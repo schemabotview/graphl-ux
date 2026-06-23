@@ -92,61 +92,11 @@ body {
 
 /* Top brand bar: logo · wordmark · topic on the left, menu button on the right.
    Floats over the scene; only the logo/menu take pointer events. */
-.scene-brand {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 14px 16px;
-  pointer-events: none;
-}
-
-.scene-brand__home {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  pointer-events: auto;
-}
-
-.scene-brand__glyph {
-  width: 24px;
-  height: 24px;
-}
-
-.scene-brand__name {
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  background: linear-gradient(90deg, #5b8cff, #37d39a);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.scene-brand__topic {
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #9aa3b2;
-}
-
-.scene-brand__actions {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  pointer-events: auto;
-}
-
 .scene-iconbtn {
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border: 1px solid #2a2d3d;
   border-radius: 999px;
@@ -163,10 +113,6 @@ body {
 .scene-iconbtn:active {
   transform: scale(0.92);
 }
-.scene-iconbtn[aria-pressed='true'] {
-  border-color: #5b8cff;
-  color: #cfe0ff;
-}
 
 /* Reel-style caption: topic kicker + title + subtitle, bottom-left over a soft
    scrim. Right pad leaves room for the play/pause button. */
@@ -175,7 +121,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 44px 76px 22px 22px;
+  padding: 44px 120px 22px 22px;
   text-align: left;
   pointer-events: none;
   background: linear-gradient(to top, rgba(22, 24, 29, 0.92), rgba(22, 24, 29, 0));
@@ -203,12 +149,19 @@ body {
   color: #9aa3b2;
 }
 
-/* Round play/pause button, bottom-right (graphl-mobile's feed__playstate). */
-.scene-playstate {
+/* Bottom-right control cluster: play/pause + content-panel toggle. */
+.scene-controls {
   position: absolute;
   right: 16px;
   bottom: 16px;
   z-index: 8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Round play/pause button (graphl-mobile's feed__playstate). */
+.scene-playstate {
   display: grid;
   place-items: center;
   width: 44px;

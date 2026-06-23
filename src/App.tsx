@@ -127,27 +127,6 @@ export default function App() {
     <div className="app-split">
       <div className="scene-pane">
         <div className="scene-frame">
-          <header className="scene-brand">
-            <div className="scene-brand__home">
-              <img className="scene-brand__glyph" src="/brand.svg" alt="" aria-hidden />
-              <span className="scene-brand__name">GraphL</span>
-              <span className="scene-brand__topic">{topicLabel}</span>
-            </div>
-            <div className="scene-brand__actions">
-              <button
-                className="scene-iconbtn"
-                onClick={() => setPanelOpen((o) => !o)}
-                aria-pressed={panelOpen}
-                aria-label="Toggle content panel"
-              >
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden>
-                  <rect x="3.5" y="5" width="17" height="14" rx="2" stroke="currentColor" strokeWidth="1.6" />
-                  <line x1="14" y1="5" x2="14" y2="19" stroke="currentColor" strokeWidth="1.6" />
-                </svg>
-              </button>
-            </div>
-          </header>
-
           <SceneViewer key={page.sceneId} scene={scene} />
 
           <div className="scene-caption">
@@ -158,14 +137,27 @@ export default function App() {
             {scene.subtitle && <p>{scene.subtitle}</p>}
           </div>
 
-          <button
-            className="scene-playstate"
-            onClick={() => setPlaying((p) => !p)}
-            disabled={!audioUrl}
-            aria-label={playing ? 'Pause' : 'Play'}
-          >
-            {playing ? '❚❚' : '▶'}
-          </button>
+          <div className="scene-controls">
+            <button
+              className="scene-playstate"
+              onClick={() => setPlaying((p) => !p)}
+              disabled={!audioUrl}
+              aria-label={playing ? 'Pause' : 'Play'}
+            >
+              {playing ? '❚❚' : '▶'}
+            </button>
+            <button
+              className="scene-iconbtn"
+              onClick={() => setPanelOpen((o) => !o)}
+              aria-pressed={panelOpen}
+              aria-label="Toggle content panel"
+            >
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                <rect x="3.5" y="5" width="17" height="14" rx="2" stroke="currentColor" strokeWidth="1.6" />
+                <line x1="14" y1="5" x2="14" y2="19" stroke="currentColor" strokeWidth="1.6" />
+              </svg>
+            </button>
+          </div>
 
           <div className="scene-progress" onClick={seek}>
             <div className="scene-progress__fill" style={{ width: `${progress * 100}%` }} />
