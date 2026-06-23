@@ -134,6 +134,27 @@ export function container(
   }
 }
 
+/** A leaf term-chip seed for `section` (id + label, optional color/sub). */
+export interface Chip {
+  id: string
+  label: string
+  color?: string
+  sub?: string
+}
+
+/**
+ * A titled box holding bands of term-chips. Each inner array is one row of
+ * chips; chips inherit `meta.color` unless they override it. Returns a
+ * `container` node — drop it into a `stack` band or nest inside another container.
+ */
+export function section(meta: ContainerMeta, bands: Chip[][], opts: WrapOpts = {}): SceneNodeSpec {
+  const content = rows(
+    bands.map((band) => band.map((c) => ({ color: meta.color, ...c, kind: 'term' as const }))),
+    { tight: true },
+  )
+  return container(meta, content, opts)
+}
+
 /** Like `container`, but an invisible wrapper (no border/label) — sub-arranges. */
 export function group(id: string, content: PatternResult, opts: WrapOpts = {}): SceneNodeSpec {
   return {
