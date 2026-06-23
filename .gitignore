@@ -1,0 +1,20 @@
+# dependencies
+node_modules
+
+# build output
+dist
+
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# editor / OS
+.idea
+.DS_Store
+
+# vite
+.vite
+
+# local env (committed: .env.example)
+.env
+.env.local
+.env.*.local

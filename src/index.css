@@ -1,0 +1,243 @@
+:root {
+  --bg: #16181d;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: #f4f5f7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+}
+
+/* The stage is the full viewport; the frame is the portrait canvas region with
+   dark pillarbox margins (the panel-hidden desktop look — see DESIGN.md). */
+.app-stage {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Scene fills the stage; the panel (when open) is a resizable right sidebar. */
+.app-split {
+  display: flex;
+  height: 100%;
+}
+
+/* Full-screen loading / error state while content is fetched from the repo. */
+.app-status {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  text-align: center;
+  color: #9aa3b2;
+  font-size: 15px;
+}
+.app-status--error {
+  color: #ff5d6c;
+}
+.app-status span {
+  max-width: 480px;
+  font-size: 12px;
+  color: #6b7280;
+  word-break: break-word;
+}
+
+.scene-pane {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+}
+
+/* A true 2:3 portrait that fills the viewport height (width derived from it), so
+   the 800×1200 canvas fills the frame. Reel-style overlays sit on top of the
+   scene (caption, play/pause, edge progress line) — none take layout space. On a
+   taller real phone the frame centers with reel-style top/bottom margins. */
+.scene-frame {
+  position: relative;
+  height: 100%;
+  aspect-ratio: 2 / 3;
+  width: auto;
+  max-width: 100%;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/* React Flow fills the frame; overlays (brand/caption/play) sit above it. */
+.scene-flow {
+  position: absolute;
+  inset: 0;
+}
+.scene-frame .react-flow {
+  height: 100%;
+}
+
+/* Top brand bar: logo · wordmark · topic on the left, menu button on the right.
+   Floats over the scene; only the logo/menu take pointer events. */
+.scene-brand {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  pointer-events: none;
+}
+
+.scene-brand__home {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.scene-brand__glyph {
+  width: 24px;
+  height: 24px;
+}
+
+.scene-brand__name {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  background: linear-gradient(90deg, #5b8cff, #37d39a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.scene-brand__topic {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #9aa3b2;
+}
+
+.scene-brand__actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.scene-iconbtn {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid #2a2d3d;
+  border-radius: 999px;
+  color: rgba(244, 245, 247, 0.92);
+  background: rgba(16, 18, 28, 0.7);
+  backdrop-filter: blur(6px);
+  font-size: 16px;
+  cursor: pointer;
+}
+.scene-iconbtn svg {
+  width: 18px;
+  height: 18px;
+}
+.scene-iconbtn:active {
+  transform: scale(0.92);
+}
+.scene-iconbtn[aria-pressed='true'] {
+  border-color: #5b8cff;
+  color: #cfe0ff;
+}
+
+/* Reel-style caption: topic kicker + title + subtitle, bottom-left over a soft
+   scrim. Right pad leaves room for the play/pause button. */
+.scene-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 44px 76px 22px 22px;
+  text-align: left;
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(22, 24, 29, 0.92), rgba(22, 24, 29, 0));
+}
+
+.scene-caption__kicker {
+  display: inline-block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #9aa3b2;
+}
+
+.scene-caption h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.scene-caption p {
+  margin: 5px 0 0;
+  font-size: 14px;
+  color: #9aa3b2;
+}
+
+/* Round play/pause button, bottom-right (graphl-mobile's feed__playstate). */
+.scene-playstate {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 8;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid #2a2d3d;
+  border-radius: 999px;
+  color: rgba(244, 245, 247, 0.92);
+  background: rgba(16, 18, 28, 0.7);
+  backdrop-filter: blur(6px);
+  font-size: 13px;
+  cursor: pointer;
+}
+.scene-playstate:active {
+  transform: scale(0.92);
+}
+
+/* Thin progress line pinned to the very bottom edge. */
+.scene-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  z-index: 6;
+  background: rgba(255, 255, 255, 0.16);
+}
+.scene-progress__fill {
+  height: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  transition: width 120ms linear;
+}
