@@ -145,9 +145,6 @@ export default function App() {
                   <line x1="14" y1="5" x2="14" y2="19" stroke="currentColor" strokeWidth="1.6" />
                 </svg>
               </button>
-              <button className="scene-iconbtn" aria-label="Sections">
-                ☰
-              </button>
             </div>
           </header>
 
