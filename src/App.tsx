@@ -216,6 +216,16 @@ export default function App() {
 
   const goto = (next: number) => setPageIdx(Math.min(pages.length - 1, Math.max(0, next)))
 
+  // When a clip finishes during playback, auto-advance to the next slide and keep
+  // playing — a hands-free playthrough. Bounded to the current module: at the module
+  // boundary (or the very end) we stop instead of running away into the next topic.
+  // (Play state stays true, so the page-change effect auto-plays the next clip.)
+  const handleClipEnded = () => {
+    const next = pageIdx + 1
+    if (next < pages.length && pages[next].moduleId === page.moduleId) setPageIdx(next)
+    else setPlaying(false)
+  }
+
   const seek = (e: React.MouseEvent<HTMLDivElement>) => {
     const a = audioRef.current
     if (!a || !a.duration) return
@@ -378,7 +388,7 @@ export default function App() {
               const a = e.currentTarget
               setProgress(a.duration > 0 ? a.currentTime / a.duration : 0)
             }}
-            onEnded={() => setPlaying(false)}
+            onEnded={handleClipEnded}
           />
         </div>
       </div>
