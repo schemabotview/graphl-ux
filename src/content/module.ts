@@ -11,6 +11,8 @@ export interface SectionOverlay {
   spine?: boolean
   audio?: string
   role?: string
+  /** Scene node ids to spotlight for this section; the rest dim back. */
+  highlight?: string[]
 }
 
 export interface ModuleManifest {
@@ -28,6 +30,8 @@ export interface Page {
   spine: boolean
   audio?: string
   role?: string
+  /** Scene node ids to spotlight for this section (rest dim back). */
+  highlight?: string[]
   // URL-safe id for the section, derived from the heading — used for refresh-safe
   // deep links (`#/<concept>/<module>/<slug>`). Stable across reordering.
   slug: string
@@ -62,6 +66,7 @@ export function buildPages(nb: NotebookJson, module: ModuleManifest): Page[] {
       spine: o?.spine ?? false,
       audio: o?.audio,
       role: o?.role,
+      highlight: o?.highlight,
       slug: sectionSlug(s.heading),
       moduleId: module.id,
       moduleTitle: module.title,

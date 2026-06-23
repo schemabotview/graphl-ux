@@ -18,6 +18,28 @@
   overflow: hidden;
 }
 
+/* Narration spotlight: the current section lights its node(s) AMBER and the rest
+   recede. Calm — an amber border + slightly stronger fill, no glow/box-shadow
+   (DESIGN.md). The transition lets focus glide as paging moves the spotlight. */
+.scene-node {
+  transition: opacity 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+}
+
+.scene-node--highlighted {
+  --spotlight: #ffc24b;
+  border-color: var(--spotlight);
+}
+
+/* Leaf nodes (symbol/term) also brighten their fill; containers keep their calm
+   panel fill so a lit box doesn't read as a solid block. */
+.scene-node--highlighted:not(.scene-node--container) {
+  background: color-mix(in srgb, var(--node-color, #9aa3b2) 42%, var(--base));
+}
+
+.scene-node--dimmed {
+  opacity: 0.28;
+}
+
 /* 'term' nodes are filled chips whose text IS the concept. */
 .scene-node--term {
   font-family: ui-monospace, 'SF Mono', Menlo, monospace;

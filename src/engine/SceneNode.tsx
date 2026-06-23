@@ -11,6 +11,10 @@ export interface SceneNodeData {
   direction: 'horizontal' | 'vertical'
   width: number
   height: number
+  /** This node is the current section's spotlight. */
+  highlighted?: boolean
+  /** A spotlight is active elsewhere; this node recedes. */
+  dimmed?: boolean
   [key: string]: unknown
 }
 
@@ -22,7 +26,7 @@ export function SceneNode({ data }: NodeProps) {
 
   return (
     <div
-      className={`scene-node scene-node--${d.kind}`}
+      className={`scene-node scene-node--${d.kind}${d.highlighted ? ' scene-node--highlighted' : ''}${d.dimmed ? ' scene-node--dimmed' : ''}`}
       style={{
         width: d.width,
         height: d.height,

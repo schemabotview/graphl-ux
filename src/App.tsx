@@ -254,7 +254,7 @@ export default function App() {
     <div className="app-split">
       <div className="scene-pane">
         <div className="scene-frame">
-          <SceneViewer key={page.sceneId} scene={scene} />
+          <SceneViewer key={page.sceneId} scene={scene} highlight={page.highlight} />
 
           {/* Top brand bar: glyph (→ home/concept catalog) + the current concept.
               Floats over the scene; only the glyph button takes pointer events so

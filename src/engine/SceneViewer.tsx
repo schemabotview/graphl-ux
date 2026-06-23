@@ -30,12 +30,34 @@ function flattenNodes(nodes: SceneNodeSpec[]): SceneNodeSpec[] {
   return out
 }
 
-export function SceneViewer({ scene }: { scene: SceneSpec }) {
+/** Expand a highlight list: spotlighting a container also lights its children,
+ *  so authors can name the box and not enumerate every chip inside it. Returns
+ *  null when nothing is highlighted (so the scene renders at full strength). */
+function expandHighlight(nodes: SceneNodeSpec[], highlight?: string[]): Set<string> | null {
+  if (!highlight?.length) return null
+  const lit = new Set(highlight)
+  const addDescendants = (n: SceneNodeSpec) => {
+    for (const c of n.children ?? []) {
+      lit.add(c.id)
+      addDescendants(c)
+    }
+  }
+  const visit = (n: SceneNodeSpec) => {
+    if (lit.has(n.id)) addDescendants(n)
+    n.children?.forEach(visit)
+  }
+  nodes.forEach(visit)
+  return lit
+}
+
+export function SceneViewer({ scene, highlight }: { scene: SceneSpec; highlight?: string[] }) {
   const direction = scene.grid.cols > scene.grid.rows ? 'horizontal' : 'vertical'
+  const highlightKey = highlight?.join(',') ?? ''
 
   const nodes = useMemo<Node<SceneNodeData>[]>(() => {
     const boxes = resolveGrid(scene.nodes, scene.grid, CANVAS)
     const flat = flattenNodes(scene.nodes)
+    const lit = expandHighlight(scene.nodes, highlight)
     return flat.map((n) => {
       const box = boxes[n.id]
       return {
@@ -52,10 +74,13 @@ export function SceneViewer({ scene }: { scene: SceneSpec }) {
           direction,
           width: box.w,
           height: box.h,
+          highlighted: lit?.has(n.id) ?? false,
+          dimmed: lit ? !lit.has(n.id) : false,
         },
       }
     })
-  }, [scene, direction])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scene, direction, highlightKey])
 
   const edges = useMemo<Edge[]>(
     () =>
