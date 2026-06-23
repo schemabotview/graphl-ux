@@ -98,26 +98,47 @@ These were settled by discussion. Don't relitigate without the owner.
 - **Content panel UX:** hidden by default; toggled from a brand-bar button. When
   open it's a **resizable right sidebar** (drag its left edge, clamp 340px–60vw) and
   the **scene keeps the bulk** of the width. On narrow screens (<760px) it becomes a
-  **full overlay sheet**, not a side split.
+  **full overlay sheet**, not a side split. **Open state + width persist in
+  `localStorage`** — a personal viewing preference, deliberately NOT in the URL (a
+  shared deep link shouldn't force the panel open on someone else). The panel has **no
+  paging stepper** (← → and tap-zones own paging); its header carries a **top-right
+  contents button** (opens a slide list to jump anywhere — a list icon, kept distinct
+  from the module ☰) **+ a close button**.
 - **Panel drops notebook images.** The `.ipynb` diagram images (`![]()`) are stripped
   by the parser — our React Flow **scenes ARE those diagrams**, so rendering them in
   the panel would duplicate the canvas. A section with an image but no scene = a
   signal to author a scene, not inline a picture. (Fenced ASCII/`text` blocks stay.)
-- **Navigation model (two axes + a menu).** Content nests **concept → module →
-  section** (e.g. Apache Spark → `01-foundations` → "Lazy evaluation"). Plan for the
-  shape: future concepts (AWS, Databricks, …), **~9 modules/concept, ~15 sections/module**.
-  - **Horizontal = sections within a module.** Touch: story-style **tap zones**
-    (left third = prev, right third = next). Desktop: ◀▶ / ← → arrow keys / panel
-    stepper. A step swaps **scene + panel + caption + audio together**; the scene
-    remounts on `sceneId` change to refit, sections sharing a scene don't remount.
-  - **Vertical = switch module** (next/prev `presentation` in the manifest). Touch:
-    swipe up/down; desktop: ↑↓. Lands on **section 1** of the target module — don't
-    preserve the horizontal index (modules differ in length). *Not built yet — the
-    app loads only `presentations[0]` today.*
+- **Navigation model (one continuous axis + a menu).** Content nests **concept →
+  module → section** (e.g. Apache Spark → `01-foundations` → "Lazy evaluation"). Plan
+  for the shape: future concepts (AWS, Databricks, …), **~9 modules/concept, ~15
+  sections/module**.
+  - **Horizontal = one continuous section flow across the WHOLE concept.** On load the
+    app fetches *every* module's notebook and flattens them into a single page list
+    (`App.tsx`), so paging runs straight past a module boundary — module 1's last
+    section → module 2's first — with **no refetch and no jump-to-start**. Touch:
+    story **tap zones** (left third = prev, right third = next). Desktop: ← → arrow
+    keys. A step swaps **scene + panel + caption + audio together**; the scene remounts
+    on `sceneId` change, and since each module now rides **one dense scene**, in-module
+    steps don't remount (smooth). The caption shows each page's own module title; the
+    counter resets per module (`section N/M`).
+  - **Module switch = the ☰ brand-bar picker** — it jumps to a module's first page
+    *within the flat list* (no refetch). There is **no separate vertical/swipe axis**;
+    paging across a boundary already crosses modules. (The earlier "vertical swipe =
+    module" plan was dropped in favor of this continuous model.)
+  - **Audio follows navigation** (`playingRef` in `App.tsx`). Play state persists
+    across steps: if narration is on, the next slide's clip auto-plays; if paused, it
+    stays paused. When a clip ends mid-playback it **auto-advances** to the next slide
+    and keeps playing — a hands-free playthrough **bounded to the current module**
+    (stops at the boundary; one-line guard to make it cross modules).
+  - **Refresh-safe deep links.** The hash carries the section:
+    `#/<concept>/<module>/<section-slug>` (`router.ts`). Paging silently rewrites the
+    URL via `replaceState` (no `hashchange` → no effect loop, no Back/Forward churn);
+    a refresh or shared link **restores the exact slide**. The slug derives from the
+    heading (`sectionSlug` in `module.ts`), stable across reordering vs. a numeric index.
   - **Concept is the third level, NOT a scroll axis** (no third gesture). The
     **home page is the concept catalog** (`components/Home.tsx`, calm card grid
     driven by `content/catalog.ts`); the brand-bar logo routes there (`navigate('')`).
-    A richer ☰ menu / in-scene concept picker is still future.
+    A richer in-scene concept picker is still future.
 
 ---
 
@@ -158,14 +179,14 @@ graphl-ux/                  # this repo — the render engine; ships no content
       notebook.ts           #   parseNotebook: .ipynb → Section[] (strips images)
       module.ts             #   buildPages: sections + manifest overlay → Page[]
       client.ts             #   fetch manifest/notebook/audio from a concept's contentBaseUrl
-    scenes/
+    scenes/                 #   one dense scene per module (+ extras kept for reuse)
       index.ts              #   scene registry (id → SceneSpec)
-      spark-cluster.ts, spark-execution.ts
+      spark-execution.ts, spark-rdd-api.ts, apache-spark-api-stack.ts
     components/
       Home.tsx, home.css          # the concept catalog (home page)
-      RightPanel.tsx, panel.css   # the content panel (markdown render + resize)
-    router.ts               # minimal hash router (#/<concept>); useRoute / navigate
-    App.tsx                 # the shell: scene + reel chrome + panel + nav
+      RightPanel.tsx, panel.css   # the content panel (markdown + contents list + resize)
+    router.ts               # hash router #/<concept>/<module>/<section>; navigate / replaceRoute
+    App.tsx                 # the shell: flat cross-module pages + reel chrome + panel + nav
     index.css
 ```
 
@@ -187,34 +208,40 @@ content built fresh, not migrating NodeMap.)
 
 ## Status
 
-Apache Spark **module 01** is wired end-to-end (build target: mobile reels + Udemy):
+Apache Spark **modules 01–02** are wired end-to-end (build target: mobile reels + Udemy):
 - Engine + pattern helpers ported from graphl-mobile (calm-restyled).
-- Two scenes built: `spark-cluster`, `spark-execution`.
+- **One dense scene per module**: module 01 = `spark-execution`, module 02 =
+  `spark-rdd-api`; `apache-spark-api-stack` kept in the registry for reuse. Five
+  earlier per-section scenes were removed (`spark-cluster`, `rdd-partitions`,
+  `rdd-lineage`, `rdd-narrow-wide`, `spark-cache-persist`).
 - Reel chrome (brand bar · caption · play/pause · edge progress), real narration
-  audio wired (per-scene), and the calm visual style locked (`DESIGN.md`).
-- Content panel: notebook 01 parsed → sections, rendered (prose/tables/code), images
-  stripped; hidden-by-default, toggleable, resizable sidebar; mobile overlay.
+  audio wired (per-section), and the calm visual style locked (`DESIGN.md`).
+- Content panel: notebooks parsed → sections, rendered (prose/tables/code), images
+  stripped; hidden-by-default, toggleable, resizable sidebar (open/width persisted);
+  mobile overlay; header **contents list + close**, no stepper.
 - **Home page built**: `#/` shows the concept catalog (`components/Home.tsx`, calm card
   grid from `content/catalog.ts`); a card routes to `#/<concept>` (hash router,
   `router.ts`); the in-scene brand-bar logo routes back home.
-- **Navigation — horizontal axis built**: sections page via ◀▶ / ← → arrow keys
-  (desktop) and story-style **tap zones** (mobile, `≤760px`); each step swaps scene +
-  panel + caption + audio together. Vertical module-switch is not built yet.
+- **Navigation — continuous flow built**: all modules load flattened into one page
+  list; ← → (desktop) and **tap zones** (mobile, `≤760px`) page straight across module
+  boundaries; the ☰ picker jumps to a module. **Audio persists across steps and
+  auto-advances within a module** on clip end. **Deep links restore the exact slide on
+  refresh** (`#/<concept>/<module>/<section-slug>`).
 - **Content is fetched at runtime** per concept from that concept's `contentBaseUrl`
-  (in `content/catalog.ts`; module 01 = `apache-spark-content` over raw GitHub).
+  (in `content/catalog.ts`; Spark = `apache-spark-content` over raw GitHub).
   `VITE_CONTENT_BASE_URL` is now only a dev override / fallback default in
   `content/client.ts`, not the primary source. The app bundles only the render engine
   + scenes + concept registry — `dist` stays content-free.
 
 **Interim shortcuts (flagged in code, to replace):**
-1. **Per-page audio is wired in the app** (`page.audio` from the manifest), but the
-   manifest's sections have no `audio` yet — they fall back to the one per-scene clip
-   (`sceneAudioFallback` in `App.tsx`). Generate per-section `.wav`/`.tts`, wire them
-   in the manifest, then delete the fallback.
-2. Scenes `aqe` and `spark-connect` aren't built; those sections fall back to
-   `defaultScene` (`spark-cluster`).
+1. **Per-section audio is wired** (`page.audio` per manifest section), but the `.wav`s
+   still need a Colab generation pass — a missing clip 404s (auto-advance halts there)
+   rather than narrating. The `sceneAudioFallback` map in `App.tsx` covers only
+   sections that omit `audio` entirely; delete it once every section has a real clip.
+2. On load the app fetches **all** wired notebooks up front (fine at 2 modules). Once
+   all ~9 are wired, switch to lazy-loading per module.
 
-**Likely next:** wire per-section `audio` in the manifest (+ generate clips) · build
-`aqe`/`spark-connect` scenes · **vertical module-switch** + the ☰ concept/module
-picker · the optional amber narration spotlight · CDN (jsDelivr) for content (swap
-`VITE_CONTENT_BASE_URL`).
+**Likely next:** generate the per-section narration `.wav`s · the optional amber
+narration **spotlight** (move focus across the one dense scene as sections advance —
+the "unique flow" payoff of consolidating to one scene) · lazy-load module notebooks ·
+CDN (jsDelivr) for content (swap `VITE_CONTENT_BASE_URL`).
