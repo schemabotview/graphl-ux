@@ -129,10 +129,66 @@ body {
   display: block;
 }
 .scene-brandbar__concept {
+  flex: 1;
   font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.01em;
   color: rgba(244, 245, 247, 0.92);
+}
+
+/* Module picker: ☰ button + dropdown anchored to its right. */
+.scene-brandbar__menu {
+  position: relative;
+  pointer-events: auto;
+}
+.scene-brandbar__menu-btn {
+  display: grid;
+  place-items: center;
+  padding: 6px 10px;
+  border: none;
+  background: none;
+  color: rgba(244, 245, 247, 0.7);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.scene-brandbar__menu-btn:hover {
+  color: rgba(244, 245, 247, 1);
+}
+.scene-brandbar__menu-btn:focus,
+.scene-brandbar__menu-btn:focus-visible {
+  outline: none;
+}
+.scene-modulepicker {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 300px;
+  background: rgba(22, 24, 29, 0.97);
+  border: 1px solid #2a2d3d;
+  border-radius: 10px;
+  z-index: 20;
+  overflow: hidden;
+  padding: 4px 0;
+}
+.scene-modulepicker__item {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  text-align: left;
+  border: none;
+  background: none;
+  color: rgba(244, 245, 247, 0.7);
+  font-size: 14px;
+  cursor: pointer;
+}
+.scene-modulepicker__item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(244, 245, 247, 1);
+}
+.scene-modulepicker__item--active {
+  color: rgba(244, 245, 247, 1);
+  font-weight: 600;
 }
 
 .scene-iconbtn {

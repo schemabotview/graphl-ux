@@ -26,17 +26,21 @@ export default function App() {
   // no concept = the home/catalog view.
   const route = useRoute()
   const concept = conceptById(route.concept)
+  const moduleId = route.module
 
   const [pages, setPages] = useState<Page[]>([])
   const [moduleMeta, setModuleMeta] = useState<ModuleManifest>()
+  const [allModules, setAllModules] = useState<ModuleManifest[]>([])
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [error, setError] = useState<string>()
 
   const [pageIdx, setPageIdx] = useState(0)
   const [panelOpen, setPanelOpen] = useState(false)
   const [panelWidth, setPanelWidth] = useState(520)
+  const [pickerOpen, setPickerOpen] = useState(false)
 
   const audioRef = useRef<HTMLAudioElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
   const [playing, setPlaying] = useState(false)
   const [progress, setProgress] = useState(0)
 
@@ -59,11 +63,14 @@ export default function App() {
     void (async () => {
       try {
         const manifest = await fetchManifest(concept.contentBaseUrl)
-        const module = manifest.presentations[0]
-        const nb = await fetchNotebook(module.notebook, concept.contentBaseUrl)
+        const presentation =
+          (moduleId ? manifest.presentations.find((p) => p.id === moduleId) : undefined) ??
+          manifest.presentations[0]
+        const nb = await fetchNotebook(presentation.notebook, concept.contentBaseUrl)
         if (cancelled) return
-        setModuleMeta(module)
-        setPages(buildPages(nb, module))
+        setAllModules(manifest.presentations)
+        setModuleMeta(presentation)
+        setPages(buildPages(nb, presentation))
         setStatus('ready')
       } catch (e) {
         if (cancelled) return
@@ -74,7 +81,7 @@ export default function App() {
     return () => {
       cancelled = true
     }
-  }, [concept])
+  }, [concept, moduleId])
 
   // Drive the <audio> element from the play state.
   useEffect(() => {
@@ -109,6 +116,18 @@ export default function App() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [pages.length])
+
+  // Close the module picker when clicking outside the menu wrapper.
+  useEffect(() => {
+    if (!pickerOpen) return
+    const onDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setPickerOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [pickerOpen])
 
   // Derive the active page + scene once content has loaded.
   const page = pages[pageIdx]
@@ -179,6 +198,35 @@ export default function App() {
               <img src="/icon.svg" alt="" width={28} height={28} />
             </button>
             <span className="scene-brandbar__concept">{concept.label}</span>
+            {allModules.length > 1 && (
+              <div className="scene-brandbar__menu" ref={menuRef}>
+                <button
+                  className="scene-brandbar__menu-btn"
+                  onClick={() => setPickerOpen((o) => !o)}
+                  aria-label="Switch module"
+                  aria-expanded={pickerOpen}
+                >
+                  ☰
+                </button>
+                {pickerOpen && (
+                  <div className="scene-modulepicker" role="menu">
+                    {allModules.map((m) => (
+                      <button
+                        key={m.id}
+                        className={`scene-modulepicker__item${m.id === moduleMeta?.id ? ' scene-modulepicker__item--active' : ''}`}
+                        role="menuitem"
+                        onClick={() => {
+                          navigate(concept.id, m.id)
+                          setPickerOpen(false)
+                        }}
+                      >
+                        {m.title}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Story-style tap zones (mobile only — desktop pages with arrow keys):
