@@ -82,9 +82,17 @@ These were settled by discussion. Don't relitigate without the owner.
   executors=green, storage=orange, …). **Full spec: `apache-spark-content/DESIGN.md`** —
   read it before restyling. (We explicitly moved *off* the old neon look.)
 - **Reel chrome (the shell around every scene):** a 2:3 portrait frame with a top
-  **brand bar** (logo · topic · ☰ menu), a bottom-left **caption** (topic kicker ·
-  title · subtitle), a bottom-right **play/pause**, and a **progress line pinned to
-  the bottom edge** (zero layout cost). Modeled on graphl-mobile's reel.
+  **brand bar** (logo · topic · ☰ menu), a bottom-left **caption**, a bottom-right
+  **play/pause + content-panel toggle**, and a **progress line pinned to the bottom
+  edge** (zero layout cost). Modeled on graphl-mobile's reel.
+- **Caption = the hierarchy breadcrumb** (`App.tsx`, three lines): **concept** kicker
+  (`scene.topic`, e.g. APACHE SPARK) · **module** title (`moduleMeta.title`, e.g.
+  "Foundations & Execution Model") · **section** title (`page.heading`) with the
+  `N/M` counter dimmed on that same section line. Each line answers a distinct
+  "where am I" — concept / module / section. **Use `module.title`, not `scene.title`,
+  for the module line:** several sections in a module share/swap scenes, so the scene
+  title flips mid-module; the module title is stable. The old per-scene `subtitle` is
+  not shown (it duplicated across a module).
 - **Content panel UX:** hidden by default; toggled from a brand-bar button. When
   open it's a **resizable right sidebar** (drag its left edge, clamp 340px–60vw) and
   the **scene keeps the bulk** of the width. On narrow screens (<760px) it becomes a

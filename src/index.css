@@ -149,6 +149,13 @@ body {
   color: #9aa3b2;
 }
 
+/* Section line: the "where am I" line; the counter rides it, dimmed + kept on
+   the same line so it doesn't wrap away from the title. */
+.scene-caption__count {
+  color: #6b7280;
+  white-space: nowrap;
+}
+
 /* Story-style tap zones for paging on touch. Transparent overlays over the
    upper-left / upper-right of the scene (bottom band left clear for the caption
    + controls); a dead middle column avoids accidental paging. Hidden on desktop

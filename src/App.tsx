@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { SceneViewer } from './engine/SceneViewer.tsx'
 import { scenes } from './scenes/index.ts'
 import { RightPanel } from './components/RightPanel.tsx'
-import { buildPages, type Page } from './content/module.ts'
+import { buildPages, type ModuleManifest, type Page } from './content/module.ts'
 import { contentUrl, fetchManifest, fetchNotebook } from './content/client.ts'
 
 // Narration is per-page: each slide wires its own clip via the manifest
@@ -19,6 +19,7 @@ const sceneAudioFallback: Record<string, string> = {
 // caption, and the audio together.
 export default function App() {
   const [pages, setPages] = useState<Page[]>([])
+  const [moduleMeta, setModuleMeta] = useState<ModuleManifest>()
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [error, setError] = useState<string>()
 
@@ -47,6 +48,7 @@ export default function App() {
         const module = manifest.presentations[0]
         const nb = await fetchNotebook(module.notebook)
         if (cancelled) return
+        setModuleMeta(module)
         setPages(buildPages(nb, module))
         setStatus('ready')
       } catch (e) {
@@ -163,11 +165,16 @@ export default function App() {
           )}
 
           <div className="scene-caption">
-            <span className="scene-caption__kicker">
-              {topicLabel} · {pageIdx + 1}/{pages.length}
-            </span>
-            <h1>{scene.title}</h1>
-            {scene.subtitle && <p>{scene.subtitle}</p>}
+            {/* concept · module · section — the user's place in the hierarchy.
+                The counter rides the section line (the thing it actually counts). */}
+            <span className="scene-caption__kicker">{topicLabel}</span>
+            <h1>{moduleMeta?.title ?? scene.title}</h1>
+            <p className="scene-caption__section">
+              {page.heading.replace(/`/g, '')}
+              <span className="scene-caption__count">
+                {' '}· {pageIdx + 1}/{pages.length}
+              </span>
+            </p>
           </div>
 
           <div className="scene-controls">
