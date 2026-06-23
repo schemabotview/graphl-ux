@@ -232,6 +232,14 @@ Apache Spark **modules 01–02** are wired end-to-end (build target: mobile reel
   `VITE_CONTENT_BASE_URL` is now only a dev override / fallback default in
   `content/client.ts`, not the primary source. The app bundles only the render engine
   + scenes + concept registry — `dist` stays content-free.
+- **Narration spotlight built**: a section can name `highlight: string[]` (scene node
+  ids) in the manifest overlay; those nodes light AMBER and the rest dim back. Plumbed
+  `SectionOverlay`/`Page` (`module.ts`) → `App.tsx` → `SceneViewer` (`expandHighlight`
+  also lights a lit container's children) → `SceneNode` (`--highlighted`/`--dimmed`,
+  `scene.css`). Since the scene doesn't remount within a module, paging glides the
+  spotlight across the one dense scene (the "unique flow" payoff). Sections that omit
+  `highlight` render full-strength. **Module 01 is fully highlighted** (14 non-hook
+  sections; the hook stays full-map); module 02 not yet.
 
 **Interim shortcuts (flagged in code, to replace):**
 1. **Per-section audio is wired** (`page.audio` per manifest section), but the `.wav`s
@@ -241,7 +249,6 @@ Apache Spark **modules 01–02** are wired end-to-end (build target: mobile reel
 2. On load the app fetches **all** wired notebooks up front (fine at 2 modules). Once
    all ~9 are wired, switch to lazy-loading per module.
 
-**Likely next:** generate the per-section narration `.wav`s · the optional amber
-narration **spotlight** (move focus across the one dense scene as sections advance —
-the "unique flow" payoff of consolidating to one scene) · lazy-load module notebooks ·
-CDN (jsDelivr) for content (swap `VITE_CONTENT_BASE_URL`).
+**Likely next:** highlight module 02 (`spark-rdd-api`) — pure manifest editing now ·
+generate the per-section narration `.wav`s · lazy-load module notebooks · CDN
+(jsDelivr) for content (swap `VITE_CONTENT_BASE_URL`).
