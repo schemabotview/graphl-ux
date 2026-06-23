@@ -5,10 +5,12 @@ import { RightPanel } from './components/RightPanel.tsx'
 import { buildPages, type Page } from './content/module.ts'
 import { contentUrl, fetchManifest, fetchNotebook } from './content/client.ts'
 
-// Audio is per-scene reel narration for now (one clip per scene). Per-section
-// clips come later, once the TTS scripts are generated. Values are content-repo
-// relative paths, resolved against VITE_CONTENT_BASE_URL at play time.
-const sceneAudio: Record<string, string> = {
+// Narration is per-page: each slide wires its own clip via the manifest
+// (`page.audio`, a content-repo-relative path resolved against
+// VITE_CONTENT_BASE_URL at play time). Until per-section clips are generated,
+// fall back to this per-scene map so the existing reel narration still plays.
+// Remove the fallback once every section has its own `audio` in the manifest.
+const sceneAudioFallback: Record<string, string> = {
   'spark-execution': 'audio/spark-execution.wav',
 }
 
@@ -27,6 +29,14 @@ export default function App() {
   const audioRef = useRef<HTMLAudioElement>(null)
   const [playing, setPlaying] = useState(false)
   const [progress, setProgress] = useState(0)
+
+  // One-time hint: flash the tap-zone chevrons on first load, then let them fade
+  // (the zones themselves are invisible, so first-timers need a nudge).
+  const [showHint, setShowHint] = useState(true)
+  useEffect(() => {
+    const t = setTimeout(() => setShowHint(false), 2600)
+    return () => clearTimeout(t)
+  }, [])
 
   // Load the manifest + first module's notebook from the content repo on mount.
   useEffect(() => {
@@ -94,7 +104,7 @@ export default function App() {
   if (!page || !scene) return <div className="app-status">No content.</div>
 
   const topicLabel = scene.topic.replace(/-/g, ' ').toUpperCase()
-  const audioPath = sceneAudio[page.sceneId]
+  const audioPath = page.audio ?? sceneAudioFallback[page.sceneId]
   const audioUrl = audioPath ? contentUrl(audioPath) : undefined
 
   const goto = (next: number) => setPageIdx(Math.min(pages.length - 1, Math.max(0, next)))
@@ -128,6 +138,29 @@ export default function App() {
       <div className="scene-pane">
         <div className="scene-frame">
           <SceneViewer key={page.sceneId} scene={scene} />
+
+          {/* Story-style tap zones (mobile only — desktop pages with arrow keys):
+              left third = prev, right third = next, upper area so the bottom
+              caption/controls stay tappable. Rendered only when a step exists,
+              so there are no dead taps at the ends. */}
+          {pageIdx > 0 && (
+            <button
+              className="scene-tapzone scene-tapzone--prev"
+              onClick={() => goto(pageIdx - 1)}
+              aria-label="Previous slide"
+            >
+              {showHint && <span className="scene-tapzone__hint">‹</span>}
+            </button>
+          )}
+          {pageIdx < pages.length - 1 && (
+            <button
+              className="scene-tapzone scene-tapzone--next"
+              onClick={() => goto(pageIdx + 1)}
+              aria-label="Next slide"
+            >
+              {showHint && <span className="scene-tapzone__hint">›</span>}
+            </button>
+          )}
 
           <div className="scene-caption">
             <span className="scene-caption__kicker">

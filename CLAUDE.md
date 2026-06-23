@@ -59,8 +59,9 @@ These were settled by discussion. Don't relitigate without the owner.
   frame nicely (good for Udemy); panel-closed on wide screens pillarboxes (cosmetic,
   like Reels on desktop web — fill the margins with chrome).
 - **Two interaction modes, toggled (defaulted by device, user can switch):**
-  - **Feed mode** — one scene per viewport, vertical snap-paging, narration
-    autoplay, panel as overlay caption. Mobile default.
+  - **Feed mode** — one scene per viewport, narration autoplay, panel as overlay
+    caption. Mobile default. Paging is **two-axis** (see Navigation model below):
+    horizontal between sections, vertical between modules.
   - **Canvas mode** — pan/zoom the full graph, user-paced, side **content panel**.
     Desktop default.
   Mode is an explicit toggle, NOT a responsive layout that stretches between the
@@ -92,9 +93,19 @@ These were settled by discussion. Don't relitigate without the owner.
   by the parser — our React Flow **scenes ARE those diagrams**, so rendering them in
   the panel would duplicate the canvas. A section with an image but no scene = a
   signal to author a scene, not inline a picture. (Fenced ASCII/`text` blocks stay.)
-- **Navigation:** the manifest maps each `##` section → a scene; ◀▶ (arrow keys or
-  the panel stepper) swaps the **scene + panel + caption + audio** together. The
-  scene remounts on `sceneId` change to refit; sections sharing a scene don't remount.
+- **Navigation model (two axes + a menu).** Content nests **concept → module →
+  section** (e.g. Apache Spark → `01-foundations` → "Lazy evaluation"). Plan for the
+  shape: future concepts (AWS, Databricks, …), **~9 modules/concept, ~15 sections/module**.
+  - **Horizontal = sections within a module.** Touch: story-style **tap zones**
+    (left third = prev, right third = next). Desktop: ◀▶ / ← → arrow keys / panel
+    stepper. A step swaps **scene + panel + caption + audio together**; the scene
+    remounts on `sceneId` change to refit, sections sharing a scene don't remount.
+  - **Vertical = switch module** (next/prev `presentation` in the manifest). Touch:
+    swipe up/down; desktop: ↑↓. Lands on **section 1** of the target module — don't
+    preserve the horizontal index (modules differ in length). *Not built yet — the
+    app loads only `presentations[0]` today.*
+  - **Concept is the third level, NOT a scroll axis** (no third gesture). Switch it
+    from the ☰ menu / a concept picker.
 
 ---
 
@@ -168,17 +179,22 @@ Apache Spark **module 01** is wired end-to-end (build target: mobile reels + Ude
   audio wired (per-scene), and the calm visual style locked (`DESIGN.md`).
 - Content panel: notebook 01 parsed → sections, rendered (prose/tables/code), images
   stripped; hidden-by-default, toggleable, resizable sidebar; mobile overlay.
-- **Navigation is manifest-driven**: ◀▶ / arrow keys swap scene + panel + caption +
-  audio per section (21/21 sections matched to scenes).
+- **Navigation — horizontal axis built**: sections page via ◀▶ / ← → arrow keys
+  (desktop) and story-style **tap zones** (mobile, `≤760px`); each step swaps scene +
+  panel + caption + audio together. Vertical module-switch is not built yet.
 - **Content is fetched at runtime** from the separate `apache-spark-content` repo
   over raw GitHub (`content/client.ts`, base via `VITE_CONTENT_BASE_URL`). The app
   bundles only the render engine + scenes — `dist` stays content-free.
 
 **Interim shortcuts (flagged in code, to replace):**
-1. **Audio is per-scene**, not per-section — needs per-section TTS clips generated.
+1. **Per-page audio is wired in the app** (`page.audio` from the manifest), but the
+   manifest's sections have no `audio` yet — they fall back to the one per-scene clip
+   (`sceneAudioFallback` in `App.tsx`). Generate per-section `.wav`/`.tts`, wire them
+   in the manifest, then delete the fallback.
 2. Scenes `aqe` and `spark-connect` aren't built; those sections fall back to
    `defaultScene` (`spark-cluster`).
 
-**Likely next:** build `aqe`/`spark-connect` scenes · the ☰ sections drawer · feed
-mode · per-section audio · the optional amber narration spotlight · CDN (jsDelivr)
-for content (swap `VITE_CONTENT_BASE_URL`).
+**Likely next:** wire per-section `audio` in the manifest (+ generate clips) · build
+`aqe`/`spark-connect` scenes · **vertical module-switch** + the ☰ concept/module
+picker · the optional amber narration spotlight · CDN (jsDelivr) for content (swap
+`VITE_CONTENT_BASE_URL`).

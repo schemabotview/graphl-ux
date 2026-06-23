@@ -149,6 +149,55 @@ body {
   color: #9aa3b2;
 }
 
+/* Story-style tap zones for paging on touch. Transparent overlays over the
+   upper-left / upper-right of the scene (bottom band left clear for the caption
+   + controls); a dead middle column avoids accidental paging. Hidden on desktop
+   (paging there is arrow keys); shown on narrow screens via the media query. */
+.scene-tapzone {
+  position: absolute;
+  top: 0;
+  bottom: 22%;
+  width: 30%;
+  z-index: 4;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.scene-tapzone--prev {
+  left: 0;
+  justify-content: flex-start;
+}
+.scene-tapzone--next {
+  right: 0;
+  justify-content: flex-end;
+}
+.scene-tapzone__hint {
+  margin: 0 14px;
+  font-size: 40px;
+  line-height: 1;
+  color: rgba(244, 245, 247, 0.55);
+  pointer-events: none;
+  animation: tapzone-hint 2.4s ease-out forwards;
+}
+@keyframes tapzone-hint {
+  0%,
+  55% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@media (max-width: 760px) {
+  .scene-tapzone {
+    display: flex;
+  }
+}
+
 /* Bottom-right control cluster: play/pause + content-panel toggle. */
 .scene-controls {
   position: absolute;
