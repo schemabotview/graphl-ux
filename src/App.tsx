@@ -181,9 +181,11 @@ export default function App() {
           section={{ heading: page.heading, body: page.body }}
           index={pageIdx}
           count={pages.length}
+          headings={pages.map((p) => p.heading)}
           width={panelWidth}
           onPrev={() => goto(pageIdx - 1)}
           onNext={() => goto(pageIdx + 1)}
+          onJump={goto}
           onClose={() => setPanelOpen(false)}
           onResizeStart={startResize}
         />

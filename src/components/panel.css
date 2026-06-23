@@ -85,6 +85,101 @@ body.resizing {
   cursor: default;
 }
 
+/* The N/M counter doubles as the "show all sections" trigger — styled as plain
+   text, not a button, so the nav stays calm. */
+.panel__count {
+  width: auto !important;
+  height: auto;
+  padding: 4px 6px !important;
+  border: none !important;
+  background: none !important;
+  color: #9aa3b2 !important;
+  font: inherit;
+  cursor: pointer;
+}
+.panel__count:hover,
+.panel__count[aria-expanded='true'] {
+  color: #e7ebf2 !important;
+}
+
+/* Contents overlay: scrollable list of every section, covers the panel body. */
+.panel__toc {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  background: #1a1c22;
+}
+
+.panel__toc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px 12px;
+  border-bottom: 1px solid #23262e;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9aa3b2;
+}
+.panel__toc-head button {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid #2a2d3d;
+  background: #22252e;
+  color: #cfd4dc;
+  cursor: pointer;
+}
+
+.panel__toc-list {
+  flex: 1;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 8px 12px 24px;
+}
+.panel__toc-list li {
+  margin: 0;
+}
+.panel__toc-list button {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  width: 100%;
+  padding: 9px 12px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: #c7ccd4;
+  text-align: left;
+  font-size: 14.5px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.panel__toc-list button:hover {
+  background: #22252e;
+}
+.panel__toc-list button.is-active {
+  background: #232a3a;
+  color: #f1f2f4;
+}
+.panel__toc-num {
+  flex: none;
+  width: 1.6em;
+  text-align: right;
+  color: #6b7383;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
+.panel__toc-list button.is-active .panel__toc-num {
+  color: #8fb0ff;
+}
+.panel__toc-text {
+  flex: 1;
+}
+
 .panel__body {
   flex: 1;
   overflow-y: auto;
