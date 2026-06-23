@@ -82,17 +82,19 @@ These were settled by discussion. Don't relitigate without the owner.
   executors=green, storage=orange, …). **Full spec: `apache-spark-content/DESIGN.md`** —
   read it before restyling. (We explicitly moved *off* the old neon look.)
 - **Reel chrome (the shell around every scene):** a 2:3 portrait frame with a top
-  **brand bar** (logo · topic · ☰ menu), a bottom-left **caption**, a bottom-right
-  **play/pause + content-panel toggle**, and a **progress line pinned to the bottom
-  edge** (zero layout cost). Modeled on graphl-mobile's reel.
-- **Caption = the hierarchy breadcrumb** (`App.tsx`, three lines): **concept** kicker
-  (`scene.topic`, e.g. APACHE SPARK) · **module** title (`moduleMeta.title`, e.g.
-  "Foundations & Execution Model") · **section** title (`page.heading`) with the
-  `N/M` counter dimmed on that same section line. Each line answers a distinct
-  "where am I" — concept / module / section. **Use `module.title`, not `scene.title`,
-  for the module line:** several sections in a module share/swap scenes, so the scene
-  title flips mid-module; the module title is stable. The old per-scene `subtitle` is
-  not shown (it duplicated across a module).
+  **brand bar** (logo → home + the current **concept** label; ☰ menu still TODO), a
+  bottom-left **caption**, a bottom-right **play/pause + content-panel toggle**, and a
+  **progress line pinned to the bottom edge** (zero layout cost). Modeled on
+  graphl-mobile's reel. The brand-bar logo is the **home affordance** —
+  `navigate('')` returns to the concept catalog (see Navigation model).
+- **Caption = the hierarchy breadcrumb** (`App.tsx`, two lines): **module** title
+  (`moduleMeta.title`, e.g. "Foundations & Execution Model") · **section** title
+  (`page.heading`) with the `N/M` counter dimmed on that same section line. The
+  **concept** lives in the brand bar (top), not the caption — the old concept-kicker
+  line was dropped as a duplicate once the brand bar shipped. **Use `module.title`,
+  not `scene.title`, for the module line:** several sections in a module share/swap
+  scenes, so the scene title flips mid-module; the module title is stable. The old
+  per-scene `subtitle` is not shown (it duplicated across a module).
 - **Content panel UX:** hidden by default; toggled from a brand-bar button. When
   open it's a **resizable right sidebar** (drag its left edge, clamp 340px–60vw) and
   the **scene keeps the bulk** of the width. On narrow screens (<760px) it becomes a
@@ -112,8 +114,10 @@ These were settled by discussion. Don't relitigate without the owner.
     swipe up/down; desktop: ↑↓. Lands on **section 1** of the target module — don't
     preserve the horizontal index (modules differ in length). *Not built yet — the
     app loads only `presentations[0]` today.*
-  - **Concept is the third level, NOT a scroll axis** (no third gesture). Switch it
-    from the ☰ menu / a concept picker.
+  - **Concept is the third level, NOT a scroll axis** (no third gesture). The
+    **home page is the concept catalog** (`components/Home.tsx`, calm card grid
+    driven by `content/catalog.ts`); the brand-bar logo routes there (`navigate('')`).
+    A richer ☰ menu / in-scene concept picker is still future.
 
 ---
 
@@ -150,14 +154,17 @@ graphl-ux/                  # this repo — the render engine; ships no content
       SceneViewer.tsx       #   React Flow wrapper, fitView + refit-on-resize
       scene.css
     content/
+      catalog.ts            #   concept registry (id · label · accent · contentBaseUrl) — app-owned
       notebook.ts           #   parseNotebook: .ipynb → Section[] (strips images)
       module.ts             #   buildPages: sections + manifest overlay → Page[]
-      client.ts             #   fetch manifest/notebook/audio from the content repo (VITE_CONTENT_BASE_URL)
+      client.ts             #   fetch manifest/notebook/audio from a concept's contentBaseUrl
     scenes/
       index.ts              #   scene registry (id → SceneSpec)
       spark-cluster.ts, spark-execution.ts
     components/
+      Home.tsx, home.css          # the concept catalog (home page)
       RightPanel.tsx, panel.css   # the content panel (markdown render + resize)
+    router.ts               # minimal hash router (#/<concept>); useRoute / navigate
     App.tsx                 # the shell: scene + reel chrome + panel + nav
     index.css
 ```
@@ -187,12 +194,17 @@ Apache Spark **module 01** is wired end-to-end (build target: mobile reels + Ude
   audio wired (per-scene), and the calm visual style locked (`DESIGN.md`).
 - Content panel: notebook 01 parsed → sections, rendered (prose/tables/code), images
   stripped; hidden-by-default, toggleable, resizable sidebar; mobile overlay.
+- **Home page built**: `#/` shows the concept catalog (`components/Home.tsx`, calm card
+  grid from `content/catalog.ts`); a card routes to `#/<concept>` (hash router,
+  `router.ts`); the in-scene brand-bar logo routes back home.
 - **Navigation — horizontal axis built**: sections page via ◀▶ / ← → arrow keys
   (desktop) and story-style **tap zones** (mobile, `≤760px`); each step swaps scene +
   panel + caption + audio together. Vertical module-switch is not built yet.
-- **Content is fetched at runtime** from the separate `apache-spark-content` repo
-  over raw GitHub (`content/client.ts`, base via `VITE_CONTENT_BASE_URL`). The app
-  bundles only the render engine + scenes — `dist` stays content-free.
+- **Content is fetched at runtime** per concept from that concept's `contentBaseUrl`
+  (in `content/catalog.ts`; module 01 = `apache-spark-content` over raw GitHub).
+  `VITE_CONTENT_BASE_URL` is now only a dev override / fallback default in
+  `content/client.ts`, not the primary source. The app bundles only the render engine
+  + scenes + concept registry — `dist` stays content-free.
 
 **Interim shortcuts (flagged in code, to replace):**
 1. **Per-page audio is wired in the app** (`page.audio` from the manifest), but the
