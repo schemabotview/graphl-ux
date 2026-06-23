@@ -107,8 +107,23 @@ body {
   pointer-events: none;
   background: linear-gradient(to bottom, rgba(22, 24, 29, 0.9), rgba(22, 24, 29, 0));
 }
+/* Bare logo button — the icon is a self-contained tile, so no circle/border/bg.
+   Padding keeps a comfortable tap target around the small glyph. */
 .scene-brandbar__home {
   pointer-events: auto;
+  display: grid;
+  place-items: center;
+  padding: 6px;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+.scene-brandbar__home:active {
+  transform: scale(0.92);
+}
+.scene-brandbar__home:focus,
+.scene-brandbar__home:focus-visible {
+  outline: none;
 }
 .scene-brandbar__home img {
   display: block;

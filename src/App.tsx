@@ -169,14 +169,14 @@ export default function App() {
               concept picker — comes with the module-switch slice.) */}
           <div className="scene-brandbar">
             <button
-              className="scene-iconbtn scene-brandbar__home"
+              className="scene-brandbar__home"
               onClick={(e) => {
                 e.currentTarget.blur()
                 navigate('')
               }}
               aria-label="Home — all concepts"
             >
-              <img src="/brand.svg" alt="" width={20} height={20} />
+              <img src="/icon.svg" alt="" width={28} height={28} />
             </button>
             <span className="scene-brandbar__concept">{concept.label}</span>
           </div>

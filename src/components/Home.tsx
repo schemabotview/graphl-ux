@@ -14,7 +14,7 @@ export function Home() {
   return (
     <main className="home">
       <header className="home__hero">
-        <img className="home__glyph" src="/brand.svg" alt="" width={52} height={52} />
+        <img className="home__glyph" src="/icon.svg" alt="" width={52} height={52} />
         <h1 className="home__brand">GraphL</h1>
         <p className="home__tagline">Pick a concept to start learning</p>
       </header>
