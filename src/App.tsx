@@ -129,12 +129,7 @@ export default function App() {
         <div className="scene-frame">
           <header className="scene-brand">
             <div className="scene-brand__home">
-              <svg className="scene-brand__glyph" viewBox="0 0 24 24" fill="none" aria-hidden>
-                <path d="M6 7 L18 7 M6 7 L12 17 M18 7 L12 17" stroke="#5b6270" strokeWidth="1.3" />
-                <circle cx="6" cy="7" r="2.4" fill="#5b8cff" />
-                <circle cx="18" cy="7" r="2.4" fill="#37d39a" />
-                <circle cx="12" cy="17" r="2.4" fill="#b98bff" />
-              </svg>
+              <img className="scene-brand__glyph" src="/brand.svg" alt="" aria-hidden />
               <span className="scene-brand__name">GraphL</span>
               <span className="scene-brand__topic">{topicLabel}</span>
             </div>
