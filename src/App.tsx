@@ -5,7 +5,7 @@ import { RightPanel } from './components/RightPanel.tsx'
 import { buildPages, type ModuleManifest, type Page } from './content/module.ts'
 import { contentUrl, fetchManifest, fetchNotebook } from './content/client.ts'
 import { conceptById } from './content/catalog.ts'
-import { navigate, useRoute } from './router.ts'
+import { navigate, replaceRoute, useRoute } from './router.ts'
 import { Home } from './components/Home.tsx'
 
 // Narration is per-page: each slide wires its own clip via the manifest
@@ -15,6 +15,29 @@ import { Home } from './components/Home.tsx'
 // Remove the fallback once every section has its own `audio` in the manifest.
 const sceneAudioFallback: Record<string, string> = {
   'spark-execution': 'audio/spark-execution.wav',
+}
+
+// Panel preference persisted across refreshes (localStorage — a viewing pref, not
+// a shareable location). Width is clamped to the same floor the resize uses.
+const PANEL_OPEN_KEY = 'graphl-ux:panelOpen'
+const PANEL_WIDTH_KEY = 'graphl-ux:panelWidth'
+const DEFAULT_PANEL_WIDTH = 520
+
+function readPanelOpen(): boolean {
+  try {
+    return localStorage.getItem(PANEL_OPEN_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function readPanelWidth(): number {
+  try {
+    const w = Number(localStorage.getItem(PANEL_WIDTH_KEY))
+    return w >= 340 ? w : DEFAULT_PANEL_WIDTH
+  } catch {
+    return DEFAULT_PANEL_WIDTH
+  }
 }
 
 // Slice D: the manifest drives navigation. Each `##` section is a Page wired to a
@@ -27,20 +50,25 @@ export default function App() {
   const route = useRoute()
   const concept = conceptById(route.concept)
   const moduleId = route.module
+  const section = route.section
 
   const [pages, setPages] = useState<Page[]>([])
-  const [moduleMeta, setModuleMeta] = useState<ModuleManifest>()
   const [allModules, setAllModules] = useState<ModuleManifest[]>([])
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [error, setError] = useState<string>()
 
   const [pageIdx, setPageIdx] = useState(0)
-  const [panelOpen, setPanelOpen] = useState(false)
-  const [panelWidth, setPanelWidth] = useState(520)
+  // Panel open/width are a personal viewing preference (not a shareable location),
+  // so they persist in localStorage across refreshes rather than in the URL.
+  const [panelOpen, setPanelOpen] = useState(() => readPanelOpen())
+  const [panelWidth, setPanelWidth] = useState(() => readPanelWidth())
   const [pickerOpen, setPickerOpen] = useState(false)
 
   const audioRef = useRef<HTMLAudioElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+  // Mirror `playing` in a ref so the page-change effect can read the live play
+  // state without depending on it (else it would reset the clip on every toggle).
+  const playingRef = useRef(false)
   const [playing, setPlaying] = useState(false)
   const [progress, setProgress] = useState(0)
 
@@ -52,9 +80,10 @@ export default function App() {
     return () => clearTimeout(t)
   }, [])
 
-  // Load the selected concept's manifest + first module's notebook from THAT
-  // concept's content repo (catalog's `contentBaseUrl`). Re-runs when the concept
-  // changes; no concept selected (home) = nothing to fetch.
+  // Load the selected concept and flatten EVERY module into one continuous page
+  // list, so paging runs straight across module boundaries (end of module 1 → start
+  // of module 2) with no refetch. Re-runs only when the concept changes; switching
+  // modules is just a jump within this list (see the jump effect below).
   useEffect(() => {
     if (!concept) return
     let cancelled = false
@@ -63,14 +92,13 @@ export default function App() {
     void (async () => {
       try {
         const manifest = await fetchManifest(concept.contentBaseUrl)
-        const presentation =
-          (moduleId ? manifest.presentations.find((p) => p.id === moduleId) : undefined) ??
-          manifest.presentations[0]
-        const nb = await fetchNotebook(presentation.notebook, concept.contentBaseUrl)
+        const notebooks = await Promise.all(
+          manifest.presentations.map((p) => fetchNotebook(p.notebook, concept.contentBaseUrl)),
+        )
         if (cancelled) return
+        const flat = manifest.presentations.flatMap((p, i) => buildPages(notebooks[i], p))
         setAllModules(manifest.presentations)
-        setModuleMeta(presentation)
-        setPages(buildPages(nb, presentation))
+        setPages(flat)
         setStatus('ready')
       } catch (e) {
         if (cancelled) return
@@ -81,25 +109,49 @@ export default function App() {
     return () => {
       cancelled = true
     }
-  }, [concept, moduleId])
+  }, [concept])
+
+  // Restore position from the route after content loads (refresh / deep link):
+  // a `section` slug lands on that exact slide; a bare `module` lands on its first
+  // page. Manual paging syncs the URL silently (below), so this fires only on an
+  // explicit route change (☰ picker, Back/Forward, or a fresh refresh).
+  useEffect(() => {
+    if (pages.length === 0 || (!moduleId && !section)) return
+    let idx = -1
+    if (section) idx = pages.findIndex((p) => p.slug === section && (!moduleId || p.moduleId === moduleId))
+    if (idx < 0 && moduleId) idx = pages.findIndex((p) => p.moduleId === moduleId)
+    if (idx >= 0) setPageIdx(idx)
+  }, [moduleId, section, pages])
+
+  // Keep the address bar deep-linkable as the user pages: silently rewrite the URL
+  // to the current slide (concept/module/slug). `replaceRoute` uses replaceState so
+  // it neither fires `hashchange` (no effect loop) nor adds Back/Forward churn.
+  useEffect(() => {
+    if (pages.length === 0 || !concept) return
+    const p = pages[pageIdx]
+    if (p) replaceRoute(concept.id, p.moduleId, p.slug)
+  }, [pageIdx, pages, concept])
 
   // Drive the <audio> element from the play state.
   useEffect(() => {
+    playingRef.current = playing
     const a = audioRef.current
     if (!a) return
     if (playing) a.play().catch(() => setPlaying(false))
     else a.pause()
   }, [playing])
 
-  // Navigating resets playback (the clip belongs to a scene/section).
+  // Navigating to a new slide starts its clip from the top but PRESERVES play
+  // state: if narration was on, the next clip auto-plays; if paused, it stays
+  // paused. (Read `playing` via the ref so this fires only on a page change, not
+  // on every play/pause toggle.)
   useEffect(() => {
     const a = audioRef.current
-    if (a) {
-      a.pause()
-      a.currentTime = 0
-    }
-    setPlaying(false)
+    if (!a) return
+    a.currentTime = 0
     setProgress(0)
+    if (playingRef.current) a.play().catch(() => setPlaying(false))
+    else a.pause()
   }, [pageIdx])
 
   // Keyboard: ←/→ page through sections (horizontal scroll), Space toggles
@@ -116,6 +168,18 @@ export default function App() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [pages.length])
+
+  // Persist the panel preference so a refresh restores it (see read helpers below).
+  useEffect(() => {
+    try {
+      localStorage.setItem(PANEL_OPEN_KEY, panelOpen ? '1' : '0')
+    } catch { /* storage unavailable (private mode) — preference just won't persist */ }
+  }, [panelOpen])
+  useEffect(() => {
+    try {
+      localStorage.setItem(PANEL_WIDTH_KEY, String(panelWidth))
+    } catch { /* ignore */ }
+  }, [panelWidth])
 
   // Close the module picker when clicking outside the menu wrapper.
   useEffect(() => {
@@ -213,7 +277,7 @@ export default function App() {
                     {allModules.map((m) => (
                       <button
                         key={m.id}
-                        className={`scene-modulepicker__item${m.id === moduleMeta?.id ? ' scene-modulepicker__item--active' : ''}`}
+                        className={`scene-modulepicker__item${m.id === page.moduleId ? ' scene-modulepicker__item--active' : ''}`}
                         role="menuitem"
                         onClick={() => {
                           navigate(concept.id, m.id)
@@ -265,11 +329,11 @@ export default function App() {
             {/* module · section — the user's place in the hierarchy. (Concept now
                 lives in the top brand bar, so the old kicker line is dropped.) The
                 counter rides the section line (the thing it actually counts). */}
-            <h1>{moduleMeta?.title ?? scene.title}</h1>
+            <h1>{page.moduleTitle}</h1>
             <p className="scene-caption__section">
               {page.heading.replace(/`/g, '')}
               <span className="scene-caption__count">
-                {' '}· {pageIdx + 1}/{pages.length}
+                {' '}· {page.moduleIndex + 1}/{page.moduleCount}
               </span>
             </p>
           </div>
@@ -323,11 +387,8 @@ export default function App() {
         <RightPanel
           section={{ heading: page.heading, body: page.body }}
           index={pageIdx}
-          count={pages.length}
           headings={pages.map((p) => p.heading)}
           width={panelWidth}
-          onPrev={() => goto(pageIdx - 1)}
-          onNext={() => goto(pageIdx + 1)}
           onJump={goto}
           onClose={() => setPanelOpen(false)}
           onResizeStart={startResize}

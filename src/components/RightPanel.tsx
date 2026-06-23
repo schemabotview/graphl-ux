@@ -8,11 +8,8 @@ import './panel.css'
 interface RightPanelProps {
   section: Section
   index: number
-  count: number
   headings: string[]
   width: number
-  onPrev: () => void
-  onNext: () => void
   onJump: (index: number) => void
   onClose: () => void
   onResizeStart: (e: React.PointerEvent) => void
@@ -20,16 +17,14 @@ interface RightPanelProps {
 
 // The content panel for one section: heading + Markdown body (prose, bullets,
 // GFM tables, fenced code). Images are already stripped by the notebook parser.
-// Resizable via the left-edge handle. The N/M counter opens an overlay list of
-// all sections (the "contents" jump); ◀▶ step one at a time.
+// Resizable via the left-edge handle. Paging is owned by ←/→ and the mobile
+// tap-zones, so the panel has no stepper — just a top-right contents list (jump to
+// any slide) and a close button.
 export function RightPanel({
   section,
   index,
-  count,
   headings,
   width,
-  onPrev,
-  onNext,
   onJump,
   onClose,
   onResizeStart,
@@ -56,6 +51,28 @@ export function RightPanel({
       <div className="panel__resizer" onPointerDown={onResizeStart} />
       <header className="panel__head">
         <h2 className="panel__title">{section.heading.replace(/`/g, '')}</h2>
+        <div className="panel__head-actions">
+          <button
+            className="panel__headbtn"
+            onClick={() => setTocOpen((o) => !o)}
+            aria-expanded={tocOpen}
+            aria-label="All slides"
+          >
+            {/* Contents (bulleted-list) icon — distinct from the brand-bar ☰, which
+                switches modules. This jumps to any slide within the reading. */}
+            <svg viewBox="0 0 24 24" fill="none" width={18} height={18} aria-hidden>
+              <circle cx="5" cy="7" r="1.4" fill="currentColor" />
+              <circle cx="5" cy="12" r="1.4" fill="currentColor" />
+              <circle cx="5" cy="17" r="1.4" fill="currentColor" />
+              <line x1="9" y1="7" x2="19" y2="7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              <line x1="9" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              <line x1="9" y1="17" x2="19" y2="17" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </button>
+          <button className="panel__headbtn" onClick={onClose} aria-label="Close panel">
+            ✕
+          </button>
+        </div>
       </header>
       <article className="panel__body markdown">
         <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
@@ -88,25 +105,6 @@ export function RightPanel({
         </div>
       )}
 
-      <div className="panel__nav">
-        <button onClick={onPrev} disabled={index === 0} aria-label="Previous section">
-          ◀
-        </button>
-        <button
-          className="panel__count"
-          onClick={() => setTocOpen((o) => !o)}
-          aria-expanded={tocOpen}
-          aria-label="Show all sections"
-        >
-          {index + 1}/{count}
-        </button>
-        <button onClick={onNext} disabled={index === count - 1} aria-label="Next section">
-          ▶
-        </button>
-        <button className="panel__close" onClick={onClose} aria-label="Close panel">
-          ✕
-        </button>
-      </div>
     </aside>
   )
 }
