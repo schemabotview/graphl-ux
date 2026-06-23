@@ -4,6 +4,9 @@ import { scenes } from './scenes/index.ts'
 import { RightPanel } from './components/RightPanel.tsx'
 import { buildPages, type ModuleManifest, type Page } from './content/module.ts'
 import { contentUrl, fetchManifest, fetchNotebook } from './content/client.ts'
+import { conceptById } from './content/catalog.ts'
+import { navigate, useRoute } from './router.ts'
+import { Home } from './components/Home.tsx'
 
 // Narration is per-page: each slide wires its own clip via the manifest
 // (`page.audio`, a content-repo-relative path resolved against
@@ -18,6 +21,12 @@ const sceneAudioFallback: Record<string, string> = {
 // scene; ◀▶ (panel stepper or arrow keys) swaps the scene, the panel content, the
 // caption, and the audio together.
 export default function App() {
+  // The hash route selects the concept; `conceptById` resolves it to a catalog
+  // entry (id + label + accent + content base URL). An empty/unknown route =
+  // no concept = the home/catalog view.
+  const route = useRoute()
+  const concept = conceptById(route.concept)
+
   const [pages, setPages] = useState<Page[]>([])
   const [moduleMeta, setModuleMeta] = useState<ModuleManifest>()
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
@@ -39,14 +48,19 @@ export default function App() {
     return () => clearTimeout(t)
   }, [])
 
-  // Load the manifest + first module's notebook from the content repo on mount.
+  // Load the selected concept's manifest + first module's notebook from THAT
+  // concept's content repo (catalog's `contentBaseUrl`). Re-runs when the concept
+  // changes; no concept selected (home) = nothing to fetch.
   useEffect(() => {
+    if (!concept) return
     let cancelled = false
+    setStatus('loading')
+    setPageIdx(0)
     void (async () => {
       try {
-        const manifest = await fetchManifest()
+        const manifest = await fetchManifest(concept.contentBaseUrl)
         const module = manifest.presentations[0]
-        const nb = await fetchNotebook(module.notebook)
+        const nb = await fetchNotebook(module.notebook, concept.contentBaseUrl)
         if (cancelled) return
         setModuleMeta(module)
         setPages(buildPages(nb, module))
@@ -60,7 +74,7 @@ export default function App() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [concept])
 
   // Drive the <audio> element from the play state.
   useEffect(() => {
@@ -81,11 +95,16 @@ export default function App() {
     setProgress(0)
   }, [pageIdx])
 
-  // Arrow keys page through sections whether or not the panel is open.
+  // Keyboard: ←/→ page through sections (horizontal scroll), Space toggles
+  // play/pause — both work whether or not the panel is open.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight') setPageIdx((i) => Math.min(pages.length - 1, i + 1))
       else if (e.key === 'ArrowLeft') setPageIdx((i) => Math.max(0, i - 1))
+      else if (e.key === ' ' || e.code === 'Space') {
+        e.preventDefault() // don't scroll the page (and don't double-fire a focused button)
+        setPlaying((p) => !p)
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -94,6 +113,10 @@ export default function App() {
   // Derive the active page + scene once content has loaded.
   const page = pages[pageIdx]
   const scene = page ? (scenes[page.sceneId] ?? Object.values(scenes)[0]) : undefined
+
+  // Home / concept catalog (no concept in the route). Returning here also narrows
+  // `concept` to defined for the content view below.
+  if (!concept) return <Home />
 
   if (status === 'loading') return <div className="app-status">Loading content…</div>
   if (status === 'error')
@@ -105,9 +128,8 @@ export default function App() {
     )
   if (!page || !scene) return <div className="app-status">No content.</div>
 
-  const topicLabel = scene.topic.replace(/-/g, ' ').toUpperCase()
   const audioPath = page.audio ?? sceneAudioFallback[page.sceneId]
-  const audioUrl = audioPath ? contentUrl(audioPath) : undefined
+  const audioUrl = audioPath ? contentUrl(audioPath, concept.contentBaseUrl) : undefined
 
   const goto = (next: number) => setPageIdx(Math.min(pages.length - 1, Math.max(0, next)))
 
@@ -141,6 +163,24 @@ export default function App() {
         <div className="scene-frame">
           <SceneViewer key={page.sceneId} scene={scene} />
 
+          {/* Top brand bar: glyph (→ home/concept catalog) + the current concept.
+              Floats over the scene; only the glyph button takes pointer events so
+              the canvas/tap-zones underneath stay interactive. (☰ menu — module +
+              concept picker — comes with the module-switch slice.) */}
+          <div className="scene-brandbar">
+            <button
+              className="scene-iconbtn scene-brandbar__home"
+              onClick={(e) => {
+                e.currentTarget.blur()
+                navigate('')
+              }}
+              aria-label="Home — all concepts"
+            >
+              <img src="/brand.svg" alt="" width={20} height={20} />
+            </button>
+            <span className="scene-brandbar__concept">{concept.label}</span>
+          </div>
+
           {/* Story-style tap zones (mobile only — desktop pages with arrow keys):
               left third = prev, right third = next, upper area so the bottom
               caption/controls stay tappable. Rendered only when a step exists,
@@ -164,10 +204,19 @@ export default function App() {
             </button>
           )}
 
+          {/* Center tap zone (mobile only): tap the middle of the scene to
+              play/pause, leaving the prev/next zones on the left/right thirds. */}
+          <button
+            className="scene-tapzone scene-tapzone--play"
+            onClick={() => setPlaying((p) => !p)}
+            disabled={!audioUrl}
+            aria-label={playing ? 'Pause' : 'Play'}
+          />
+
           <div className="scene-caption">
-            {/* concept · module · section — the user's place in the hierarchy.
-                The counter rides the section line (the thing it actually counts). */}
-            <span className="scene-caption__kicker">{topicLabel}</span>
+            {/* module · section — the user's place in the hierarchy. (Concept now
+                lives in the top brand bar, so the old kicker line is dropped.) The
+                counter rides the section line (the thing it actually counts). */}
             <h1>{moduleMeta?.title ?? scene.title}</h1>
             <p className="scene-caption__section">
               {page.heading.replace(/`/g, '')}
@@ -180,7 +229,10 @@ export default function App() {
           <div className="scene-controls">
             <button
               className="scene-playstate"
-              onClick={() => setPlaying((p) => !p)}
+              onClick={(e) => {
+                e.currentTarget.blur() // don't retain focus (Space drives play/pause globally)
+                setPlaying((p) => !p)
+              }}
               disabled={!audioUrl}
               aria-label={playing ? 'Pause' : 'Play'}
             >
@@ -188,7 +240,10 @@ export default function App() {
             </button>
             <button
               className="scene-iconbtn"
-              onClick={() => setPanelOpen((o) => !o)}
+              onClick={(e) => {
+                e.currentTarget.blur() // don't retain focus after toggling
+                setPanelOpen((o) => !o)
+              }}
               aria-pressed={panelOpen}
               aria-label="Toggle content panel"
             >

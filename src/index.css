@@ -92,6 +92,34 @@ body {
 
 /* Top brand bar: logo · wordmark · topic on the left, menu button on the right.
    Floats over the scene; only the logo/menu take pointer events. */
+.scene-brandbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
+  /* Pass taps through to the scene/tap-zones underneath; only the home button
+     (below) opts back in. */
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(22, 24, 29, 0.9), rgba(22, 24, 29, 0));
+}
+.scene-brandbar__home {
+  pointer-events: auto;
+}
+.scene-brandbar__home img {
+  display: block;
+}
+.scene-brandbar__concept {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: rgba(244, 245, 247, 0.92);
+}
+
 .scene-iconbtn {
   display: grid;
   place-items: center;
@@ -113,6 +141,15 @@ body {
 .scene-iconbtn:active {
   transform: scale(0.92);
 }
+/* No lingering focus ring on the control buttons — Space/tap drive play/pause
+   and the panel toggle is a momentary action, so a sticky focus state reads as a
+   stuck "on" button. */
+.scene-iconbtn:focus,
+.scene-iconbtn:focus-visible,
+.scene-playstate:focus,
+.scene-playstate:focus-visible {
+  outline: none;
+}
 
 /* Reel-style caption: topic kicker + title + subtitle, bottom-left over a soft
    scrim. Right pad leaves room for the play/pause button. */
@@ -125,15 +162,6 @@ body {
   text-align: left;
   pointer-events: none;
   background: linear-gradient(to top, rgba(22, 24, 29, 0.92), rgba(22, 24, 29, 0));
-}
-
-.scene-caption__kicker {
-  display: inline-block;
-  margin-bottom: 6px;
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #9aa3b2;
 }
 
 .scene-caption h1 {
@@ -181,6 +209,16 @@ body {
 .scene-tapzone--next {
   right: 0;
   justify-content: flex-end;
+}
+/* Center column between prev/next: tap to play/pause (mobile). */
+.scene-tapzone--play {
+  left: 30%;
+  right: 30%;
+  width: auto;
+  justify-content: center;
+}
+.scene-tapzone--play:disabled {
+  display: none;
 }
 .scene-tapzone__hint {
   margin: 0 14px;

@@ -1,0 +1,93 @@
+/* Concept catalog (home). Calm per DESIGN.md: flat neutral bg, color lives in a
+   muted accent FILL mixed over the dark base — no glow, no box-shadow, no blur,
+   no gradient text. The accent (engine role hue) comes from catalog.ts per card. */
+
+.home {
+  height: 100%;
+  overflow-y: auto;
+  background: var(--bg);
+  padding: 64px 20px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.home__hero {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.home__glyph {
+  opacity: 0.95;
+}
+
+.home__brand {
+  margin: 12px 0 0;
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #f1f2f4; /* flat, not the old neon gradient wordmark */
+}
+
+.home__tagline {
+  margin: 8px 0 0;
+  font-size: 15px;
+  color: #9aa3b2;
+}
+
+.home__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 640px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+@media (min-width: 560px) {
+  .home__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Card: subtle accent fill over the base + a solid accent left edge (a filled
+   block, not a glowing outline). Hover just deepens the fill — no shadow/glow. */
+.home__card {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 20px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--bg));
+  border-left: 3px solid var(--accent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg));
+  color: #f1f2f4;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+.home__card:hover {
+  background: color-mix(in srgb, var(--accent) 20%, var(--bg));
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--bg));
+  border-left-color: var(--accent);
+}
+.home__card:active {
+  transform: scale(0.98);
+}
+.home__card:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 60%, var(--bg));
+  outline-offset: 2px;
+}
+
+.home__card-label {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.home__card-blurb {
+  font-size: 13px;
+  color: #9aa3b2;
+}
