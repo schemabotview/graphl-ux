@@ -114,10 +114,12 @@ Carried over from graphl-mobile / graphl-ui (the cleaner of the engines):
 ## Structure (as built)
 
 ```
-graphl-ux/
-  apache-spark-content/     # the Spark content repo (see its README + DESIGN + MODULES)
+~/Products/  (two separate repos, siblings)
+  apache-spark-content/     # SEPARATE repo — fetched at runtime via raw GitHub (see its README)
     manifest.json           #   wires sections → scene/spine/audio per module
-    notebooks/ scenes/ tts/ audio/
+    notebooks/ tts/ audio/  #   scenes are NOT served from here (they live in graphl-ux)
+
+graphl-ux/                  # this repo — the render engine; ships no content
   src/
     engine/                 # the visual engine
       types.ts              #   SceneSpec authoring contract
@@ -131,6 +133,7 @@ graphl-ux/
     content/
       notebook.ts           #   parseNotebook: .ipynb → Section[] (strips images)
       module.ts             #   buildPages: sections + manifest overlay → Page[]
+      client.ts             #   fetch manifest/notebook/audio from the content repo (VITE_CONTENT_BASE_URL)
     scenes/
       index.ts              #   scene registry (id → SceneSpec)
       spark-cluster.ts, spark-execution.ts
@@ -167,13 +170,15 @@ Apache Spark **module 01** is wired end-to-end (build target: mobile reels + Ude
   stripped; hidden-by-default, toggleable, resizable sidebar; mobile overlay.
 - **Navigation is manifest-driven**: ◀▶ / arrow keys swap scene + panel + caption +
   audio per section (21/21 sections matched to scenes).
+- **Content is fetched at runtime** from the separate `apache-spark-content` repo
+  over raw GitHub (`content/client.ts`, base via `VITE_CONTENT_BASE_URL`). The app
+  bundles only the render engine + scenes — `dist` stays content-free.
 
 **Interim shortcuts (flagged in code, to replace):**
-1. The notebook + audio are **bundled** via direct import. The proper path is the
-   runtime content client fetching from the served content repo (keeps `dist` tiny).
-2. **Audio is per-scene**, not per-section — needs per-section TTS clips generated.
-3. Scenes `aqe` and `spark-connect` aren't built; those sections fall back to
+1. **Audio is per-scene**, not per-section — needs per-section TTS clips generated.
+2. Scenes `aqe` and `spark-connect` aren't built; those sections fall back to
    `defaultScene` (`spark-cluster`).
 
-**Likely next:** build `aqe`/`spark-connect` scenes · the real content loader (stop
-bundling) · the ☰ sections drawer · feed mode · the optional amber narration spotlight.
+**Likely next:** build `aqe`/`spark-connect` scenes · the ☰ sections drawer · feed
+mode · per-section audio · the optional amber narration spotlight · CDN (jsDelivr)
+for content (swap `VITE_CONTENT_BASE_URL`).
