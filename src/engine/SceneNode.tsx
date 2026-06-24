@@ -13,7 +13,11 @@ function fitFontPx(label: string, width: number, height: number, kind: NodeKind)
   const isContainer = kind === 'container'
   // Per-em character width: monospace term chips are wide; uppercase + letter-spaced
   // container titles wider still; sans symbols a touch narrower.
-  const charEm = isContainer ? 0.72 : kind === 'term' ? 0.58 : 0.58
+  // Per-em char width estimate. Slightly CONSERVATIVE for proportional sans so a
+  // width-bound long word (repartition, sortMergeJoin) fits instead of fitting a
+  // font a hair too big and clipping its tail. Cap-bound chips (e.g. SparkSession)
+  // are unaffected — they hit `max` below, not this width bound.
+  const charEm = isContainer ? 0.72 : kind === 'term' ? 0.64 : 0.58
   // Leaf chips keep a small centering margin — but a tight pad so long single
   // words (e.g. createGlobalTempView) shrink to FIT a narrow column instead of
   // clipping at the font floor. Must track the chip's CSS horizontal padding.
