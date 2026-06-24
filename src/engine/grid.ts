@@ -11,9 +11,10 @@ export interface Box {
 }
 
 // Fraction of a container's height reserved at the top for its title, capped so
-// it never dominates a tall box. Children lay out in the remaining body.
-const TITLE_BAND = 0.28
-const TITLE_CAP = 46
+// it never dominates a tall box. Children lay out in the remaining body. The
+// title is a compact top-left tag (badge + label), so this stays small.
+const TITLE_BAND = 0.22
+const TITLE_CAP = 30
 
 /**
  * Resolve the scene tree into an id -> absolute Box map (top-left origin). A node

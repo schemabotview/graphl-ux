@@ -14,7 +14,9 @@ function fitFontPx(label: string, width: number, height: number, kind: NodeKind)
   // Per-em character width: monospace term chips are wide; uppercase + letter-spaced
   // container titles wider still; sans symbols a touch narrower.
   const charEm = isContainer ? 0.72 : kind === 'term' ? 0.6 : 0.58
-  const padX = isContainer ? 16 : 16
+  // Leaf chips get extra horizontal padding so a fitted label leaves a visible
+  // centering margin on both sides instead of running edge-to-edge.
+  const padX = isContainer ? 16 : kind === 'term' ? 24 : 18
   const words = label.split(/\s+/).filter(Boolean)
   const longest = Math.max(1, ...words.map((w) => w.length))
   const byWidth = Math.max(width - padX, 8) / (longest * charEm)
@@ -25,6 +27,12 @@ function fitFontPx(label: string, width: number, height: number, kind: NodeKind)
   const byHeight = Math.max(bandH, 8) / (lines * 1.2)
   const max = isContainer ? 14 : kind === 'symbol' ? 22 : 16
   return Math.max(6, Math.min(byWidth, byHeight, max))
+}
+
+/** A short corner badge for a container title (e.g. "Setup" → "Set"). */
+function abbr(label: string): string {
+  const a = label.replace(/[^a-zA-Z0-9]/g, '')
+  return a ? a[0].toUpperCase() + a.slice(1, 3).toLowerCase() : '•'
 }
 
 export interface SceneNodeData {
@@ -60,7 +68,15 @@ export function SceneNode({ data }: NodeProps) {
       }}
     >
       <Handle type="target" position={targetPos} className="scene-handle" isConnectable={false} />
-      {d.kind !== 'group' && (
+      {d.kind === 'container' && (
+        // Title pinned top-left as a compact badge + label, so it reads as a tag
+        // on the panel rather than a centered header eating the body space.
+        <span className="scene-node__title">
+          <span className="scene-node__badge">{abbr(d.label)}</span>
+          <span className="scene-node__label">{d.label}</span>
+        </span>
+      )}
+      {(d.kind === 'symbol' || d.kind === 'term') && (
         <span
           className="scene-node__label"
           style={{ fontSize: fitFontPx(d.label, d.width, d.height, d.kind) }}

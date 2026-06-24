@@ -3,6 +3,7 @@ import { sparkExecution } from './spark-execution.ts'
 import { sparkRddApi } from './spark-rdd-api.ts'
 import { sparkApiStack } from './apache-spark-api-stack.ts'
 import { sparkArchitecture } from './spark-architecture.ts'
+import { sparkBatchApi } from './spark-batch-api.ts'
 
 // Scene registry: the manifest references scenes by id; this maps id → SceneSpec.
 // Modules run on one dense scene each (01 = spark-execution, 02 = spark-rdd-api);
@@ -13,4 +14,5 @@ export const scenes: Record<string, SceneSpec> = {
   'spark-rdd-api': sparkRddApi,
   'apache-spark-api-stack': sparkApiStack,
   'spark-architecture': sparkArchitecture,
+  'spark-batch-api': sparkBatchApi,
 }

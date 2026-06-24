@@ -197,6 +197,28 @@ export default function App() {
   const page = pages[pageIdx]
   const scene = page ? (scenes[page.sceneId] ?? Object.values(scenes)[0]) : undefined
 
+  // Dev scene preview: `#/preview/<sceneId>` renders any registered scene
+  // standalone, with no content/manifest wiring — for authoring a scene before a
+  // module points at it. An optional third segment frames a region the way a real
+  // section will, e.g. `#/preview/spark-batch-api/b-rdd` — so chip legibility can
+  // be judged at the camera zoom a learner actually sees, not the whole-wall fit.
+  // Not linked from the UI; type the hash directly.
+  if (route.concept === 'preview' && scenes[route.module]) {
+    return (
+      <div className="app-split">
+        <div className="scene-pane">
+          <div className="scene-frame">
+            <SceneViewer
+              key={route.module}
+              scene={scenes[route.module]}
+              focus={route.section || undefined}
+            />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // Home / concept catalog (no concept in the route). Returning here also narrows
   // `concept` to defined for the content view below.
   if (!concept) return <Home />

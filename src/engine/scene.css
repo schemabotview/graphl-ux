@@ -49,12 +49,33 @@
 }
 
 /* 'container' nodes are subtle dark panels that group children drawn on top.
-   The title pins to the top so the body is free for the children. */
+   The title pins to the TOP-LEFT (badge + label) so the body is free. */
 .scene-node--container {
   justify-content: flex-start;
-  padding: 10px 12px;
+  align-items: flex-start;
+  padding: 8px 10px;
   background: color-mix(in srgb, var(--node-color) 12%, var(--base));
   border-color: color-mix(in srgb, var(--node-color) 28%, var(--base));
+}
+
+/* Title row: a small colored tag + the label, top-left. */
+.scene-node__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.scene-node__badge {
+  flex: none;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 3px 4px;
+  border-radius: 4px;
+  color: #f1f2f4;
+  background: color-mix(in srgb, var(--node-color) 55%, var(--base));
 }
 
 /* 'group' nodes are invisible containers — only sub-arrange their children. */
@@ -65,9 +86,13 @@
 }
 
 .scene-node--container .scene-node__label {
-  font-size: 14px;
-  letter-spacing: 0.05em;
+  font-size: 13px;
+  width: auto;
+  text-align: left;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   color: color-mix(in srgb, var(--node-color) 70%, #cfd4dc);
 }
 
@@ -76,6 +101,11 @@
   font-weight: 500;
   line-height: 1.15;
   color: #f1f2f4;
+  /* Fill the node width and center explicitly (don't rely on inherited
+     text-align / shrink-wrap) so every label is centered, and an overflowing
+     word clips evenly from the middle rather than reading as left-aligned. */
+  width: 100%;
+  text-align: center;
   max-width: 100%;
   /* Wrap only at spaces — the font is auto-fit (SceneNode.fitFontPx) so words stay
      whole; never break mid-word (that was the garble). overflow:hidden on the node

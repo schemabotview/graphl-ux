@@ -11,6 +11,10 @@ export const PURPLE = '#b98bff' // API / abstraction layer — DataFrame, lazy p
 export const TEAL = '#3fd0d6' // Transformations / flow — movement between stages
 export const RED = '#ff5d6c' // Wide op / danger / gotcha — shuffle, exam traps
 export const GRAY = '#9aa3b2' // Inert / context — supporting, non-focal nodes
+// Secondary / config / a distinct API lane (e.g. pandas-on-Spark). A calm gold —
+// deliberately separated from the bright SPOTLIGHT amber so a yellow node and a
+// narration-lit node never read the same.
+export const YELLOW = '#d9b84a'
 
 /** Reserved for the ONE node the narration is on right now (+ animated edge). */
 export const SPOTLIGHT = '#ffc24b'
