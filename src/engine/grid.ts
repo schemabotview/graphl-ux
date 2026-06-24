@@ -10,11 +10,10 @@ export interface Box {
   h: number
 }
 
-// Fraction of a container's height reserved at the top for its title, capped so
-// it never dominates a tall box. Children lay out in the remaining body. The
-// title is a compact top-left tag (badge + label), so this stays small.
-const TITLE_BAND = 0.22
-const TITLE_CAP = 30
+// NodeMap-style title placement: the container title is a compact tag that
+// STRADDLES the top-left border (see SceneNode/scene.css), so it costs the body
+// no vertical space — children fill the container's full box. Each child grid
+// carries its own top padding, which leaves the strip the title sits in.
 
 /**
  * Resolve the scene tree into an id -> absolute Box map (top-left origin). A node
@@ -59,9 +58,8 @@ function layoutLevel(
     out[node.id] = nb
 
     if (node.children?.length && node.layout) {
-      const title = node.kind === 'container' ? Math.min(nb.h * TITLE_BAND, TITLE_CAP) : 0
-      const inner: Box = { x: nb.x, y: nb.y + title, w: nb.w, h: nb.h - title }
-      layoutLevel(node.children, node.layout, inner, out)
+      // Children fill the full box; the title rides the top border (no reserve).
+      layoutLevel(node.children, node.layout, nb, out)
     }
   }
 }

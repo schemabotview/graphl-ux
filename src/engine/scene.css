@@ -45,37 +45,38 @@
    Regular(400), which is why mono chips ignored the thin weight set on the label. */
 .scene-node--term {
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Tight chip padding so the fitted label gets the chip's width — long single
+     words shrink to fit instead of clipping. Tracks padX in SceneNode.fitFontPx. */
+  padding: 4px 7px;
   background: color-mix(in srgb, var(--node-color) 34%, var(--base));
 }
 
 /* 'container' nodes are subtle dark panels that group children drawn on top.
-   The title pins to the TOP-LEFT (badge + label) so the body is free. */
+   The title rides the TOP-LEFT BORDER (NodeMap-style) so the body is fully free
+   for children. overflow:visible lets the title's top half straddle the border
+   (the node has no DOM children of its own — children are separate RF nodes). */
 .scene-node--container {
+  position: relative;
   justify-content: flex-start;
   align-items: flex-start;
-  padding: 8px 10px;
+  padding: 0;
+  overflow: visible;
   background: color-mix(in srgb, var(--node-color) 12%, var(--base));
   border-color: color-mix(in srgb, var(--node-color) 28%, var(--base));
 }
 
-/* Title row: a small colored tag + the label, top-left. */
+/* Title tag: a small colored badge + label, straddling the top-left border. Its
+   background masks the border line behind it (matches the container fill). */
 .scene-node__title {
+  position: absolute;
+  top: 0;
+  left: 9px;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
-  gap: 6px;
-  max-width: 100%;
-  overflow: hidden;
-}
-
-.scene-node__badge {
-  flex: none;
-  font-size: 9px;
-  font-weight: 600;
-  line-height: 1;
-  padding: 3px 4px;
-  border-radius: 4px;
-  color: #f1f2f4;
-  background: color-mix(in srgb, var(--node-color) 55%, var(--base));
+  max-width: none;
+  padding: 0 4px;
+  background: color-mix(in srgb, var(--node-color) 12%, var(--base));
 }
 
 /* 'group' nodes are invisible containers — only sub-arrange their children. */
@@ -88,11 +89,11 @@
 .scene-node--container .scene-node__label {
   font-size: 13px;
   width: auto;
+  max-width: none;
   text-align: left;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   white-space: nowrap;
-  text-overflow: ellipsis;
   color: color-mix(in srgb, var(--node-color) 70%, #cfd4dc);
 }
 
