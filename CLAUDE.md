@@ -52,12 +52,36 @@ These were settled by discussion. Don't relitigate without the owner.
   only real loss is 3D z-depth (mostly novelty for a learning tool); React Flow
   covers nesting (parent nodes + `extent`) and the zoom-based **dot-collapse LOD**
   (drive it off the live viewport zoom instead of per-frame pixel measurement).
-- **One canonical layout: portrait `800×1200` SceneSpec**, authored once, used on
-  every platform. Rationale: on desktop the content panel takes ~half the width,
-  so the canvas region is portrait-ish anyway; `fitView` scales the same scene to
-  any device with no distortion. Panel-open on desktop tiles a 16:9 recording
-  frame nicely (good for Udemy); panel-closed on wide screens pillarboxes (cosmetic,
-  like Reels on desktop web — fill the margins with chrome).
+- **One canonical layout: landscape `16:9` big map** (SUPERSEDES the earlier
+  portrait `800×1200` decision — settled 2026-06-24). One dense spatial map per
+  concept is the **single source of truth**, authored once at 16:9. Rationale: the
+  spatial topology (Worker A *beside* Worker B, memory *nested in* heap, storage
+  *under* the lakehouse) **is** the lesson — one retained big picture beats N small
+  fragments the learner can't hold in memory. 16:9 = the Udemy/HD recording frame,
+  so the primary (desktop video) target needs no re-fit.
+  - **The phone is a viewport, not a smaller canvas.** A 16:9 map can't legibly
+    `fitView` into 9:16, and reflowing nodes into a portrait column destroys the
+    spatial model. So on mobile we **never show the whole map shrunk** — the camera
+    frames one subsystem at a time (see the camera-focus spine below); pinch-out /
+    a button returns the whole map with "you are here" lit. Rotating to landscape is
+    a fallback, not the mechanism — at ~700px the abbreviated labels aren't readable,
+    so rotation alone gives a silhouette, not the model.
+  - **Panel-open keeps the canvas at 16:9.** On desktop the canvas box shrinks as the
+    right panel opens but holds 16:9 (pillarbox the spare space); panel-**closed** =
+    clean full-frame 16:9 for recording. On **mobile the map and the content panel are
+    a toggle** (each full-screen, tap to swap) — NOT side-by-side and NOT a shrunk map
+    behind text. Same show/hide mechanism as desktop, different layout.
+- **Camera-focus spine (how a linear walkthrough rides one big map).** Each section
+  carries an optional **`focus`** target (node id / region) alongside the existing
+  **`highlight`** (spotlight + dim the rest). Paging moves the camera to that region:
+  - **Desktop video:** pan/zoom over the master map (Prezi/Ken-Burns) to the narrated
+    subsystem — more watchable than a static 50-node wall, and it reinforces the one
+    mental model.
+  - **Mobile:** zoom hard to the focused subsystem (legible at full size); pinch-out =
+    the whole map.
+  This is the *merge* of the two source views: the dense map = the territory, the paged
+  slides = a camera path over it. Reuses today's spine + `highlight` + audio
+  auto-advance; `focus` is one added field on `SectionOverlay` (`content/module.ts`).
 - **Two interaction modes, toggled (defaulted by device, user can switch):**
   - **Feed mode** — one scene per viewport, narration autoplay, panel as overlay
     caption. Mobile default. Paging is **two-axis** (see Navigation model below):
@@ -72,8 +96,10 @@ These were settled by discussion. Don't relitigate without the owner.
   most mature of the three). The manifest only *wires* scene + highlights + audio
   per section; the notebook holds the prose/code. Audio/tts live in per-topic
   content repos fetched at runtime (keeps the app bundle tiny).
-- **Authoring caveat:** strongly left→right pipeline scenes get cramped in a portrait
-  canvas — author wide flows to **wrap/stack** rather than one long horizontal line.
+- **Authoring caveat:** the big map is wide (16:9), so spread subsystems horizontally
+  and use nesting for depth; the constraint is now **vertical** — tall pipeline scenes
+  get cramped, so let deep flows breathe across the width rather than stacking. (The
+  portrait-era "wrap a wide flow to stack" caveat no longer applies.)
 - **Visual style: calm filled blocks, NOT neon.** Color lives in a muted *fill*
   (role hue ~30% over a dark base), not a glowing outline — no `box-shadow`,
   no backdrop-blur, no dotted grid. Flat neutral bg `#16181d`. Edges are plain
@@ -81,7 +107,8 @@ These were settled by discussion. Don't relitigate without the owner.
   (optional) narration spotlight. Semantic role colors are memory cues (driver=blue,
   executors=green, storage=orange, …). **Full spec: `apache-spark-content/DESIGN.md`** —
   read it before restyling. (We explicitly moved *off* the old neon look.)
-- **Reel chrome (the shell around every scene):** a 2:3 portrait frame with a top
+- **Reel chrome (the shell around every scene):** a frame wrapping the **16:9 map**
+  (canvas pillarboxed within the device viewport) with a top
   **brand bar** (logo → home + the current **concept** label; ☰ menu still TODO), a
   bottom-left **caption**, a bottom-right **play/pause + content-panel toggle**, and a
   **progress line pinned to the bottom edge** (zero layout cost). Modeled on

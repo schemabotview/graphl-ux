@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   ReactFlow,
   MarkerType,
@@ -8,7 +8,7 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import type { SceneNodeSpec, SceneSpec } from './types.ts'
-import { resolveGrid } from './grid.ts'
+import { resolveGrid, type Box } from './grid.ts'
 import { GRAY, EDGE } from './colors.ts'
 import { SceneNode, type SceneNodeData } from './SceneNode.tsx'
 import { FlowEdge } from './FlowEdge.tsx'
@@ -50,12 +50,24 @@ function expandHighlight(nodes: SceneNodeSpec[], highlight?: string[]): Set<stri
   return lit
 }
 
-export function SceneViewer({ scene, highlight }: { scene: SceneSpec; highlight?: string[] }) {
+export function SceneViewer({
+  scene,
+  highlight,
+  focus,
+}: {
+  scene: SceneSpec
+  highlight?: string[]
+  focus?: string | string[]
+}) {
   const direction = scene.grid.cols > scene.grid.rows ? 'horizontal' : 'vertical'
   const highlightKey = highlight?.join(',') ?? ''
+  const focusIds = useMemo(() => (Array.isArray(focus) ? focus : focus ? [focus] : []), [focus])
+
+  // Resolved geometry, shared by node placement AND the camera (so framing a
+  // focus region reuses the exact boxes React Flow renders).
+  const boxes = useMemo(() => resolveGrid(scene.nodes, scene.grid, CANVAS), [scene])
 
   const nodes = useMemo<Node<SceneNodeData>[]>(() => {
-    const boxes = resolveGrid(scene.nodes, scene.grid, CANVAS)
     const flat = flattenNodes(scene.nodes)
     const lit = expandHighlight(scene.nodes, highlight)
     return flat.map((n) => {
@@ -97,18 +109,45 @@ export function SceneViewer({ scene, highlight }: { scene: SceneSpec; highlight?
     [scene],
   )
 
-  // Refit when the scene's box changes (panel toggled / resized, window resize).
   const instRef = useRef<ReactFlowInstance<Node<SceneNodeData>, Edge> | null>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
+
+  // The camera: frame the union box of the focused node(s); with no focus, fit the
+  // whole scene. One helper drives every trigger (section change, init, resize) so
+  // a refit always respects the current focus.
+  const applyCamera = useCallback(() => {
+    const inst = instRef.current
+    if (!inst) return
+    const framed = focusIds.map((id) => boxes[id]).filter(Boolean) as Box[]
+    if (framed.length) {
+      const minX = Math.min(...framed.map((b) => b.x))
+      const minY = Math.min(...framed.map((b) => b.y))
+      const maxX = Math.max(...framed.map((b) => b.x + b.w))
+      const maxY = Math.max(...framed.map((b) => b.y + b.h))
+      inst.fitBounds(
+        { x: minX, y: minY, width: maxX - minX, height: maxY - minY },
+        { padding: 0.18, duration: 500 },
+      )
+    } else {
+      inst.fitView({ padding: 0.1, duration: 500 })
+    }
+  }, [boxes, focusIds])
+
+  // Re-aim the camera when the focus changes. In-module section steps reuse the same
+  // scene (no remount), so this effect — not mount — is what pans between subsystems.
+  useEffect(() => {
+    const id = requestAnimationFrame(applyCamera)
+    return () => cancelAnimationFrame(id)
+  }, [applyCamera])
+
+  // Refit when the scene's box changes (panel toggled / resized, window resize).
   useEffect(() => {
     const el = wrapRef.current
     if (!el) return
-    const ro = new ResizeObserver(() => {
-      requestAnimationFrame(() => instRef.current?.fitView({ padding: 0.1 }))
-    })
+    const ro = new ResizeObserver(() => requestAnimationFrame(applyCamera))
     ro.observe(el)
     return () => ro.disconnect()
-  }, [])
+  }, [applyCamera])
 
   return (
     <div ref={wrapRef} className="scene-flow">
@@ -119,6 +158,7 @@ export function SceneViewer({ scene, highlight }: { scene: SceneSpec; highlight?
         edgeTypes={edgeTypes}
         onInit={(i) => {
           instRef.current = i
+          applyCamera()
         }}
         fitView
         fitViewOptions={{ padding: 0.1 }}
