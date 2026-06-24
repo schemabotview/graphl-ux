@@ -41,9 +41,10 @@ export const concepts: Concept[] = [
     label: 'Apache Spark',
     accent: ORANGE,
     blurb: 'Distributed batch & stream processing',
-    // TEMP (B3 view, local-only): local CORS content server. REVERT after.
-    contentBaseUrl: 'http://localhost:8080',
-  },
+    // TEMP (local preview, unpushed manifest): local CORS content server. REVERT after.
+    // contentBaseUrl: 'http://localhost:8080',
+    contentBaseUrl: 'https://raw.githubusercontent.com/schemabotview/apache-spark-content/main'
+},
 ]
 
 /** Look up a concept by id (hash slug). */

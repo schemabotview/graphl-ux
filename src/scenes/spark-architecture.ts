@@ -240,7 +240,7 @@ export const sparkArchitecture: SceneSpec = {
   title: 'Spark Architecture',
   subtitle: 'The whole system — driver, cluster, workers, lakehouse',
   // 16:9 canvas so the wide architecture grid (~27×15) renders with square cells.
-  canvas: { width: 1424, height: 800 },
+  canvas: { width: 1424, height: 960 },
   grid: { cols: 1, rows: 1, gap: 0, padding: 0.05 },
   nodes: [architecture],
   edges: [
