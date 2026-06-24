@@ -17,7 +17,7 @@ export const SPOTLIGHT = '#ffc24b'
 
 /** Surfaces: flat neutral dark, no blue tint, no glow. */
 export const BG = '#252525'
-export const CODE_BG = '#0d1117'
+export const CODE_BG = '#282c34'
 
 /** Edges are calm and uniform — color semantics live in the nodes, not arrows. */
 export const EDGE = '#5b6270'
