@@ -2,6 +2,31 @@ import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { GRAY } from './colors.ts'
 import type { NodeKind } from './types.ts'
 
+/**
+ * Proportionate label size: shrink the font so the label fits its box instead of
+ * wrapping mid-word into garble. We size to the LONGEST WORD (so words stay whole
+ * and wrap only at spaces) against the box width, and to the line budget against
+ * the box height, then clamp. This keeps a dense map's small chips legible on one
+ * or two clean lines without the dot-collapse LOD.
+ */
+function fitFontPx(label: string, width: number, height: number, kind: NodeKind): number {
+  const isContainer = kind === 'container'
+  // Per-em character width: monospace term chips are wide; uppercase + letter-spaced
+  // container titles wider still; sans symbols a touch narrower.
+  const charEm = isContainer ? 0.72 : kind === 'term' ? 0.6 : 0.58
+  const padX = isContainer ? 16 : 16
+  const words = label.split(/\s+/).filter(Boolean)
+  const longest = Math.max(1, ...words.map((w) => w.length))
+  const byWidth = Math.max(width - padX, 8) / (longest * charEm)
+  // Container titles live in a top band; leaves use the whole box. Allow a second
+  // line only for multi-word leaf labels.
+  const bandH = isContainer ? Math.min(height * 0.28, 46) - 6 : height - 16
+  const lines = !isContainer && words.length > 1 ? 2 : 1
+  const byHeight = Math.max(bandH, 8) / (lines * 1.2)
+  const max = isContainer ? 14 : kind === 'symbol' ? 22 : 16
+  return Math.max(6, Math.min(byWidth, byHeight, max))
+}
+
 export interface SceneNodeData {
   label: string
   sub?: string
@@ -35,7 +60,14 @@ export function SceneNode({ data }: NodeProps) {
       }}
     >
       <Handle type="target" position={targetPos} className="scene-handle" isConnectable={false} />
-      {d.kind !== 'group' && <span className="scene-node__label">{d.label}</span>}
+      {d.kind !== 'group' && (
+        <span
+          className="scene-node__label"
+          style={{ fontSize: fitFontPx(d.label, d.width, d.height, d.kind) }}
+        >
+          {d.label}
+        </span>
+      )}
       {d.kind !== 'group' && d.sub && <span className="scene-node__sub">{d.sub}</span>}
       <Handle type="source" position={sourcePos} className="scene-handle" isConnectable={false} />
     </div>

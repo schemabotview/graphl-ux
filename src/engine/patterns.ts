@@ -198,3 +198,66 @@ export function stack(
   }
   return { grid: { cols, rows: row, ...gridOpts }, nodes }
 }
+
+// --- Weighted-track lowering -------------------------------------------------
+// graphl-ux grids are UNIFORM (equal cells + spans); the NodeMap source authored
+// the big architecture map with WEIGHTED tracks (`cols: [7, 2, 9, 9]` — unequal
+// widths). `weighted()` lowers a weighted grid to a uniform one so a faithful
+// transcription of that map drops straight in. The port keeps the source's track
+// indices; only the dialect changes.
+
+/** A child placed by WEIGHTED-track index: `at = [col, row, colSpan?, rowSpan?]`
+ *  indexes the `cols`/`rows` weight arrays (1:1 with the NodeMap source `cell`). */
+export interface WeightedSeed {
+  node: NodeSeed
+  at: [number, number, number?, number?]
+}
+
+/** A weighted grid: each `cols`/`rows` entry is a relative track size. */
+export interface WeightedSpec {
+  cols: number[]
+  rows: number[]
+  gap?: number
+  padding?: number
+}
+
+const gcd = (a: number, b: number): number => (b ? gcd(b, a % b) : a)
+
+/** Lower relative track weights to MINIMAL integers: ×10 (so .1 steps survive)
+ *  then divide by their gcd, so uniform tracks (`[1,1,1,1]`) stay `[1,1,1,1]`. */
+function integerTracks(weights: number[]): number[] {
+  const scaled = weights.map((w) => Math.max(1, Math.round(w * 10)))
+  const g = scaled.reduce((a, b) => gcd(a, b))
+  return scaled.map((s) => s / g)
+}
+
+/** Cumulative offsets: `[2,1,3]` → `[0,2,3,6]` (offset before each track + total). */
+const prefix = (tracks: number[]): number[] =>
+  tracks.reduce((acc, t) => [...acc, acc[acc.length - 1] + t], [0])
+
+/**
+ * Faithfully lower a NodeMap-style WEIGHTED grid to graphl-ux's uniform grid +
+ * cell spans. A child's track-index `at` becomes a pixel-proportional uniform
+ * cell, so unequal track widths are preserved. gap/padding pass through unchanged:
+ * they are fractions of a CELL, and lowering keeps a 1-track child = 1 cell, so the
+ * authored spacing already means the same thing. (Do NOT scale them by track count —
+ * that over-pads any axis with few tracks, e.g. a 1-column × many-row stack.)
+ */
+export function weighted(spec: WeightedSpec, children: WeightedSeed[]): PatternResult {
+  const cx = prefix(integerTracks(spec.cols))
+  const cy = prefix(integerTracks(spec.rows))
+  const nodes = children.map(({ node, at }) => {
+    const [ci, ri, cts = 1, rts = 1] = at
+    const cell: SceneNodeSpec['cell'] = [
+      cx[ci],
+      cy[ri],
+      cx[ci + cts] - cx[ci],
+      cy[ri + rts] - cy[ri],
+    ]
+    return { ...node, cell }
+  })
+  return {
+    grid: { cols: cx[cx.length - 1], rows: cy[cy.length - 1], gap: spec.gap, padding: spec.padding },
+    nodes,
+  }
+}

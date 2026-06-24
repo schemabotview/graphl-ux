@@ -75,7 +75,12 @@
   line-height: 1.15;
   color: #f1f2f4;
   max-width: 100%;
-  overflow-wrap: anywhere;
+  /* Wrap only at spaces — the font is auto-fit (SceneNode.fitFontPx) so words stay
+     whole; never break mid-word (that was the garble). overflow:hidden on the node
+     clips the rare word too long even at min size. */
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
 }
 
 .scene-node--term .scene-node__label {

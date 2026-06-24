@@ -54,4 +54,11 @@ export interface SceneSpec {
   grid: SceneGrid
   nodes: SceneNodeSpec[]
   edges: SceneEdgeSpec[]
+  /**
+   * Logical canvas the grid resolves into; its aspect should match the grid's
+   * `cols:rows` so cells stay square (fitView then scales it to any screen).
+   * Defaults to portrait 800×1200. A wide 16:9 map declares e.g.
+   * `{ width: 1424, height: 800 }`.
+   */
+  canvas?: { width: number; height: number }
 }

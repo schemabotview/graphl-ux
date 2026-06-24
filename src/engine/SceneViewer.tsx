@@ -17,7 +17,8 @@ import './scene.css'
 const nodeTypes = { scene: SceneNode }
 const edgeTypes = { flow: FlowEdge }
 
-// Virtual portrait canvas; React Flow's fitView scales it to the real viewport.
+// Default virtual canvas (portrait); a scene may override via `scene.canvas` (e.g.
+// a wide 16:9 map). React Flow's fitView scales whichever it is to the viewport.
 const CANVAS = { width: 800, height: 1200 }
 
 /** Flatten the scene tree, parent before each of its children (depth-first). */
@@ -65,11 +66,15 @@ export function SceneViewer({
 
   // Resolved geometry, shared by node placement AND the camera (so framing a
   // focus region reuses the exact boxes React Flow renders).
-  const boxes = useMemo(() => resolveGrid(scene.nodes, scene.grid, CANVAS), [scene])
+  const boxes = useMemo(() => resolveGrid(scene.nodes, scene.grid, scene.canvas ?? CANVAS), [scene])
+
+  // The spotlight set (null = nothing highlighted), shared by nodes AND edges so an
+  // edge can fade in step with the nodes it connects.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const lit = useMemo(() => expandHighlight(scene.nodes, highlight), [scene, highlightKey])
 
   const nodes = useMemo<Node<SceneNodeData>[]>(() => {
     const flat = flattenNodes(scene.nodes)
-    const lit = expandHighlight(scene.nodes, highlight)
     return flat.map((n) => {
       const box = boxes[n.id]
       return {
@@ -91,22 +96,28 @@ export function SceneViewer({
         },
       }
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scene, direction, highlightKey])
+  }, [scene, direction, boxes, lit])
 
   const edges = useMemo<Edge[]>(
     () =>
-      scene.edges.map((e, i) => ({
-        id: `${e.from}-${e.to}-${i}`,
-        source: e.from,
-        target: e.to,
-        sourceHandle: e.sourceHandle,
-        targetHandle: e.targetHandle,
-        type: 'flow',
-        data: { color: e.color ?? EDGE, animated: e.animated, label: e.label },
-        markerEnd: { type: MarkerType.ArrowClosed, color: e.color ?? EDGE },
-      })),
-    [scene],
+      scene.edges.map((e, i) => {
+        // An edge is "active" when a spotlight is on and it touches a lit node;
+        // "dimmed" when a spotlight is on but it touches neither. With no spotlight
+        // every edge is calm (neither) — see FlowEdge for the visual states.
+        const active = lit ? lit.has(e.from) || lit.has(e.to) : false
+        const dimmed = lit ? !active : false
+        return {
+          id: `${e.from}-${e.to}-${i}`,
+          source: e.from,
+          target: e.to,
+          sourceHandle: e.sourceHandle,
+          targetHandle: e.targetHandle,
+          type: 'flow',
+          data: { color: e.color ?? EDGE, animated: e.animated, label: e.label, active, dimmed },
+          markerEnd: { type: MarkerType.ArrowClosed, color: e.color ?? EDGE },
+        }
+      }),
+    [scene, lit],
   )
 
   const instRef = useRef<ReactFlowInstance<Node<SceneNodeData>, Edge> | null>(null)
@@ -166,10 +177,17 @@ export function SceneViewer({
         nodesDraggable={false}
         nodesConnectable={false}
         elementsSelectable={false}
-        panOnDrag={false}
-        zoomOnScroll={false}
-        zoomOnPinch={false}
+        // Manual zoom/pan = the "read it yourself" escape hatch over a dense map.
+        // The camera still drives paging (focus/fitView), and a page step re-frames,
+        // so any stray manual zoom self-corrects on the next slide. Desktop canvas is
+        // unobstructed; on mobile two-finger pinch clears the single-tap paging zones.
+        // Wide zoom range so the deepest nested chips can be zoomed up to legibility.
+        panOnDrag
+        zoomOnScroll
+        zoomOnPinch
         zoomOnDoubleClick={false}
+        minZoom={0.2}
+        maxZoom={8}
       />
     </div>
   )
