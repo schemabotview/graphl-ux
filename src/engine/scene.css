@@ -10,7 +10,7 @@
   gap: 4px;
   padding: 10px 14px;
   border: 1px solid color-mix(in srgb, var(--node-color, #9aa3b2) 45%, var(--base));
-  border-radius: 12px;
+  border-radius: 6px;
   background: color-mix(in srgb, var(--node-color, #9aa3b2) 30%, var(--base));
   text-align: center;
   /* Grid sizes a node from its cell, not its text — clip any label still wider

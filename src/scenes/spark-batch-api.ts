@@ -144,11 +144,11 @@ const readApi = container(
 
 const writeMode = container(
   { id: 'b-w-mode', label: 'mode()', color: ORANGE },
-  weighted({ cols: [1, 1], rows: [1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
     { node: chip('b-w-m-over', 'overwrite', ORANGE), at: [0, 0] },
-    { node: chip('b-w-m-append', 'append', ORANGE), at: [1, 0] },
-    { node: chip('b-w-m-error', 'error', ORANGE), at: [0, 1] },
-    { node: chip('b-w-m-ignore', 'ignore', ORANGE), at: [1, 1] },
+    { node: chip('b-w-m-append', 'append', ORANGE), at: [0, 1] },
+    { node: chip('b-w-m-error', 'error', ORANGE), at: [0, 2] },
+    { node: chip('b-w-m-ignore', 'ignore', ORANGE), at: [0, 3] },
   ]),
 )
 
@@ -163,21 +163,21 @@ const writeLayout = container(
 
 const writeSinks = container(
   { id: 'b-w-sinks', label: 'Sinks', color: PURPLE },
-  weighted({ cols: [1, 1], rows: [1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
     { node: chip('b-w-save', 'save', PURPLE), at: [0, 0] },
-    { node: chip('b-w-saveTbl', 'saveAsTable', PURPLE), at: [1, 0] },
-    { node: chip('b-w-jdbc', 'jdbc', PURPLE), at: [0, 1] },
-    { node: chip('b-w-insert', 'insertInto', PURPLE), at: [1, 1] },
+    { node: chip('b-w-saveTbl', 'saveAsTable', PURPLE), at: [0, 1] },
+    { node: chip('b-w-jdbc', 'jdbc', PURPLE), at: [0, 2] },
+    { node: chip('b-w-insert', 'insertInto', PURPLE), at: [0, 3] },
   ]),
 )
 
 const writeFormat = container(
   { id: 'b-w-fmt', label: 'Format', color: TEAL },
-  weighted({ cols: [1, 1], rows: [1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
     { node: chip('b-w-fmt-pq', 'parquet', TEAL), at: [0, 0] },
-    { node: chip('b-w-fmt-csv', 'csv', TEAL), at: [1, 0] },
-    { node: chip('b-w-fmt-json', 'json', TEAL), at: [0, 1] },
-    { node: chip('b-w-fmt-delta', 'delta', TEAL), at: [1, 1] },
+    { node: chip('b-w-fmt-csv', 'csv', TEAL), at: [0, 1] },
+    { node: chip('b-w-fmt-json', 'json', TEAL), at: [0, 2] },
+    { node: chip('b-w-fmt-delta', 'delta', TEAL), at: [0, 3] },
   ]),
 )
 

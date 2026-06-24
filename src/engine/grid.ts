@@ -15,6 +15,12 @@ export interface Box {
 // no vertical space — children fill the container's full box. Each child grid
 // carries its own top padding, which leaves the strip the title sits in.
 
+// Pixel inset applied between a container's border and its inner elements, so
+// children get a little breathing room off the border (and clearance under the
+// on-border title) on top of the child grid's own relative padding. Containers
+// only — groups are invisible arrangers and stay flush.
+const CONTAINER_INSET = 5
+
 /**
  * Resolve the scene tree into an id -> absolute Box map (top-left origin). A node
  * with `children` + `layout` resolves those children INSIDE its own pixel box
@@ -58,8 +64,13 @@ function layoutLevel(
     out[node.id] = nb
 
     if (node.children?.length && node.layout) {
-      // Children fill the full box; the title rides the top border (no reserve).
-      layoutLevel(node.children, node.layout, nb, out)
+      // Children fill the box (title rides the border, no reserve), inset a few
+      // px for containers so inner elements don't crowd the border.
+      const i = node.kind === 'container' ? CONTAINER_INSET : 0
+      const inner: Box = i
+        ? { x: nb.x + i, y: nb.y + i, w: nb.w - 2 * i, h: nb.h - 2 * i }
+        : nb
+      layoutLevel(node.children, node.layout, inner, out)
     }
   }
 }
