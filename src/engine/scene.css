@@ -40,9 +40,11 @@
   opacity: 0.28;
 }
 
-/* 'term' nodes are filled chips whose text IS the concept. */
+/* 'term' nodes are filled chips whose text IS the concept. Sans font (not mono)
+   so labels honor light font-weights — macOS system monospace has no face below
+   Regular(400), which is why mono chips ignored the thin weight set on the label. */
 .scene-node--term {
-  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   background: color-mix(in srgb, var(--node-color) 34%, var(--base));
 }
 
@@ -71,7 +73,7 @@
 
 .scene-node__label {
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 100;
   line-height: 1.15;
   color: #f1f2f4;
   max-width: 100%;

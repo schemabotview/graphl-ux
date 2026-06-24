@@ -85,7 +85,10 @@ const master = container(
   // 1-column stack a NodeMap-style 0.3 becomes a huge side gutter. Keep it small
   // here so the children use the column's full width.
   { id: 'master', label: 'Master Node', color: ORANGE },
-  weighted({ cols: [1], rows: [1, 1, 2.5, 1, 2.5, 1.2, 1.5], gap: 0.25, padding: 0.08 }, [
+  // Bigger gap so the vertical control-flow edges (driver → session, etc.) have
+  // room to draw between the stacked boxes; leaf-chip rows trimmed to 0.8 so the
+  // single-line chips aren't taller than they need to be.
+  weighted({ cols: [1], rows: [0.8, 0.8, 2.5, 0.8, 2.5, 1, 1.5], gap: 0.45, padding: 0.08 }, [
     { node: chip('driver', 'Driver Program', ORANGE), at: [0, 0] },
     { node: chip('session', 'SparkSession', BLUE), at: [0, 1] },
     { node: catalyst, at: [0, 2] },
@@ -134,9 +137,11 @@ const worker = (s: 'a' | 'b', label: 'A' | 'B', mode: 'batch' | 'streaming'): Sc
   )
 
   const children: WeightedSeed[] = [
-    { node: chip(`exec-${s}`, 'Executor', PURPLE), at: [0, 0, 2, 2] },
-    { node: chip(`core1-${s}`, 'Core 1', RED), at: [0, 2, 1, 2] },
-    { node: chip(`core2-${s}`, 'Core 2', RED), at: [1, 2, 1, 2] },
+    // Executor is the big box (spans 3 rows); the cores are short chips on the
+    // bottom row, aligned with Local Disk in the right column.
+    { node: chip(`exec-${s}`, 'Executor', PURPLE), at: [0, 0, 2, 3] },
+    { node: chip(`core1-${s}`, 'Core 1', RED), at: [0, 3, 1, 1] },
+    { node: chip(`core2-${s}`, 'Core 2', RED), at: [1, 3, 1, 1] },
     { node: heap, at: [2, 0, 1, 3] },
     { node: chip(`local-disk-${s}`, 'Local Disk', ORANGE), at: [2, 3] },
   ]
@@ -199,7 +204,7 @@ const storageLayer = container(
 
 const lakehouse = container(
   { id: 'lakehouse', label: 'Lakehouse (Delta Lake)', color: BLUE },
-  weighted({ cols: [1, 1, 1], rows: [0.8, 2, 0.7, 1.2], gap: 0.25, padding: 0.3 }, [
+  weighted({ cols: [1, 1, 1], rows: [0.8, 1.3, 0.7, 1.2], gap: 0.25, padding: 0.3 }, [
     { node: chip('unity-catalog', 'Unity Catalog', PURPLE), at: [0, 0, 3, 1] },
     { node: chip('bronze', 'Bronze', ORANGE), at: [0, 1] },
     { node: chip('silver', 'Silver', GRAY), at: [1, 1] },
