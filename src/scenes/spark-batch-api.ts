@@ -21,6 +21,10 @@ import { BLUE, GRAY, GREEN, ORANGE, PURPLE, RED, TEAL, YELLOW } from '../engine/
 
 const G = 0.18
 const P = 0.22
+// Tight inner padding for the single-column rail containers (Read API's Format
+// options / Bad-record / Multi-file / JDBC). Their stacked chips left wide
+// left/right margins at P; PT reclaims that so each chip fills the box width.
+const PT = 0.01
 
 /** A filled leaf chip — the text IS the concept (graphl-ux `term`). */
 const chip = (id: string, label: string, color: string): NodeSeed => ({ id, label, color, kind: 'term' })
@@ -74,7 +78,7 @@ const setup = container(
 
 const sources = container(
   { id: 'b-sources', label: 'Input Sources', color: TEAL },
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1, 1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-src-csv', 'CSV', TEAL), at: [0, 0] },
     { node: chip('b-src-parquet', 'Parquet', TEAL), at: [0, 1] },
     { node: chip('b-src-json', 'JSON', TEAL), at: [0, 2] },
@@ -90,7 +94,7 @@ const sources = container(
 
 const formatOptions = container(
   { id: 'b-read-fmt', label: 'Format options', color: BLUE },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-r-header', 'header', BLUE), at: [0, 0] },
     { node: chip('b-r-sep', 'sep', BLUE), at: [0, 1] },
     { node: chip('b-r-merge', 'mergeSchema', BLUE), at: [0, 2] },
@@ -100,7 +104,7 @@ const formatOptions = container(
 
 const badRecord = container(
   { id: 'b-read-mode', label: 'Bad-record mode()', color: RED },
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-r-permissive', 'permissive', RED), at: [0, 0] },
     { node: chip('b-r-failfast', 'failFast', RED), at: [0, 1] },
     { node: chip('b-r-drop', 'dropMalformed', RED), at: [0, 2] },
@@ -111,7 +115,7 @@ const badRecord = container(
 
 const multiFile = container(
   { id: 'b-read-multi', label: 'Multi-file lookup', color: YELLOW },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-r-glob', 'glob', YELLOW), at: [0, 0] },
     { node: chip('b-r-regex', 'regex', YELLOW), at: [0, 1] },
     { node: chip('b-r-paths', 'multiple paths', YELLOW), at: [0, 2] },
@@ -121,7 +125,7 @@ const multiFile = container(
 
 const jdbcReads = container(
   { id: 'b-read-jdbc', label: 'JDBC parallel reads', color: PURPLE },
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-r-pcol', 'partitionColumn', PURPLE), at: [0, 0] },
     { node: chip('b-r-lower', 'lowerBound', PURPLE), at: [0, 1] },
     { node: chip('b-r-upper', 'upperBound', PURPLE), at: [0, 2] },
@@ -144,7 +148,7 @@ const readApi = container(
 
 const writeMode = container(
   { id: 'b-w-mode', label: 'mode()', color: ORANGE },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-w-m-over', 'overwrite', ORANGE), at: [0, 0] },
     { node: chip('b-w-m-append', 'append', ORANGE), at: [0, 1] },
     { node: chip('b-w-m-error', 'error', ORANGE), at: [0, 2] },
@@ -154,7 +158,7 @@ const writeMode = container(
 
 const writeLayout = container(
   { id: 'b-w-layout', label: 'Layout', color: GREEN },
-  weighted({ cols: [1], rows: [1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-w-partby', 'partitionBy', GREEN), at: [0, 0] },
     { node: chip('b-w-bucket', 'bucketBy', GREEN), at: [0, 1] },
     { node: chip('b-w-sortby', 'sortBy', GREEN), at: [0, 2] },
@@ -163,7 +167,7 @@ const writeLayout = container(
 
 const writeSinks = container(
   { id: 'b-w-sinks', label: 'Sinks', color: PURPLE },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-w-save', 'save', PURPLE), at: [0, 0] },
     { node: chip('b-w-saveTbl', 'saveAsTable', PURPLE), at: [0, 1] },
     { node: chip('b-w-jdbc', 'jdbc', PURPLE), at: [0, 2] },
@@ -173,7 +177,7 @@ const writeSinks = container(
 
 const writeFormat = container(
   { id: 'b-w-fmt', label: 'Format', color: TEAL },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-w-fmt-pq', 'parquet', TEAL), at: [0, 0] },
     { node: chip('b-w-fmt-csv', 'csv', TEAL), at: [0, 1] },
     { node: chip('b-w-fmt-json', 'json', TEAL), at: [0, 2] },
@@ -195,7 +199,7 @@ const writeApi = container(
 
 const output = container(
   { id: 'b-output', label: 'Output', color: TEAL },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-out-files', 'Files', TEAL), at: [0, 0] },
     { node: chip('b-out-hive', 'Hive table', TEAL), at: [0, 1] },
     { node: chip('b-out-jdbc', 'JDBC target', TEAL), at: [0, 2] },
@@ -208,7 +212,7 @@ const output = container(
 
 const rddCreate = container(
   { id: 'b-rdd-create', label: 'Creation', color: RED },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-rdd-parallelize', 'parallelize', RED), at: [0, 0] },
     { node: chip('b-rdd-numslices', 'numSlices', RED), at: [0, 1] },
     { node: chip('b-rdd-textfile', 'textFile', RED), at: [0, 2] },
@@ -218,7 +222,7 @@ const rddCreate = container(
 
 const rddNarrow = container(
   { id: 'b-rdd-narrow', label: 'Narrow (local)', color: GREEN },
-  weighted({ cols: [1, 1], rows: [1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1, 1], rows: [1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-rdd-map', 'map', GREEN), at: [0, 0] },
     { node: chip('b-rdd-mappart', 'mapPartitions', GREEN), at: [1, 0] },
     { node: chip('b-rdd-flatmap', 'flatMap', GREEN), at: [0, 1] },
@@ -230,7 +234,7 @@ const rddNarrow = container(
 
 const rddWide = container(
   { id: 'b-rdd-wide', label: 'Wide (shuffle)', color: ORANGE },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-rdd-union', 'union', ORANGE), at: [0, 0] },
     { node: chip('b-rdd-distinct', 'distinct', ORANGE), at: [1, 0] },
     { node: chip('b-rdd-inter', 'intersection', ORANGE), at: [0, 1] },
@@ -244,7 +248,7 @@ const rddWide = container(
 
 const rddPair = container(
   { id: 'b-rdd-pair', label: 'Pair RDD — byKey', color: PURPLE },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-rdd-maptopair', 'mapToPair', PURPLE), at: [0, 0] },
     { node: chip('b-rdd-rbk', 'reduceByKey', PURPLE), at: [1, 0] },
     { node: chip('b-rdd-gbk', 'groupByKey', PURPLE), at: [0, 1] },
@@ -258,7 +262,7 @@ const rddPair = container(
 
 const rddActions = container(
   { id: 'b-rdd-actions', label: 'Actions + Misc', color: TEAL },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1, 1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-rdd-collect', 'collect', TEAL), at: [0, 0] },
     { node: chip('b-rdd-count', 'count', TEAL), at: [1, 0] },
     { node: chip('b-rdd-take', 'take', TEAL), at: [0, 1] },
@@ -288,7 +292,7 @@ const rddLane = container(
 
 const psCreate = container(
   { id: 'b-ps-create', label: 'Creation', color: YELLOW },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-ps-dfdict', 'ps.DataFrame(dict)', YELLOW), at: [0, 0] },
     { node: chip('b-ps-read', 'read_csv/json/parquet', YELLOW), at: [0, 1] },
     { node: chip('b-ps-papi', 'sdf.pandas_api()', YELLOW), at: [0, 2] },
@@ -298,7 +302,7 @@ const psCreate = container(
 
 const psTrans = container(
   { id: 'b-ps-trans', label: 'Transformations', color: GREEN },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-ps-t-col', 'select/asgn', GREEN), at: [0, 0] },
     { node: chip('b-ps-t-filter', 'filter/qry', GREEN), at: [1, 0] },
     { node: chip('b-ps-t-group', 'groupby/agg', GREEN), at: [0, 1] },
@@ -311,7 +315,7 @@ const psTrans = container(
 
 const psActions = container(
   { id: 'b-ps-actions', label: 'Actions', color: TEAL },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-ps-tc', 'to_csv', TEAL), at: [0, 0] },
     { node: chip('b-ps-tp', 'to_parquet', TEAL), at: [0, 1] },
     { node: chip('b-ps-tj', 'to_json', TEAL), at: [0, 2] },
@@ -321,7 +325,7 @@ const psActions = container(
 
 const psIndex = container(
   { id: 'b-ps-index', label: 'Index Strategies', color: PURPLE },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-ps-idx-seq', 'sequence', PURPLE), at: [0, 0] },
     { node: chip('b-ps-idx-dist', 'distributed', PURPLE), at: [0, 1] },
     { node: chip('b-ps-idx-ds', 'distributed-sequence', PURPLE), at: [0, 2] },
@@ -345,7 +349,7 @@ const pandasLane = container(
 
 const sqlViews = container(
   { id: 'b-sql-views', label: 'Views + Catalog', color: GREEN },
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-sql-temp', 'createTempView', GREEN), at: [0, 0] },
     { node: chip('b-sql-gtemp', 'createGlobalTempView', GREEN), at: [0, 1] },
     { node: chip('b-sql-savetbl', 'saveAsTable', GREEN), at: [0, 2] },
@@ -356,7 +360,7 @@ const sqlViews = container(
 
 const sqlQueries = container(
   { id: 'b-sql-queries', label: 'Queries', color: ORANGE },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-sql-select', 'SELECT', ORANGE), at: [0, 0] },
     { node: chip('b-sql-from', 'FROM', ORANGE), at: [1, 0] },
     { node: chip('b-sql-where', 'WHERE', ORANGE), at: [0, 1] },
@@ -370,7 +374,7 @@ const sqlQueries = container(
 
 const sqlJoins = container(
   { id: 'b-sql-joins', label: 'Joins + Sets + CTE', color: PURPLE },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-sql-j-inner', 'INNER JOIN', PURPLE), at: [0, 0] },
     { node: chip('b-sql-j-left', 'LEFT JOIN', PURPLE), at: [1, 0] },
     { node: chip('b-sql-j-full', 'FULL JOIN', PURPLE), at: [0, 1] },
@@ -384,7 +388,7 @@ const sqlJoins = container(
 
 const sqlAgg = container(
   { id: 'b-sql-agg', label: 'Aggregates + Window', color: TEAL },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-sql-avg', 'AVG', TEAL), at: [0, 0] },
     { node: chip('b-sql-sum', 'SUM', TEAL), at: [1, 0] },
     { node: chip('b-sql-minmax', 'MIN/MAX', TEAL), at: [0, 1] },
@@ -398,7 +402,7 @@ const sqlAgg = container(
 
 const sqlFns = container(
   { id: 'b-sql-fns', label: 'Functions', color: BLUE },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-sql-fn-acf', 'abs/ceil/floor', BLUE), at: [0, 0] },
     { node: chip('b-sql-fn-rsl', 'round/sqrt/log', BLUE), at: [1, 0] },
     { node: chip('b-sql-fn-str1', 'concat/substring', BLUE), at: [0, 1] },
@@ -412,7 +416,7 @@ const sqlFns = container(
 
 const sqlNull = container(
   { id: 'b-sql-null', label: 'Null semantics', color: RED },
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-sql-n-eq', '=', RED), at: [0, 0] },
     { node: chip('b-sql-n-neq', '<==>', RED), at: [0, 1] },
     { node: chip('b-sql-n-isn', 'IS NULL', RED), at: [0, 2] },
@@ -439,7 +443,7 @@ const sqlLane = container(
 
 const dfCreate = container(
   { id: 'b-df-create', label: 'Schema + Creation', color: ORANGE },
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-df-structtype', 'StructType', ORANGE), at: [0, 0] },
     { node: chip('b-df-ddl', 'DDL string', ORANGE), at: [0, 1] },
     { node: chip('b-df-createdf', 'createDataFrame', ORANGE), at: [0, 2] },
@@ -450,7 +454,7 @@ const dfCreate = container(
 
 const dfCol = container(
   { id: 'b-df-col', label: 'Column ref + when', color: YELLOW },
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-df-colstr', '"name"', YELLOW), at: [0, 0] },
     { node: chip('b-df-colfn', 'col("n")', YELLOW), at: [0, 1] },
     { node: chip('b-df-expr', 'expr("…")', YELLOW), at: [0, 2] },
@@ -462,7 +466,7 @@ const dfCol = container(
 
 const dfTrans = container(
   { id: 'b-df-trans', label: 'Transformations', color: GREEN },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1, 1], rows: [1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-df-t-select', 'select', GREEN), at: [0, 0] },
     { node: chip('b-df-t-selectexpr', 'selectExpr', GREEN), at: [1, 0] },
     { node: chip('b-df-t-withcol', 'withColumn', GREEN), at: [0, 1] },
@@ -480,7 +484,7 @@ const dfTrans = container(
 
 const dfFns = container(
   { id: 'b-df-fns', label: 'pyspark.sql.functions', color: BLUE },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-df-fn-str', 'string fns', BLUE), at: [0, 0] },
     { node: chip('b-df-fn-date', 'date/time fns', BLUE), at: [0, 1] },
     { node: chip('b-df-fn-array', 'array fns', BLUE), at: [0, 2] },
@@ -490,7 +494,7 @@ const dfFns = container(
 
 const dfJoins = container(
   { id: 'b-df-joins', label: 'Joins + Set ops', color: PURPLE },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-df-j-inner', 'inner', PURPLE), at: [0, 0] },
     { node: chip('b-df-j-left', 'left', PURPLE), at: [1, 0] },
     { node: chip('b-df-j-right', 'right', PURPLE), at: [0, 1] },
@@ -504,7 +508,7 @@ const dfJoins = container(
 
 const dfAgg = container(
   { id: 'b-df-agg', label: 'Aggregations + Window', color: TEAL },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-df-a-groupby', 'groupBy', TEAL), at: [0, 0] },
     { node: chip('b-df-a-agg', 'agg', TEAL), at: [1, 0] },
     { node: chip('b-df-a-cntdist', 'countDistinct', TEAL), at: [0, 1] },
@@ -518,7 +522,7 @@ const dfAgg = container(
 
 const dfActions = container(
   { id: 'b-df-actions', label: 'Actions + Persistence + Explore', color: RED },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1, 1], gap: G, padding: P }, [
+  weighted({ cols: [1, 1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-df-act-collect', 'collect', RED), at: [0, 0] },
     { node: chip('b-df-act-count', 'count', RED), at: [1, 0] },
     { node: chip('b-df-act-show', 'show', RED), at: [0, 1] },
@@ -576,18 +580,18 @@ const pipeline = group(
 
 const perfPart = container(
   { id: 'b-perf-part', label: 'Partitioning', color: ORANGE },
-  weighted({ cols: [1, 1, 1], rows: [1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1, 1], gap: G, padding: P }, [
     { node: chip('b-perf-rp', 'repartition', ORANGE), at: [0, 0] },
-    { node: chip('b-perf-co', 'coalesce', ORANGE), at: [1, 0] },
-    { node: chip('b-perf-pb', 'partitionBy', ORANGE), at: [2, 0] },
+    { node: chip('b-perf-co', 'coalesce', ORANGE), at: [0, 1] },
+    { node: chip('b-perf-pb', 'partitionBy', ORANGE), at: [0, 2] },
   ]),
 )
 
 const perfShuffle = container(
   { id: 'b-perf-shuffle', label: 'Shuffle', color: RED },
-  weighted({ cols: [1, 1], rows: [1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1], gap: G, padding: P }, [
     { node: chip('b-perf-smj', 'sortMergeJoin', RED), at: [0, 0] },
-    { node: chip('b-perf-sp', 'shuffle partitions', RED), at: [1, 0] },
+    { node: chip('b-perf-sp', 'shuffle partitions', RED), at: [0, 1] },
   ]),
 )
 
@@ -606,15 +610,18 @@ const perfCache = container(
 
 const perfBcast = container(
   { id: 'b-perf-bcast', label: 'Broadcast joins', color: PURPLE },
-  weighted({ cols: [1, 1], rows: [1], gap: G, padding: P }, [
+  weighted({ cols: [1], rows: [1, 1], gap: G, padding: P }, [
     { node: chip('b-perf-bc-fn', 'broadcast(df)', PURPLE), at: [0, 0] },
-    { node: chip('b-perf-bc-cfg', 'autoBroadcastJoin', PURPLE), at: [1, 0] },
+    { node: chip('b-perf-bc-cfg', 'autoBroadcastJoin', PURPLE), at: [0, 1] },
   ]),
 )
 
 const perf = container(
   { id: 'b-perf', label: 'Performance Tuning', color: GRAY },
-  weighted({ cols: [1, 1, 1, 1], rows: [1], gap: 0.3, padding: P }, [
+  // Tight inter-container gap (was 0.3): the four sub-containers were narrower
+  // than needed, clipping long chip labels (repartition, MEMORY_AND_DISK_2). The
+  // reclaimed gap space widens every container — chips get the width to fit.
+  weighted({ cols: [1, 1, 1, 1], rows: [1], gap: 0.15, padding: P }, [
     { node: perfPart, at: [0, 0] },
     { node: perfShuffle, at: [1, 0] },
     { node: perfCache, at: [2, 0] },
