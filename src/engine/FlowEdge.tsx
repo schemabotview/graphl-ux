@@ -32,7 +32,6 @@ function sideOf(node: InternalNode<Node>, p: { x: number; y: number }): Position
   const px = node.internals.positionAbsolute.x
   const py = node.internals.positionAbsolute.y
   const w = node.measured.width ?? 0
-  const h = node.measured.height ?? 0
   if (p.x <= px + 1) return Position.Left
   if (p.x >= px + w - 1) return Position.Right
   if (p.y <= py + 1) return Position.Top
