@@ -1,7 +1,11 @@
 :root {
-  --bg: #16181d;
+  --bg: #252525;
+  /* Two-tier reading ink (NodeMap's calm recipe): a warm off-white at two
+     opacities — strong for titles/bold/code, body dimmer so headings pop. */
+  --ink-strong: rgba(240, 240, 236, 0.92);
+  --ink-body: rgba(240, 240, 236, 0.65);
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  color: #f4f5f7;
+  color: var(--ink-strong);
 }
 
 * {
@@ -105,7 +109,7 @@ body {
   /* Pass taps through to the scene/tap-zones underneath; only the home button
      (below) opts back in. */
   pointer-events: none;
-  background: linear-gradient(to bottom, rgba(22, 24, 29, 0.9), rgba(22, 24, 29, 0));
+  background: linear-gradient(to bottom, rgba(37, 37, 37, 0.9), rgba(37, 37, 37, 0));
 }
 /* Bare logo button — the icon is a self-contained tile, so no circle/border/bg.
    Padding keeps a comfortable tap target around the small glyph. */
@@ -164,7 +168,7 @@ body {
   top: calc(100% + 4px);
   right: 0;
   min-width: 300px;
-  background: rgba(22, 24, 29, 0.97);
+  background: rgba(37, 37, 37, 0.97);
   border: 1px solid #2a2d3d;
   border-radius: 10px;
   z-index: 20;
@@ -200,7 +204,7 @@ body {
   border: 1px solid #2a2d3d;
   border-radius: 999px;
   color: rgba(244, 245, 247, 0.92);
-  background: rgba(16, 18, 28, 0.7);
+  background: rgba(28, 28, 28, 0.7);
   backdrop-filter: blur(6px);
   font-size: 16px;
   cursor: pointer;
@@ -232,7 +236,7 @@ body {
   padding: 44px 120px 22px 22px;
   text-align: left;
   pointer-events: none;
-  background: linear-gradient(to top, rgba(22, 24, 29, 0.92), rgba(22, 24, 29, 0));
+  background: linear-gradient(to top, rgba(37, 37, 37, 0.92), rgba(37, 37, 37, 0));
 }
 
 .scene-caption h1 {
@@ -335,7 +339,7 @@ body {
   border: 1px solid #2a2d3d;
   border-radius: 999px;
   color: rgba(244, 245, 247, 0.92);
-  background: rgba(16, 18, 28, 0.7);
+  background: rgba(28, 28, 28, 0.7);
   backdrop-filter: blur(6px);
   font-size: 13px;
   cursor: pointer;

@@ -16,7 +16,7 @@ export const GRAY = '#9aa3b2' // Inert / context — supporting, non-focal nodes
 export const SPOTLIGHT = '#ffc24b'
 
 /** Surfaces: flat neutral dark, no blue tint, no glow. */
-export const BG = '#16181d'
+export const BG = '#252525'
 export const CODE_BG = '#0d1117'
 
 /** Edges are calm and uniform — color semantics live in the nodes, not arrows. */

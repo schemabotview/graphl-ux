@@ -4,8 +4,8 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  background: #1a1c22;
-  border-left: 1px solid #2a2d36;
+  background: #252525;
+  border-left: 1px solid #3a3a3a;
 }
 
 /* Drag handle on the panel's left edge. */
@@ -20,7 +20,7 @@
 }
 .panel__resizer:hover,
 body.resizing .panel__resizer {
-  background: linear-gradient(to right, transparent, rgba(91, 140, 255, 0.5));
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3));
 }
 
 /* Keep the resize cursor while dragging anywhere on the page. */
@@ -35,7 +35,7 @@ body.resizing {
   justify-content: space-between;
   gap: 12px;
   padding: 18px 22px 12px;
-  border-bottom: 1px solid #23262e;
+  border-bottom: 1px solid #333333;
 }
 
 .panel__title {
@@ -44,7 +44,7 @@ body.resizing {
   margin: 0;
   font-size: 22px;
   font-weight: 700;
-  color: #f1f2f4;
+  color: var(--ink-strong);
   line-height: 1.2;
 }
 
@@ -64,15 +64,15 @@ body.resizing {
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  border: 1px solid #2a2d3d;
-  background: #22252e;
-  color: #cfd4dc;
+  border: 1px solid #3a3a3a;
+  background: #2f2f2f;
+  color: #d8d8d8;
   cursor: pointer;
 }
 .panel__headbtn:hover,
 .panel__headbtn[aria-expanded='true'] {
-  background: #2a2e3a;
-  color: #f1f2f4;
+  background: #383838;
+  color: #ededed;
 }
 
 /* Contents overlay: scrollable list of every section, covers the panel body. */
@@ -82,7 +82,7 @@ body.resizing {
   z-index: 8;
   display: flex;
   flex-direction: column;
-  background: #1a1c22;
+  background: #252525;
 }
 
 .panel__toc-head {
@@ -90,19 +90,19 @@ body.resizing {
   align-items: center;
   justify-content: space-between;
   padding: 18px 22px 12px;
-  border-bottom: 1px solid #23262e;
+  border-bottom: 1px solid #333333;
   font-size: 12px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #9aa3b2;
+  color: #a0a0a0;
 }
 .panel__toc-head button {
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  border: 1px solid #2a2d3d;
-  background: #22252e;
-  color: #cfd4dc;
+  border: 1px solid #3a3a3a;
+  background: #2f2f2f;
+  color: #d8d8d8;
   cursor: pointer;
 }
 
@@ -125,24 +125,24 @@ body.resizing {
   border: none;
   border-radius: 8px;
   background: none;
-  color: #c7ccd4;
+  color: var(--ink-body);
   text-align: left;
   font-size: 14.5px;
   line-height: 1.4;
   cursor: pointer;
 }
 .panel__toc-list button:hover {
-  background: #22252e;
+  background: #2f2f2f;
 }
 .panel__toc-list button.is-active {
-  background: #232a3a;
-  color: #f1f2f4;
+  background: #333333;
+  color: var(--ink-strong);
 }
 .panel__toc-num {
   flex: none;
   width: 1.6em;
   text-align: right;
-  color: #6b7383;
+  color: #888888;
   font-variant-numeric: tabular-nums;
   font-size: 13px;
 }
@@ -159,9 +159,10 @@ body.resizing {
   padding: 18px 22px 24px;
 }
 
-/* Markdown body — calm, readable, matches the scene palette. */
+/* Markdown body — calm, readable, matches the scene palette. Two-tier ink:
+   body dimmer (--ink-body) so headings/bold (--ink-strong) clearly pop. */
 .markdown {
-  color: #c7ccd4;
+  color: var(--ink-body);
   font-size: 15px;
   line-height: 1.65;
 }
@@ -169,7 +170,7 @@ body.resizing {
 .markdown h1,
 .markdown h2,
 .markdown h3 {
-  color: #f1f2f4;
+  color: var(--ink-strong);
   line-height: 1.25;
   margin: 1.4em 0 0.5em;
 }
@@ -187,7 +188,7 @@ body.resizing {
   margin: 0.7em 0;
 }
 .markdown strong {
-  color: #f1f2f4;
+  color: var(--ink-strong);
 }
 .markdown a {
   color: #8fb0ff;
@@ -206,16 +207,16 @@ body.resizing {
 .markdown code {
   font-family: ui-monospace, 'SF Mono', Menlo, monospace;
   font-size: 13px;
-  background: #23262e;
+  background: #333333;
   padding: 1px 5px;
   border-radius: 5px;
-  color: #e0b6ff;
+  color: var(--ink-strong);
 }
 
 /* Fenced code blocks (highlight.js github-dark theme colors the tokens). */
 .markdown pre {
   background: #0d1117;
-  border: 1px solid #23262e;
+  border: 1px solid #333333;
   border-radius: 10px;
   padding: 14px 16px;
   overflow-x: auto;
@@ -238,21 +239,21 @@ body.resizing {
 }
 .markdown th,
 .markdown td {
-  border: 1px solid #2a2d36;
+  border: 1px solid #3a3a3a;
   padding: 7px 10px;
   text-align: left;
   vertical-align: top;
 }
 .markdown th {
-  background: #23262e;
-  color: #f1f2f4;
+  background: #333333;
+  color: var(--ink-strong);
 }
 
 .markdown blockquote {
-  border-left: 3px solid #3a3f4b;
+  border-left: 3px solid #444444;
   margin: 0.8em 0;
   padding: 0.2em 0 0.2em 14px;
-  color: #9aa3b2;
+  color: var(--ink-body);
 }
 
 /* Narrow screens: the panel becomes a full overlay sheet, not a side split. */
