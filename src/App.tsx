@@ -253,6 +253,8 @@ export default function App() {
   return (
     <div className="app-split">
       <div className="scene-pane">
+        {/* Screen-responsive stage: the frame fills the pane (wide on desktop,
+            portrait on mobile); the scene fits within via the viewer's fitView. */}
         <div className="scene-frame">
           <SceneViewer
             key={page.sceneId}
