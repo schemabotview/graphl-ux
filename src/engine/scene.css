@@ -87,11 +87,11 @@
 }
 
 .scene-node--container .scene-node__label {
-  font-size: 13px;
+  font-size: 10px;
   width: auto;
   max-width: none;
   text-align: left;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   white-space: nowrap;
   color: color-mix(in srgb, var(--node-color) 70%, #cfd4dc);
