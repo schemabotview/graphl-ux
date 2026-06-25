@@ -22,6 +22,10 @@ import { BLUE, GRAY, GREEN, ORANGE, PURPLE, RED, TEAL } from '../engine/colors.t
 // A filled term-chip leaf — its text IS the concept (NodeMap's `kind: 'term'`).
 const term = (id: string, label: string, color: string): NodeSeed => ({ id, label, color, kind: 'term' })
 
+// A COMPONENT leaf — icon glyph tile + label below (graphl-ux `symbol`, same as
+// scala-jvm.ts's `comp`). The taxonomy categories render as these identity tiles.
+const comp = (id: string, label: string, color: string): NodeSeed => ({ id, label, color, kind: 'symbol' })
+
 // Native weighted-track authoring: the grid carries the relative track WEIGHTS and
 // each child's `at` becomes its `cell`, indexing those tracks 1:1 (see java-jvm.ts).
 const wgrid = (spec: WeightedSpec, children: WeightedSeed[]): PatternResult => ({
@@ -58,19 +62,19 @@ const taxonomy = group(
   wgrid(
     { cols: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], rows: [1, 1, 1, 1, 1], gap: 0.3, padding: 0.3 },
     [
-      { node: term('dsa-root', 'Data Structure', GREEN), at: [4, 0, 2, 1] },
+      { node: comp('dsa-root', 'Data Structure', GREEN), at: [4, 0, 2, 1] },
       { node: primitive, at: [0, 1, 4, 1] },
-      { node: term('dsa-nonprimitive', 'Non-Primitive', RED), at: [4, 1, 6, 1] },
-      { node: term('dsa-linear', 'Linear', BLUE), at: [4, 2, 4, 1] },
-      { node: term('dsa-nonlinear', 'Non-Linear', BLUE), at: [8, 2, 2, 1] },
-      { node: term('dsa-static', 'Static', PURPLE), at: [4, 3, 1, 1] },
-      { node: term('dsa-dynamic', 'Dynamic', PURPLE), at: [5, 3, 3, 1] },
-      { node: term('dsa-tree', 'Tree', GRAY), at: [8, 3, 1, 1] },
-      { node: term('dsa-graph', 'Graph', GRAY), at: [9, 3, 1, 1] },
-      { node: term('dsa-array', 'Array', GREEN), at: [4, 4, 1, 1] },
-      { node: term('dsa-linkedlist', 'Linked List', ORANGE), at: [5, 4, 1, 1] },
-      { node: term('dsa-stack', 'Stack', ORANGE), at: [6, 4, 1, 1] },
-      { node: term('dsa-queue', 'Queue', ORANGE), at: [7, 4, 1, 1] },
+      { node: comp('dsa-nonprimitive', 'Non-Primitive', RED), at: [4, 1, 6, 1] },
+      { node: comp('dsa-linear', 'Linear', BLUE), at: [4, 2, 4, 1] },
+      { node: comp('dsa-nonlinear', 'Non-Linear', BLUE), at: [8, 2, 2, 1] },
+      { node: comp('dsa-static', 'Static', PURPLE), at: [4, 3, 1, 1] },
+      { node: comp('dsa-dynamic', 'Dynamic', PURPLE), at: [5, 3, 3, 1] },
+      { node: comp('dsa-tree', 'Tree', GRAY), at: [8, 3, 1, 1] },
+      { node: comp('dsa-graph', 'Graph', GRAY), at: [9, 3, 1, 1] },
+      { node: comp('dsa-array', 'Array', GREEN), at: [4, 4, 1, 1] },
+      { node: comp('dsa-linkedlist', 'Linked List', ORANGE), at: [5, 4, 1, 1] },
+      { node: comp('dsa-stack', 'Stack', ORANGE), at: [6, 4, 1, 1] },
+      { node: comp('dsa-queue', 'Queue', ORANGE), at: [7, 4, 1, 1] },
     ],
   ),
 )
@@ -187,7 +191,7 @@ const ramColumn = group(
 
 const root = group(
   'dsa-scene-root',
-  wgrid({ cols: [3, 2], rows: [1], gap: 0.6, padding: 0.5 }, [
+  wgrid({ cols: [1.2, 2], rows: [1], gap: 0.05, padding: 0.5 }, [
     { node: taxonomy, at: [0, 0] },
     { node: ramColumn, at: [1, 0] },
   ]),
