@@ -89,6 +89,13 @@
   background: color-mix(in srgb, var(--node-color) 34%, var(--base));
 }
 
+/* 'circle' shape: round a leaf chip (border-radius 50%). Author its cell square so
+   it reads as a true circle, not an ellipse. Keeps the calm filled look — same fill
+   rules as the chip kind it's applied to (term keeps its fill; symbol stays bare). */
+.scene-node--circle {
+  border-radius: 50%;
+}
+
 /* 'container' nodes are subtle dark panels that group children drawn on top.
    The title rides the TOP-LEFT BORDER (NodeMap-style) so the body is fully free
    for children. overflow:visible lets the title's top half straddle the border

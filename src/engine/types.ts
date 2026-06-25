@@ -20,6 +20,12 @@ export interface SceneNodeSpec {
    * sub-arranges its children.
    */
   kind?: NodeKind
+  /**
+   * Render shape for a leaf chip. 'circle' rounds a `term`/`symbol` into a round
+   * node (border-radius 50%) — author its cell square so it reads as a true circle.
+   * Default (omitted) = the standard rounded-rect chip.
+   */
+  shape?: 'circle'
   /** Optional smaller caption under the label. */
   sub?: string
   /**

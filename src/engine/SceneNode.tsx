@@ -63,6 +63,8 @@ export interface SceneNodeData {
   icon?: string
   color: string
   kind: NodeKind
+  /** Optional render shape ('circle' rounds a leaf chip); see types.ts. */
+  shape?: 'circle'
   /** Dominant flow direction of the scene, sets handle placement. */
   direction: 'horizontal' | 'vertical'
   width: number
@@ -82,7 +84,7 @@ export function SceneNode({ data }: NodeProps) {
 
   return (
     <div
-      className={`scene-node scene-node--${d.kind}${d.highlighted ? ' scene-node--highlighted' : ''}${d.dimmed ? ' scene-node--dimmed' : ''}`}
+      className={`scene-node scene-node--${d.kind}${d.shape === 'circle' ? ' scene-node--circle' : ''}${d.highlighted ? ' scene-node--highlighted' : ''}${d.dimmed ? ' scene-node--dimmed' : ''}`}
       style={{
         width: d.width,
         height: d.height,

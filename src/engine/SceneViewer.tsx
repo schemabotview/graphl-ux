@@ -90,6 +90,7 @@ export function SceneViewer({
           icon: n.icon,
           color: n.color ?? GRAY,
           kind: n.kind ?? 'symbol',
+          shape: n.shape,
           direction,
           width: box.w,
           height: box.h,
