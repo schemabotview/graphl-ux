@@ -135,18 +135,22 @@ const joinBox: SceneNodeSpec = container(
 
 const pipelineBox: SceneNodeSpec = container(
   { id: 'sql-pipeline', label: 'Query Pipeline (logical execution order)', color: GREEN },
-  wgrid({ cols: [1, 3, 1, 1, 1, 1, 1, 1, 1], rows: [1.2, 2.2], gap: 0.2, padding: 0.3 }, [
+  // The bottom band is 3 rows (pad · clause · pad): the single-chip clauses sit in
+  // the MIDDLE row so they render as compact chips (a node fills its cell, so a tall
+  // cell would stretch them), while JOIN spans all three rows to stay a 2×3 box. The
+  // pad rows vertically center the clauses on JOIN's middle, where the flow enters.
+  wgrid({ cols: [1, 3, 1, 1, 1, 1, 1, 1, 1], rows: [1.2, 0.7, 1, 0.7], gap: 0.2, padding: 0.3 }, [
     { node: term('sql-cte', 'CTE / Subquery', YELLOW), at: [0, 0] },
     { node: term('sql-window', 'Window Functions', YELLOW), at: [5, 0] },
-    { node: term('sql-from', 'FROM', GREEN), at: [0, 1] },
-    { node: joinBox, at: [1, 1] },
-    { node: term('sql-where', 'WHERE', GREEN), at: [2, 1] },
-    { node: term('sql-group-by', 'GROUP BY', GREEN), at: [3, 1] },
-    { node: term('sql-having', 'HAVING', GREEN), at: [4, 1] },
-    { node: term('sql-select', 'SELECT', GREEN), at: [5, 1] },
-    { node: term('sql-distinct', 'DISTINCT', GREEN), at: [6, 1] },
-    { node: term('sql-order-by', 'ORDER BY', GREEN), at: [7, 1] },
-    { node: term('sql-limit', 'LIMIT', GREEN), at: [8, 1] },
+    { node: term('sql-from', 'FROM', GREEN), at: [0, 2] },
+    { node: joinBox, at: [1, 1, 1, 3] },
+    { node: term('sql-where', 'WHERE', GREEN), at: [2, 2] },
+    { node: term('sql-group-by', 'GROUP BY', GREEN), at: [3, 2] },
+    { node: term('sql-having', 'HAVING', GREEN), at: [4, 2] },
+    { node: term('sql-select', 'SELECT', GREEN), at: [5, 2] },
+    { node: term('sql-distinct', 'DISTINCT', GREEN), at: [6, 2] },
+    { node: term('sql-order-by', 'ORDER BY', GREEN), at: [7, 2] },
+    { node: term('sql-limit', 'LIMIT', GREEN), at: [8, 2] },
   ]),
 )
 
