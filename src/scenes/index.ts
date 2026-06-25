@@ -12,7 +12,6 @@ import { scalaAnatomy } from './scala-anatomy.ts'
 import { pythonCpython } from './python-cpython.ts'
 import { pythonAnatomy } from './python-anatomy.ts'
 import { dsa } from './dsa.ts'
-import { dsaCatalog } from './dsa-catalog.ts'
 
 // Scene registry: the manifest references scenes by id; this maps id → SceneSpec.
 // Modules run on one dense scene each (01 = spark-execution, 02 = spark-rdd-api);
@@ -25,11 +24,11 @@ import { dsaCatalog } from './dsa-catalog.ts'
 // python-cpython + python-anatomy mirror them for the Python concept (python-content):
 // the CPython runtime map (.py/compile()/import system) and Python's keyword-less
 // `Name : Type = Value` grammar (Model ▸ Bind ▸ Transform ▸ Return).
-// dsa is the Data Structures & Algorithms concept's classical taxonomy (ported from
-// NodeMap's dsa.ts): the family tree from Primitive/Non-Primitive down to the
-// concrete types. dsa-catalog is its companion reference poster — the same 12
-// structures, each drawn at a glance (boxed sequences + node-link trees/graphs).
-// Both are shared across the dsa-content modules via that repo's manifest.
+// dsa is the Data Structures & Algorithms concept's single scene: the "top data
+// structures" poster laid out GROUPED BY the classical taxonomy category (Primitive ·
+// Linear/Static · Linear/Dynamic · Non-Linear/Tree · Non-Linear/Graph · Hashing), each
+// cell a boxed sequence or node-link diagram. Shared across all dsa-content modules via
+// that repo's manifest (camera frames one category/structure box per section).
 export const scenes: Record<string, SceneSpec> = {
   'spark-execution': sparkExecution,
   'spark-rdd-api': sparkRddApi,
@@ -44,5 +43,4 @@ export const scenes: Record<string, SceneSpec> = {
   'python-cpython': pythonCpython,
   'python-anatomy': pythonAnatomy,
   dsa: dsa,
-  'dsa-catalog': dsaCatalog,
 }
