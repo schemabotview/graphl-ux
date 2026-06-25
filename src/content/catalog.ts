@@ -16,7 +16,7 @@
 // each content repo owns *what's inside that one concept* (manifest + notebooks +
 // audio). Mirror of src/scenes/index.ts (app owns the registry).
 
-import { BLUE, ORANGE, PURPLE, RED } from '../engine/colors.ts'
+import { BLUE, GREEN, ORANGE, PURPLE, RED } from '../engine/colors.ts'
 
 export interface Concept {
   /** Slug; also the hash-route id, e.g. 'apache-spark'. */
@@ -65,6 +65,13 @@ export const concepts: Concept[] = [
     accent: BLUE,
     blurb: 'The language, CPython, and the data/ML ecosystem',
     contentBaseUrl: 'https://raw.githubusercontent.com/schemabotview/python-content/main',
+  },
+  {
+    id: 'dsa',
+    label: 'Data Structures & Algorithms',
+    accent: GREEN,
+    blurb: 'From memory layout and Big O to trees, heaps, and interview patterns',
+    contentBaseUrl: 'https://raw.githubusercontent.com/schemabotview/dsa-content/main',
   },
 ]
 

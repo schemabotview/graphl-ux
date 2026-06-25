@@ -11,6 +11,7 @@ import { scalaJvm } from './scala-jvm.ts'
 import { scalaAnatomy } from './scala-anatomy.ts'
 import { pythonCpython } from './python-cpython.ts'
 import { pythonAnatomy } from './python-anatomy.ts'
+import { dsa } from './dsa.ts'
 
 // Scene registry: the manifest references scenes by id; this maps id → SceneSpec.
 // Modules run on one dense scene each (01 = spark-execution, 02 = spark-rdd-api);
@@ -23,6 +24,9 @@ import { pythonAnatomy } from './python-anatomy.ts'
 // python-cpython + python-anatomy mirror them for the Python concept (python-content):
 // the CPython runtime map (.py/compile()/import system) and Python's keyword-less
 // `Name : Type = Value` grammar (Model ▸ Bind ▸ Transform ▸ Return).
+// dsa is the Data Structures & Algorithms concept's single dense map (ported from
+// NodeMap's dsa.ts): the classical taxonomy beside per-structure RAM sketches,
+// shared across all dsa-content modules via that repo's manifest.
 export const scenes: Record<string, SceneSpec> = {
   'spark-execution': sparkExecution,
   'spark-rdd-api': sparkRddApi,
@@ -36,4 +40,5 @@ export const scenes: Record<string, SceneSpec> = {
   'scala-anatomy': scalaAnatomy,
   'python-cpython': pythonCpython,
   'python-anatomy': pythonAnatomy,
+  dsa: dsa,
 }
