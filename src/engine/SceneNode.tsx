@@ -50,7 +50,10 @@ function fitTitlePx(label: string, width: number): number {
   // Uppercase + 0.03em letter-spacing runs wide; ~0.66em/char is conservative.
   const avail = Math.max(width - 18, 8) // left inset (9px) + title h-padding + margin
   const px = avail / (Math.max(label.length, 1) * 0.66)
-  return Math.max(7, Math.min(px, 13))
+  // Cap at 11px: short titles in wide boxes (LAYOUT/SINKS/MODE) otherwise hit a high
+  // ceiling and read BIG next to long titles that land at 7-10px. 11 keeps the band
+  // of titles even.
+  return Math.max(7, Math.min(px, 11))
 }
 
 export interface SceneNodeData {
