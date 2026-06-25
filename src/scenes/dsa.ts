@@ -250,11 +250,18 @@ const hashMapBox = container(
 // The grouping IS the taxonomy: each band is one classification category.
 
 const catStatic = catRow('dsa-grp-static', 'Linear · Static', GREEN, [arrayBox, matrixBox])
-const catDynamic = catRow('dsa-grp-dynamic', 'Linear · Dynamic', ORANGE, [
-  linkedListBox,
-  stackBox,
-  queueBox,
-])
+
+// Linear · Dynamic gets TWO rows: Linked List full-width on top (it needs the most
+// horizontal room — head + 5 nodes + tail), Stack + Queue side-by-side below. A single
+// row squeezed all three and clipped the head/tail/rear/front labels.
+const catDynamic = container(
+  { id: 'dsa-grp-dynamic', label: 'Linear · Dynamic', color: ORANGE },
+  wgrid({ cols: [1, 1], rows: [0.8, 1.2], gap: 0.25, padding: 0.4 }, [
+    { node: linkedListBox, at: [0, 0, 2, 1] },
+    { node: stackBox, at: [0, 1] },
+    { node: queueBox, at: [1, 1] },
+  ]),
+)
 const catTree = catRow('dsa-grp-tree', 'Non-Linear · Tree', TEAL, [treeBox, bstBox, heapBox, trieBox])
 const catGraph = catRow('dsa-grp-graph', 'Non-Linear · Graph', GREEN, [graphBox, unionFindBox])
 const catHashing = catRow('dsa-grp-hashing', 'Hashing', PURPLE, [hashMapBox])
@@ -265,7 +272,7 @@ const catHashing = catRow('dsa-grp-hashing', 'Hashing', PURPLE, [hashMapBox])
 
 const leftColumn = group(
   'dsa-col-linear',
-  wgrid({ cols: [1], rows: [0.5, 1, 1.3], gap: 0.3, padding: 0 }, [
+  wgrid({ cols: [1], rows: [0.45, 1.1, 1.9], gap: 0.3, padding: 0 }, [
     { node: primitiveBox, at: [0, 0] },
     { node: catStatic, at: [0, 1] },
     { node: catDynamic, at: [0, 2] },
