@@ -30,14 +30,52 @@
   border-color: var(--spotlight);
 }
 
-/* Leaf nodes (symbol/term) also brighten their fill; containers keep their calm
-   panel fill so a lit box doesn't read as a solid block. */
-.scene-node--highlighted:not(.scene-node--container) {
+/* term leaves brighten their fill; containers keep their calm panel fill so a lit
+   box doesn't read as a solid block. symbol leaves have no fill — they spotlight
+   via their label (below), so they're excluded here too. */
+.scene-node--highlighted:not(.scene-node--container):not(.scene-node--symbol):not(.scene-node--label) {
   background: color-mix(in srgb, var(--node-color, #9aa3b2) 42%, var(--base));
 }
 
 .scene-node--dimmed {
   opacity: 0.28;
+}
+
+/* 'symbol' nodes are NodeMap-style identity leaves: a role-color glyph tile with
+   the label stacked below it, on a TRANSPARENT body (no border/fill) — the glyph
+   carries the color, the label reads in the role hue. (Option B: contained — glyph
+   + label both sit inside the cell box.) */
+.scene-node--symbol {
+  border: none;
+  background: none;
+  padding: 4px;
+  gap: 4px;
+}
+
+.scene-node--symbol .scene-node__label {
+  color: color-mix(in srgb, var(--node-color, #cfd4dc) 75%, #ffffff);
+}
+
+/* Spotlight: a symbol has no border to turn amber, so light its label instead. */
+.scene-node--symbol.scene-node--highlighted .scene-node__label {
+  color: var(--spotlight, #ffc24b);
+}
+
+/* 'label' nodes are bare text leaves — no glyph, no fill, no border. Just the label
+   in the role hue (like a symbol's label), for plain enumerations inside a container
+   (stage partitions, tasks). */
+.scene-node--label {
+  border: none;
+  background: none;
+  padding: 2px;
+}
+
+.scene-node--label .scene-node__label {
+  color: color-mix(in srgb, var(--node-color, #cfd4dc) 75%, #ffffff);
+}
+
+.scene-node--label.scene-node--highlighted .scene-node__label {
+  color: var(--spotlight, #ffc24b);
 }
 
 /* 'term' nodes are filled chips whose text IS the concept. Sans font (not mono)
@@ -125,6 +163,31 @@
   font-size: 15px;
   line-height: 1.3;
   color: color-mix(in srgb, var(--node-color) 60%, #ffffff 40%);
+}
+
+/* Glyph square for a `symbol` leaf (SceneGlyph): a role-color tile holding an
+   image or short initials. Calm filled fill like the other nodes — no glow. */
+.scene-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border-radius: 4px;
+  background: var(--glyph-color, #9aa3b2);
+  overflow: hidden;
+}
+
+.scene-glyph__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.scene-glyph__text {
+  color: #f1f2f4;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
 }
 
 /* Edge labels rendered via EdgeLabelRenderer (HTML over the SVG). */

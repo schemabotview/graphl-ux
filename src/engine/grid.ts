@@ -37,6 +37,33 @@ export function resolveGrid(
   return out
 }
 
+/**
+ * Normalize a grid dimension to per-track WEIGHTS: a number `n` → `[1,1,…,1]`
+ * (n equal tracks), an array passes through (relative track sizes). One axis of
+ * the weighted/uniform unification — uniform is just the all-ones case.
+ */
+export const tracks = (dim: number | number[]): number[] =>
+  Array.isArray(dim) ? dim : Array.from({ length: dim }, () => 1)
+
+const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0)
+
+/** Cumulative pixel offset BEFORE each track: `[w0,w1,w2]` → `[0,w0,w0+w1]`. */
+const offsets = (sizes: number[]): number[] =>
+  sizes.reduce<number[]>((acc, s) => [...acc, acc[acc.length - 1] + s], [0])
+
+/**
+ * Lay out one axis: turn relative weights into pixel track sizes within `extent`,
+ * reserving `padding` on both ends and `gap` between tracks (both measured in
+ * weight-1 units, so a unit = one base track). Returns the unit size (for gap/pad
+ * pixels), each track's size, and the cumulative offset before each track.
+ */
+function axis(weights: number[], extent: number, gap: number, padding: number) {
+  const denom = sum(weights) + 2 * padding + (weights.length - 1) * gap
+  const unit = extent / denom
+  const sizes = weights.map((w) => w * unit)
+  return { unit, sizes, before: offsets(sizes) }
+}
+
 /** Place one level of siblings within `box`, then recurse into their children. */
 function layoutLevel(
   nodes: SceneNodeSpec[],
@@ -44,22 +71,21 @@ function layoutLevel(
   box: Box,
   out: Record<string, Box>,
 ): void {
-  const { cols, rows, gap = 0.2, padding = 0.4 } = grid
-
-  const cellW = box.w / (cols + 2 * padding + (cols - 1) * gap)
-  const cellH = box.h / (rows + 2 * padding + (rows - 1) * gap)
-  const gapX = cellW * gap
-  const gapY = cellH * gap
-  const padX = cellW * padding
-  const padY = cellH * padding
+  const { gap = 0.2, padding = 0.4 } = grid
+  const col = axis(tracks(grid.cols), box.w, gap, padding)
+  const row = axis(tracks(grid.rows), box.h, gap, padding)
+  const gapX = col.unit * gap
+  const gapY = row.unit * gap
+  const padX = col.unit * padding
+  const padY = row.unit * padding
 
   for (const node of nodes) {
     const [c, r, cs = 1, rs = 1] = node.cell
     const nb: Box = {
-      x: box.x + padX + c * (cellW + gapX),
-      y: box.y + padY + r * (cellH + gapY),
-      w: cs * cellW + (cs - 1) * gapX,
-      h: rs * cellH + (rs - 1) * gapY,
+      x: box.x + padX + col.before[c] + c * gapX,
+      y: box.y + padY + row.before[r] + r * gapY,
+      w: sum(col.sizes.slice(c, c + cs)) + (cs - 1) * gapX,
+      h: sum(row.sizes.slice(r, r + rs)) + (rs - 1) * gapY,
     }
     out[node.id] = nb
 
@@ -96,7 +122,8 @@ const contains = (a: Rect, b: Rect) =>
  * other. Checked per level (children live in their parent's sub-grid).
  */
 export function validateLayout(nodes: SceneNodeSpec[], grid: SceneGrid): void {
-  const { cols, rows } = grid
+  const cols = tracks(grid.cols).length
+  const rows = tracks(grid.rows).length
 
   for (const { id, cell } of nodes) {
     const [c, r, cs = 1, rs = 1] = cell

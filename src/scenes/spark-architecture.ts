@@ -1,5 +1,12 @@
 import type { SceneNodeSpec, SceneSpec } from '../engine/types.ts'
-import { container, group, weighted, type NodeSeed, type WeightedSeed } from '../engine/patterns.ts'
+import {
+  container,
+  group,
+  type NodeSeed,
+  type PatternResult,
+  type WeightedSeed,
+  type WeightedSpec,
+} from '../engine/patterns.ts'
 import { BLUE, GRAY, GREEN, ORANGE, PURPLE, RED, TEAL } from '../engine/colors.ts'
 
 // The WHOLE Spark system on one 16:9 map — ported from NodeMap's `spark.ts`
@@ -7,7 +14,9 @@ import { BLUE, GRAY, GREEN, ORANGE, PURPLE, RED, TEAL } from '../engine/colors.t
 // mental model: Master Node (driver → Catalyst → Tungsten → DAG → schedulers),
 // Cluster Mgr, two Worker Nodes (A batch / B streaming), Output Modes, and the
 // data plane (sources → lakehouse). Geometry is faithful to the source: it used
-// WEIGHTED grid tracks, lowered here to graphl-ux's uniform grid via `weighted()`.
+// WEIGHTED grid tracks, which graphl-ux's resolver now supports NATIVELY — a grid's
+// `cols`/`rows` can be relative-weight arrays, and a child's `cell` indexes those
+// tracks directly (no lowering). `wgrid()` below is the thin authoring shim.
 //
 // Palette reconciliation (graphl-ux has no YELLOW; amber is spotlight-only):
 //   - storage/IO yellows (S3, Local Disk, Gold, User Code) → ORANGE
@@ -16,55 +25,85 @@ import { BLUE, GRAY, GREEN, ORANGE, PURPLE, RED, TEAL } from '../engine/colors.t
 const G = 0.2
 const P = 0.3
 
-/** A filled leaf chip — the text IS the concept (graphl-ux `term`). */
+/**
+ * A COMPONENT leaf — an icon glyph + label (graphl-ux `symbol`, NodeMap's default).
+ * Use for parts of the system that do/hold/flow something (Driver, Executor, Kafka,
+ * Bronze, …). The glyph derives initials from the label unless an `icon` is given.
+ */
+const comp = (id: string, label: string, color: string): NodeSeed => ({ id, label, color, kind: 'symbol' })
+
+/**
+ * A LABEL chip — a filled chip whose text IS the value (graphl-ux `term`). Use for
+ * enumerated options, not components: the Cluster-Manager deployment targets and the
+ * streaming Output Modes (append/update/complete).
+ */
 const chip = (id: string, label: string, color: string): NodeSeed => ({ id, label, color, kind: 'term' })
+
+/**
+ * A bare LABEL leaf — text only, no glyph and no rectangle (graphl-ux `label`). Use
+ * for plain enumerations inside a labelled container where a glyph would be noise:
+ * the Stage partitions (P0/P1/P2) and the Tasks.
+ */
+const lbl = (id: string, label: string, color: string): NodeSeed => ({ id, label, color, kind: 'label' })
+
+/**
+ * Native weighted-track authoring: the grid carries the relative track WEIGHTS
+ * (`engine/grid.ts` resolves arrays directly), and each child's `at` becomes its
+ * `cell`, indexing those tracks 1:1. Same `{ node, at }` ergonomics as the old
+ * lowering helper, but with no integer-lowering step — unequal widths are now
+ * a first-class grid feature, so the resolver places them straight.
+ */
+const wgrid = (spec: WeightedSpec, children: WeightedSeed[]): PatternResult => ({
+  grid: spec,
+  nodes: children.map(({ node, at }) => ({ ...node, cell: at })),
+})
 
 // --- Master Node: the driver-side control plane ------------------------------
 
 const catalyst = container(
   { id: 'catalyst', label: 'Catalyst Optimizer', color: PURPLE },
-  weighted({ cols: [1, 1, 1, 1], rows: [1], gap: 0.2, padding: 0.25 }, [
-    { node: chip('logical-plan', 'Logical Plan', BLUE), at: [0, 0] },
-    { node: chip('analyzed-plan', 'Analyzed Plan', BLUE), at: [1, 0] },
-    { node: chip('optimized-plan', 'Optimized Plan', BLUE), at: [2, 0] },
-    { node: chip('physical-plan', 'Physical Plan', BLUE), at: [3, 0] },
+  wgrid({ cols: [1, 1, 1, 1], rows: [1], gap: 0.2, padding: 0.25 }, [
+    { node: comp('logical-plan', 'Logical Plan', BLUE), at: [0, 0] },
+    { node: comp('analyzed-plan', 'Analyzed Plan', BLUE), at: [1, 0] },
+    { node: comp('optimized-plan', 'Optimized Plan', BLUE), at: [2, 0] },
+    { node: comp('physical-plan', 'Physical Plan', BLUE), at: [3, 0] },
   ]),
 )
 
 const stage1 = container(
   { id: 'stage-1', label: 'Stage 1', color: ORANGE },
-  weighted({ cols: [1], rows: [1, 1, 1], gap: 0.1, padding: 0.18 }, [
-    { node: chip('stage1-p0', 'P0', ORANGE), at: [0, 0] },
-    { node: chip('stage1-p1', 'P1', ORANGE), at: [0, 1] },
-    { node: chip('stage1-p2', 'P2', ORANGE), at: [0, 2] },
+  wgrid({ cols: [1], rows: [1, 1, 1], gap: 0.1, padding: 0.18 }, [
+    { node: lbl('stage1-p0', 'P0', ORANGE), at: [0, 0] },
+    { node: lbl('stage1-p1', 'P1', ORANGE), at: [0, 1] },
+    { node: lbl('stage1-p2', 'P2', ORANGE), at: [0, 2] },
   ]),
 )
 
 const stage2 = container(
   { id: 'stage-2', label: 'Stage 2', color: RED },
-  weighted({ cols: [1], rows: [1, 1, 1], gap: 0.1, padding: 0.18 }, [
-    { node: chip('stage2-g0', 'G0', RED), at: [0, 0] },
-    { node: chip('stage2-g1', 'G1', RED), at: [0, 1] },
-    { node: chip('stage2-g2', 'G2', RED), at: [0, 2] },
+  wgrid({ cols: [1], rows: [1, 1, 1], gap: 0.1, padding: 0.18 }, [
+    { node: lbl('stage2-g0', 'G0', RED), at: [0, 0] },
+    { node: lbl('stage2-g1', 'G1', RED), at: [0, 1] },
+    { node: lbl('stage2-g2', 'G2', RED), at: [0, 2] },
   ]),
 )
 
 const tasks = container(
   { id: 'tasks', label: 'Tasks', color: TEAL },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: 0.15, padding: 0.2 }, [
-    { node: chip('task-p0', 'Task p0', TEAL), at: [0, 0] },
-    { node: chip('task-p1', 'Task p1', TEAL), at: [0, 1] },
-    { node: chip('task-p2', 'Task p2', TEAL), at: [0, 2] },
-    { node: chip('task-p3', 'Task p3', TEAL), at: [0, 3] },
+  wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: 0.15, padding: 0.2 }, [
+    { node: lbl('task-p0', 'Task p0', TEAL), at: [0, 0] },
+    { node: lbl('task-p1', 'Task p1', TEAL), at: [0, 1] },
+    { node: lbl('task-p2', 'Task p2', TEAL), at: [0, 2] },
+    { node: lbl('task-p3', 'Task p3', TEAL), at: [0, 3] },
   ]),
 )
 
 const dagScheduler = container(
   { id: 'dag-scheduler', label: 'DAG Scheduler', color: TEAL },
-  weighted({ cols: [0.7, 1.2, 0.4, 1.2, 1.2], rows: [1], gap: 0.15, padding: 0.25 }, [
-    { node: chip('job', 'Job', ORANGE), at: [0, 0] },
+  wgrid({ cols: [0.7, 1.2, 0.4, 1.2, 1.2], rows: [1], gap: 0.15, padding: 0.25 }, [
+    { node: comp('job', 'Job', ORANGE), at: [0, 0] },
     { node: stage1, at: [1, 0] },
-    { node: chip('shuffle', 'Shuffle', RED), at: [2, 0] },
+    { node: comp('shuffle', 'Shuffle', RED), at: [2, 0] },
     { node: stage2, at: [3, 0] },
     { node: tasks, at: [4, 0] },
   ]),
@@ -72,11 +111,11 @@ const dagScheduler = container(
 
 const streamingCoord = container(
   { id: 'streaming-coord', label: 'Streaming Coordinator', color: TEAL },
-  weighted({ cols: [1, 1, 1, 1], rows: [1], gap: 0.2, padding: 0.25 }, [
-    { node: chip('trigger', 'Trigger', TEAL), at: [0, 0] },
-    { node: chip('offset-log', 'Offset Log', TEAL), at: [1, 0] },
-    { node: chip('global-watermark', 'Global Watermark', TEAL), at: [2, 0] },
-    { node: chip('commit-log', 'Commit Log', TEAL), at: [3, 0] },
+  wgrid({ cols: [1, 1, 1, 1], rows: [1], gap: 0.2, padding: 0.25 }, [
+    { node: comp('trigger', 'Trigger', TEAL), at: [0, 0] },
+    { node: comp('offset-log', 'Offset Log', TEAL), at: [1, 0] },
+    { node: comp('global-watermark', 'Global Watermark', TEAL), at: [2, 0] },
+    { node: comp('commit-log', 'Commit Log', TEAL), at: [3, 0] },
   ]),
 )
 
@@ -88,13 +127,13 @@ const master = container(
   // Bigger gap so the vertical control-flow edges (driver → session, etc.) have
   // room to draw between the stacked boxes; leaf-chip rows trimmed to 0.8 so the
   // single-line chips aren't taller than they need to be.
-  weighted({ cols: [1], rows: [0.8, 0.8, 2.5, 0.8, 2.5, 1, 1.5], gap: 0.45, padding: 0.08 }, [
-    { node: chip('driver', 'Driver Program', ORANGE), at: [0, 0] },
-    { node: chip('session', 'SparkSession', BLUE), at: [0, 1] },
+  wgrid({ cols: [1], rows: [0.8, 0.8, 2.5, 0.8, 2.5, 1, 1.5], gap: 0.45, padding: 0.08 }, [
+    { node: comp('driver', 'Driver Program', ORANGE), at: [0, 0] },
+    { node: comp('session', 'SparkSession', BLUE), at: [0, 1] },
     { node: catalyst, at: [0, 2] },
-    { node: chip('tungsten', 'Tungsten Engine', PURPLE), at: [0, 3] },
+    { node: comp('tungsten', 'Tungsten Engine', PURPLE), at: [0, 3] },
     { node: dagScheduler, at: [0, 4] },
-    { node: chip('task-scheduler', 'TaskScheduler', BLUE), at: [0, 5] },
+    { node: comp('task-scheduler', 'TaskScheduler', BLUE), at: [0, 5] },
     { node: streamingCoord, at: [0, 6] },
   ]),
 )
@@ -105,7 +144,7 @@ const clusterMgr = container(
   { id: 'cluster-mgr', label: 'Cluster Mgr', color: BLUE },
   // Small padding (1-column stack — see Master note) so the mode chips are wide
   // enough for their labels ("standalone", "Databricks") instead of clipping.
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: 0.08 }, [
+  wgrid({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: 0.08 }, [
     { node: chip('mode-local', 'local', GRAY), at: [0, 0] },
     { node: chip('mode-standalone', 'standalone', BLUE), at: [0, 1] },
     { node: chip('mode-yarn', 'YARN', ORANGE), at: [0, 2] },
@@ -121,40 +160,40 @@ const worker = (s: 'a' | 'b', label: 'A' | 'B', mode: 'batch' | 'streaming'): Sc
 
   const heap = container(
     { id: `heap-${s}`, label: 'Heap (Block Mgr)', color: BLUE },
-    weighted({ cols: [2.8, 1.4], rows: [1], gap: G, padding: P }, [
+    wgrid({ cols: [2.8, 1.4], rows: [1], gap: G, padding: P }, [
       {
         node: container(
           { id: `unified-${s}`, label: 'Unified Memory', color: BLUE },
-          weighted({ cols: [1, 1], rows: [1], gap: G, padding: P }, [
-            { node: chip(`execution-${s}`, 'Execution', PURPLE), at: [0, 0] },
-            { node: chip(`storage-${s}`, 'Storage', GREEN), at: [1, 0] },
+          wgrid({ cols: [1, 1], rows: [1], gap: G, padding: P }, [
+            { node: comp(`execution-${s}`, 'Execution', PURPLE), at: [0, 0] },
+            { node: comp(`storage-${s}`, 'Storage', GREEN), at: [1, 0] },
           ]),
         ),
         at: [0, 0],
       },
-      { node: chip(`user-code-${s}`, 'User Code', ORANGE), at: [1, 0] },
+      { node: comp(`user-code-${s}`, 'User Code', ORANGE), at: [1, 0] },
     ]),
   )
 
   const children: WeightedSeed[] = [
     // Executor is the big box (spans 3 rows); the cores are short chips on the
     // bottom row, aligned with Local Disk in the right column.
-    { node: chip(`exec-${s}`, 'Executor', PURPLE), at: [0, 0, 2, 3] },
-    { node: chip(`core1-${s}`, 'Core 1', RED), at: [0, 3, 1, 1] },
-    { node: chip(`core2-${s}`, 'Core 2', RED), at: [1, 3, 1, 1] },
+    { node: comp(`exec-${s}`, 'Executor', PURPLE), at: [0, 0, 2, 3] },
+    { node: comp(`core1-${s}`, 'Core 1', RED), at: [0, 3, 1, 1] },
+    { node: comp(`core2-${s}`, 'Core 2', RED), at: [1, 3, 1, 1] },
     { node: heap, at: [2, 0, 1, 3] },
-    { node: chip(`local-disk-${s}`, 'Local Disk', ORANGE), at: [2, 3] },
+    { node: comp(`local-disk-${s}`, 'Local Disk', ORANGE), at: [2, 3] },
   ]
 
   if (streaming) {
     children.push({
       node: container(
         { id: `stateful-ops-${s}`, label: 'Stateful Ops', color: TEAL },
-        weighted({ cols: [1, 1, 1, 1], rows: [1], gap: G, padding: P }, [
-          { node: chip(`local-watermark-${s}`, 'Local Watermark', TEAL), at: [0, 0] },
-          { node: chip(`window-state-${s}`, 'Window State', TEAL), at: [1, 0] },
-          { node: chip(`rocksdb-${s}`, 'RocksDB', TEAL), at: [2, 0] },
-          { node: chip(`state-snapshot-${s}`, 'State Snapshot', TEAL), at: [3, 0] },
+        wgrid({ cols: [1, 1, 1, 1], rows: [1], gap: G, padding: P }, [
+          { node: comp(`local-watermark-${s}`, 'Local Watermark', TEAL), at: [0, 0] },
+          { node: comp(`window-state-${s}`, 'Window State', TEAL), at: [1, 0] },
+          { node: comp(`rocksdb-${s}`, 'RocksDB', TEAL), at: [2, 0] },
+          { node: comp(`state-snapshot-${s}`, 'State Snapshot', TEAL), at: [3, 0] },
         ]),
       ),
       at: [0, 4, 3, 1],
@@ -163,7 +202,7 @@ const worker = (s: 'a' | 'b', label: 'A' | 'B', mode: 'batch' | 'streaming'): Sc
 
   return container(
     { id: `worker-${s}`, label: `Worker Node ${label} (${streaming ? 'Streaming' : 'Batch'})`, color: GREEN },
-    weighted(
+    wgrid(
       { cols: [1.2, 1.2, 4.8], rows: streaming ? [1, 1, 1, 1, 1.5] : [1, 1, 1, 1], gap: G, padding: P },
       children,
     ),
@@ -174,7 +213,7 @@ const worker = (s: 'a' | 'b', label: 'A' | 'B', mode: 'batch' | 'streaming'): Sc
 
 const outputModes = container(
   { id: 'output-modes', label: 'Output Modes', color: GREEN },
-  weighted({ cols: [1, 1, 1], rows: [1], gap: 0.3, padding: 0.25 }, [
+  wgrid({ cols: [1, 1, 1], rows: [1], gap: 0.3, padding: 0.25 }, [
     { node: chip('mode-append', 'append', GREEN), at: [0, 0] },
     { node: chip('mode-update', 'update', GREEN), at: [1, 0] },
     { node: chip('mode-complete', 'complete', GREEN), at: [2, 0] },
@@ -183,33 +222,33 @@ const outputModes = container(
 
 const dataSources = container(
   { id: 'data-sources', label: 'Data Sources', color: TEAL },
-  weighted({ cols: [1, 1, 1], rows: [1, 1], gap: 0.25, padding: 0.3 }, [
-    { node: chip('hdfs', 'HDFS', ORANGE), at: [0, 0] },
-    { node: chip('s3', 'S3', ORANGE), at: [1, 0] },
-    { node: chip('jdbc', 'JDBC', BLUE), at: [2, 0] },
-    { node: chip('kafka-src', 'Kafka', TEAL), at: [0, 1] },
-    { node: chip('delta-src', 'Delta', TEAL), at: [1, 1] },
-    { node: chip('file-src', 'Files', TEAL), at: [2, 1] },
+  wgrid({ cols: [1, 1, 1], rows: [1, 1], gap: 0.25, padding: 0.3 }, [
+    { node: comp('hdfs', 'HDFS', ORANGE), at: [0, 0] },
+    { node: comp('s3', 'S3', ORANGE), at: [1, 0] },
+    { node: comp('jdbc', 'JDBC', BLUE), at: [2, 0] },
+    { node: comp('kafka-src', 'Kafka', TEAL), at: [0, 1] },
+    { node: comp('delta-src', 'Delta', TEAL), at: [1, 1] },
+    { node: comp('file-src', 'Files', TEAL), at: [2, 1] },
   ]),
 )
 
 const storageLayer = container(
   { id: 'storage-layer', label: 'Storage Layer', color: GRAY },
-  weighted({ cols: [1, 1, 1], rows: [1], gap: 0.25, padding: 0.25 }, [
-    { node: chip('storage-hdfs', 'HDFS', ORANGE), at: [0, 0] },
-    { node: chip('storage-adls', 'ADLS', BLUE), at: [1, 0] },
-    { node: chip('storage-s3', 'S3', ORANGE), at: [2, 0] },
+  wgrid({ cols: [1, 1, 1], rows: [1], gap: 0.25, padding: 0.25 }, [
+    { node: comp('storage-hdfs', 'HDFS', ORANGE), at: [0, 0] },
+    { node: comp('storage-adls', 'ADLS', BLUE), at: [1, 0] },
+    { node: comp('storage-s3', 'S3', ORANGE), at: [2, 0] },
   ]),
 )
 
 const lakehouse = container(
   { id: 'lakehouse', label: 'Lakehouse (Delta Lake)', color: BLUE },
-  weighted({ cols: [1, 1, 1], rows: [0.8, 1.3, 0.7, 1.2], gap: 0.25, padding: 0.3 }, [
-    { node: chip('unity-catalog', 'Unity Catalog', PURPLE), at: [0, 0, 3, 1] },
-    { node: chip('bronze', 'Bronze', ORANGE), at: [0, 1] },
-    { node: chip('silver', 'Silver', GRAY), at: [1, 1] },
-    { node: chip('gold', 'Gold', ORANGE), at: [2, 1] },
-    { node: chip('delta-log', 'Delta Log', BLUE), at: [0, 2, 3, 1] },
+  wgrid({ cols: [1, 1, 1], rows: [0.8, 1.3, 0.7, 1.2], gap: 0.25, padding: 0.3 }, [
+    { node: comp('unity-catalog', 'Unity Catalog', PURPLE), at: [0, 0, 3, 1] },
+    { node: comp('bronze', 'Bronze', ORANGE), at: [0, 1] },
+    { node: comp('silver', 'Silver', GRAY), at: [1, 1] },
+    { node: comp('gold', 'Gold', ORANGE), at: [2, 1] },
+    { node: comp('delta-log', 'Delta Log', BLUE), at: [0, 2, 3, 1] },
     { node: storageLayer, at: [0, 3, 3, 1] },
   ]),
 )
@@ -218,9 +257,9 @@ const lakehouse = container(
 // regions left→right with a wide center weight on the lakehouse.
 const dataPlane = group(
   'data-plane',
-  weighted({ cols: [3, 1.5, 7], rows: [1], gap: 0.4, padding: 0 }, [
+  wgrid({ cols: [3, 1.5, 7], rows: [1], gap: 0.4, padding: 0 }, [
     { node: dataSources, at: [0, 0] },
-    { node: chip('shared-checkpoint', 'Shared Checkpoint', GRAY), at: [1, 0] },
+    { node: comp('shared-checkpoint', 'Shared Checkpoint', GRAY), at: [1, 0] },
     { node: lakehouse, at: [2, 0] },
   ]),
 )
@@ -229,7 +268,7 @@ const dataPlane = group(
 
 const architecture = container(
   { id: 'spark', label: 'Spark Architecture', color: ORANGE },
-  weighted({ cols: [7, 2, 9, 9], rows: [8, 2, 5], gap: 0.4, padding: 0.4 }, [
+  wgrid({ cols: [7, 2, 9, 9], rows: [8, 2, 5], gap: 0.4, padding: 0.4 }, [
     { node: master, at: [0, 0, 1, 3] },
     { node: clusterMgr, at: [1, 0] },
     { node: worker('a', 'A', 'batch'), at: [2, 0] },

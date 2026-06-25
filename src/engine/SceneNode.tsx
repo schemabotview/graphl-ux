@@ -1,6 +1,11 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { GRAY } from './colors.ts'
 import type { NodeKind } from './types.ts'
+import { SceneGlyph } from './SceneGlyph.tsx'
+
+/** Glyph edge length for a `symbol` leaf: ~40% of the box's smaller side (so it
+ *  reads as an identity tile with the label beside it), clamped to a sane range. */
+const glyphSizeFor = (w: number, h: number) => Math.max(14, Math.min(Math.min(w, h) * 0.4, 64))
 
 /**
  * Proportionate label size: shrink the font so the label fits its box instead of
@@ -37,6 +42,8 @@ function fitFontPx(label: string, width: number, height: number, kind: NodeKind)
 export interface SceneNodeData {
   label: string
   sub?: string
+  /** Optional glyph for a `symbol` leaf (image URL or short literal); see types.ts. */
+  icon?: string
   color: string
   kind: NodeKind
   /** Dominant flow direction of the scene, sets handle placement. */
@@ -74,7 +81,27 @@ export function SceneNode({ data }: NodeProps) {
           <span className="scene-node__label">{d.label}</span>
         </span>
       )}
-      {(d.kind === 'symbol' || d.kind === 'term') && (
+      {d.kind === 'symbol' &&
+        (() => {
+          // Option B: glyph + label stacked INSIDE the cell (transparent body). The
+          // glyph claims its square off the top, so the label fits the rest.
+          const glyph = glyphSizeFor(d.width, d.height)
+          const labelH = Math.max(d.height - glyph - 8, 8)
+          return (
+            <>
+              <SceneGlyph icon={d.icon} label={d.label} color={d.color} size={glyph} />
+              <span
+                className="scene-node__label"
+                style={{ fontSize: fitFontPx(d.label, d.width, labelH, 'symbol') }}
+              >
+                {d.label}
+              </span>
+            </>
+          )
+        })()}
+      {(d.kind === 'term' || d.kind === 'label') && (
+        // 'label' is a bare text leaf (no glyph, no fill); like 'term' it uses the
+        // whole box for font-fit, just without the chip chrome (styled in scene.css).
         <span
           className="scene-node__label"
           style={{ fontSize: fitFontPx(d.label, d.width, d.height, d.kind) }}

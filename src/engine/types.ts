@@ -2,7 +2,7 @@
 // on purpose (an AI generator may emit this later). Nodes are placed on a grid by
 // `cell`; the grid resolver turns cells into pixel boxes for React Flow.
 
-export type NodeKind = 'symbol' | 'term' | 'container' | 'group'
+export type NodeKind = 'symbol' | 'term' | 'label' | 'container' | 'group'
 
 export interface SceneNodeSpec {
   id: string
@@ -12,7 +12,9 @@ export interface SceneNodeSpec {
   /** A semantic role color from `colors.ts` (driver=BLUE, executors=GREEN, …). */
   color?: string
   /**
-   * 'symbol' = labelled node; 'term' = filled chip whose text IS the concept;
+   * 'symbol' = icon glyph + label (a component); 'term' = filled chip whose text
+   * IS the concept (an option/value); 'label' = bare text leaf — no glyph, no fill —
+   * for plain enumerations inside a labelled container (stage partitions, tasks);
    * 'container' = titled box whose `children` lay out INSIDE it (title band
    * reserved at top); 'group' = invisible container (no chrome) that only
    * sub-arranges its children.
@@ -20,6 +22,12 @@ export interface SceneNodeSpec {
   kind?: NodeKind
   /** Optional smaller caption under the label. */
   sub?: string
+  /**
+   * Optional glyph for a `symbol` leaf: an image URL, or a short literal (e.g. an
+   * emoji / 2-3 letters). When omitted, the renderer derives initials from `label`
+   * (NodeMap-style). Ignored by non-`symbol` kinds.
+   */
+  icon?: string
   /** Inner grid for this node's `children`, resolved inside this node's box. */
   layout?: SceneGrid
   /** Child nodes laid out inside this node's box via `layout`. */
@@ -38,11 +46,18 @@ export interface SceneEdgeSpec {
 }
 
 export interface SceneGrid {
-  cols: number
-  rows: number
-  /** Gap between cells, in grid units (relative). Default 0.2. */
+  /**
+   * Column tracks. A number `n` means n EQUAL columns (uniform grid). An array
+   * is per-column relative WEIGHTS — `[1.2, 1, 1.2]` makes the outer columns 1.2×
+   * the middle (NodeMap-style unequal tracks). A `cell`'s col index/span counts
+   * tracks either way.
+   */
+  cols: number | number[]
+  /** Row tracks — same rule as `cols` (a count, or per-row relative weights). */
+  rows: number | number[]
+  /** Gap between tracks, in grid units (one unit = one weight-1 track). Default 0.2. */
   gap?: number
-  /** Inner padding, in grid units (relative). Default 0.4. */
+  /** Inner padding, in grid units (one unit = one weight-1 track). Default 0.4. */
   padding?: number
 }
 

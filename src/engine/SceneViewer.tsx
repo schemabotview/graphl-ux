@@ -8,7 +8,7 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import type { SceneNodeSpec, SceneSpec } from './types.ts'
-import { resolveGrid, type Box } from './grid.ts'
+import { resolveGrid, tracks, type Box } from './grid.ts'
 import { GRAY, EDGE } from './colors.ts'
 import { SceneNode, type SceneNodeData } from './SceneNode.tsx'
 import { FlowEdge } from './FlowEdge.tsx'
@@ -60,7 +60,8 @@ export function SceneViewer({
   highlight?: string[]
   focus?: string | string[]
 }) {
-  const direction = scene.grid.cols > scene.grid.rows ? 'horizontal' : 'vertical'
+  const direction =
+    tracks(scene.grid.cols).length > tracks(scene.grid.rows).length ? 'horizontal' : 'vertical'
   const highlightKey = highlight?.join(',') ?? ''
   const focusIds = useMemo(() => (Array.isArray(focus) ? focus : focus ? [focus] : []), [focus])
 
@@ -86,6 +87,7 @@ export function SceneViewer({
         data: {
           label: n.label,
           sub: n.sub,
+          icon: n.icon,
           color: n.color ?? GRAY,
           kind: n.kind ?? 'symbol',
           direction,

@@ -1,13 +1,21 @@
 import type { SceneSpec } from '../engine/types.ts'
-import { container, group, weighted, type NodeSeed } from '../engine/patterns.ts'
+import {
+  container,
+  group,
+  type NodeSeed,
+  type PatternResult,
+  type WeightedSeed,
+  type WeightedSpec,
+} from '../engine/patterns.ts'
 import { BLUE, GRAY, GREEN, ORANGE, PURPLE, RED, TEAL, YELLOW } from '../engine/colors.ts'
 
 // The WHOLE Spark STRUCTURED STREAMING API on one 16:9 wall — ported from
 // NodeMap's `spark-streaming.ts` (`~/Projects/NodeMap/src/data/scenes/spark-streaming.ts`),
 // the same way `spark-batch-api.ts` was: NodeMap's WEIGHTED grid tracks
-// (`layout.cols/rows` = relative weights, `cell` = track index) are lowered to
-// graphl-ux's uniform grid via `weighted()`, so the transcription is faithful
-// (ids, labels, colors, and track weights all come straight from the source).
+// (`layout.cols/rows` = relative weights, `cell` = track index) are resolved
+// NATIVELY now (a grid's `cols`/`rows` can be weight arrays; `wgrid()` is the thin
+// shim), so the transcription is faithful (ids, labels, colors, and track weights
+// all come straight from the source).
 // Source ids are preserved (e.g. `s-ses-create`) so they stay stable spotlight
 // targets for the module manifests.
 //
@@ -25,11 +33,23 @@ const PT = 0.01
 /** A filled leaf chip — the text IS the concept (graphl-ux `term`). */
 const chip = (id: string, label: string, color: string): NodeSeed => ({ id, label, color, kind: 'term' })
 
+/**
+ * Native weighted-track authoring: the grid carries the relative track WEIGHTS
+ * (`engine/grid.ts` resolves arrays directly), and each child's `at` becomes its
+ * `cell`, indexing those tracks 1:1. Same `{ node, at }` ergonomics as the old
+ * lowering helper, minus the integer-lowering step — unequal widths are a
+ * first-class grid feature now, so the resolver places them straight.
+ */
+const wgrid = (spec: WeightedSpec, children: WeightedSeed[]): PatternResult => ({
+  grid: spec,
+  nodes: children.map(({ node, at }) => ({ ...node, cell: at })),
+})
+
 // ─── SETUP BAND ──────────────────────────────────────────────────────────────
 
 const session = container(
   { id: 's-session', label: 'SparkSession.builder', color: PURPLE },
-  weighted({ cols: [1, 1, 1], rows: [1, 1], gap: G, padding: P }, [
+  wgrid({ cols: [1, 1, 1], rows: [1, 1], gap: G, padding: P }, [
     { node: chip('s-ses-appname', 'appName', PURPLE), at: [0, 0] },
     { node: chip('s-ses-master', 'master', PURPLE), at: [1, 0] },
     { node: chip('s-ses-remote', 'remote', PURPLE), at: [2, 0] },
@@ -41,7 +61,7 @@ const session = container(
 
 const manager = container(
   { id: 's-mgr', label: 'spark.streams (manager)', color: YELLOW },
-  weighted({ cols: [1, 1], rows: [1, 1, 1], gap: G, padding: P }, [
+  wgrid({ cols: [1, 1], rows: [1, 1, 1], gap: G, padding: P }, [
     { node: chip('s-mgr-active', 'active', YELLOW), at: [0, 0] },
     { node: chip('s-mgr-get', 'get(id)', YELLOW), at: [1, 0] },
     { node: chip('s-mgr-await', 'awaitAnyTermination', YELLOW), at: [0, 1] },
@@ -52,7 +72,7 @@ const manager = container(
 
 const queryHandle = container(
   { id: 's-query', label: 'StreamingQuery handle', color: BLUE },
-  weighted({ cols: [1, 1, 1], rows: [1, 1, 1], gap: G, padding: P }, [
+  wgrid({ cols: [1, 1, 1], rows: [1, 1, 1], gap: G, padding: P }, [
     { node: chip('s-q-id', 'id', BLUE), at: [0, 0] },
     { node: chip('s-q-runid', 'runId', BLUE), at: [1, 0] },
     { node: chip('s-q-active', 'isActive', BLUE), at: [2, 0] },
@@ -67,7 +87,7 @@ const queryHandle = container(
 
 const setup = container(
   { id: 's-setup', label: 'Setup', color: PURPLE },
-  weighted({ cols: [1.2, 1.1, 1.3], rows: [1], gap: 0.3, padding: P }, [
+  wgrid({ cols: [1.2, 1.1, 1.3], rows: [1], gap: 0.3, padding: P }, [
     { node: session, at: [0, 0] },
     { node: manager, at: [1, 0] },
     { node: queryHandle, at: [2, 0] },
@@ -78,7 +98,7 @@ const setup = container(
 
 const sources = container(
   { id: 's-sources', label: 'Streaming Sources', color: TEAL },
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
+  wgrid({ cols: [1], rows: [1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('s-src-rate', 'rate', TEAL), at: [0, 0] },
     { node: chip('s-src-ratepm', 'rate-per-microbatch', TEAL), at: [0, 1] },
     { node: chip('s-src-socket', 'socket', TEAL), at: [0, 2] },
@@ -92,7 +112,7 @@ const sources = container(
 
 const readFmt = container(
   { id: 's-read-fmt', label: 'Format + schema', color: BLUE },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
+  wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('s-r-format', 'format', BLUE), at: [0, 0] },
     { node: chip('s-r-schema', 'schema', BLUE), at: [0, 1] },
     { node: chip('s-r-option', 'option', BLUE), at: [0, 2] },
@@ -102,7 +122,7 @@ const readFmt = container(
 
 const readFile = container(
   { id: 's-read-file', label: 'File options', color: YELLOW },
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
+  wgrid({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('s-r-maxfiles', 'maxFilesPerTrigger', YELLOW), at: [0, 0] },
     { node: chip('s-r-latest', 'latestFirst', YELLOW), at: [0, 1] },
     { node: chip('s-r-namelookup', 'fileNameOnly', YELLOW), at: [0, 2] },
@@ -113,7 +133,7 @@ const readFile = container(
 
 const readKafka = container(
   { id: 's-read-kafka', label: 'Kafka options', color: ORANGE },
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
+  wgrid({ cols: [1], rows: [1, 1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('s-r-k-boot', 'bootstrap.servers', ORANGE), at: [0, 0] },
     { node: chip('s-r-k-sub', 'subscribe', ORANGE), at: [0, 1] },
     { node: chip('s-r-k-pattern', 'subscribePattern', ORANGE), at: [0, 2] },
@@ -126,7 +146,7 @@ const readKafka = container(
 
 const readApi = container(
   { id: 's-read', label: 'Read API  (spark.readStream)', color: BLUE },
-  weighted({ cols: [1], rows: [3, 4, 5], gap: 0.22, padding: P }, [
+  wgrid({ cols: [1], rows: [3, 4, 5], gap: 0.22, padding: P }, [
     { node: readFmt, at: [0, 0] },
     { node: readFile, at: [0, 1] },
     { node: readKafka, at: [0, 2] },
@@ -137,7 +157,7 @@ const readApi = container(
 
 const dfStateless = container(
   { id: 's-df-stateless', label: 'Stateless transforms', color: GREEN },
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
+  wgrid({ cols: [1], rows: [1, 1, 1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('s-df-t-select', 'select', GREEN), at: [0, 0] },
     { node: chip('s-df-t-selectexpr', 'selectExpr', GREEN), at: [0, 1] },
     { node: chip('s-df-t-filter', 'filter', GREEN), at: [0, 2] },
@@ -151,7 +171,7 @@ const dfStateless = container(
 
 const dfWindow = container(
   { id: 's-df-window', label: 'Windows (event time)', color: TEAL },
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
+  wgrid({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('s-df-w-window', 'window(col, dur)', TEAL), at: [0, 0] },
     { node: chip('s-df-w-session', 'session_window', TEAL), at: [0, 1] },
     { node: chip('s-df-w-tumb', 'tumbling', TEAL), at: [0, 2] },
@@ -162,7 +182,7 @@ const dfWindow = container(
 
 const dfWatermark = container(
   { id: 's-df-water', label: 'Watermark', color: RED },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
+  wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('s-df-wm-fn', 'withWatermark', RED), at: [0, 0] },
     { node: chip('s-df-wm-event', 'eventTime col', RED), at: [0, 1] },
     { node: chip('s-df-wm-delay', 'delay', RED), at: [0, 2] },
@@ -172,7 +192,7 @@ const dfWatermark = container(
 
 const dfState = container(
   { id: 's-df-state', label: 'Stateful ops', color: PURPLE },
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
+  wgrid({ cols: [1], rows: [1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('s-df-st-gbk', 'groupBy + agg', PURPLE), at: [0, 0] },
     { node: chip('s-df-st-dedup', 'dropDuplicates', PURPLE), at: [0, 1] },
     { node: chip('s-df-st-mgws', 'mapGroupsWithState', PURPLE), at: [0, 2] },
@@ -184,7 +204,7 @@ const dfState = container(
 
 const dfJoins = container(
   { id: 's-df-joins', label: 'Joins', color: BLUE },
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
+  wgrid({ cols: [1], rows: [1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('s-df-j-static', 'stream-static', BLUE), at: [0, 0] },
     { node: chip('s-df-j-bcast', 'broadcast(dim)', BLUE), at: [0, 1] },
     { node: chip('s-df-j-ssi', 'stream-stream inner', BLUE), at: [0, 2] },
@@ -196,7 +216,7 @@ const dfJoins = container(
 
 const dfLane = container(
   { id: 's-df', label: 'DataFrame API (streaming)', color: ORANGE },
-  weighted({ cols: [1.3, 1.3, 1.0, 1.1, 1.1], rows: [1], gap: 0.22, padding: P }, [
+  wgrid({ cols: [1.3, 1.3, 1.0, 1.1, 1.1], rows: [1], gap: 0.22, padding: P }, [
     { node: dfStateless, at: [0, 0] },
     { node: dfWindow, at: [1, 0] },
     { node: dfWatermark, at: [2, 0] },
@@ -209,7 +229,7 @@ const dfLane = container(
 
 const writeCore = container(
   { id: 's-w-core', label: 'Core', color: GREEN },
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
+  wgrid({ cols: [1], rows: [1, 1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('s-w-format', 'format', GREEN), at: [0, 0] },
     { node: chip('s-w-qname', 'queryName', GREEN), at: [0, 1] },
     { node: chip('s-w-ckpt', 'option(checkpoint)', GREEN), at: [0, 2] },
@@ -222,7 +242,7 @@ const writeCore = container(
 
 const outputModes = container(
   { id: 's-outmode', label: 'Output modes', color: GREEN },
-  weighted({ cols: [1], rows: [1, 1, 1], gap: G, padding: PT }, [
+  wgrid({ cols: [1], rows: [1, 1, 1], gap: G, padding: PT }, [
     { node: chip('s-om-append', 'append', GREEN), at: [0, 0] },
     { node: chip('s-om-update', 'update', GREEN), at: [0, 1] },
     { node: chip('s-om-complete', 'complete', GREEN), at: [0, 2] },
@@ -231,7 +251,7 @@ const outputModes = container(
 
 const writeKafka = container(
   { id: 's-w-kafka', label: 'Kafka options', color: ORANGE },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
+  wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('s-w-k-boot', 'bootstrap.servers', ORANGE), at: [0, 0] },
     { node: chip('s-w-k-topic', 'topic', ORANGE), at: [0, 1] },
     { node: chip('s-w-k-kv', 'key/value cols', ORANGE), at: [0, 2] },
@@ -241,7 +261,7 @@ const writeKafka = container(
 
 const writeApi = container(
   { id: 's-write', label: 'Write API  (df.writeStream)', color: BLUE },
-  weighted({ cols: [1], rows: [1, 1, 1], gap: 0.22, padding: P }, [
+  wgrid({ cols: [1], rows: [1, 1, 1], gap: 0.22, padding: P }, [
     { node: writeCore, at: [0, 0] },
     { node: outputModes, at: [0, 1] },
     { node: writeKafka, at: [0, 2] },
@@ -252,7 +272,7 @@ const writeApi = container(
 
 const sinks = container(
   { id: 's-sinks', label: 'Sinks', color: PURPLE },
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
+  wgrid({ cols: [1], rows: [1, 1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('s-sink-mem', 'memory', PURPLE), at: [0, 0] },
     { node: chip('s-sink-console', 'console', PURPLE), at: [0, 1] },
     { node: chip('s-sink-file', 'file', PURPLE), at: [0, 2] },
@@ -267,7 +287,7 @@ const sinks = container(
 
 const output = container(
   { id: 's-output', label: 'Output', color: TEAL },
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
+  wgrid({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('s-out-mem', 'in-memory view', TEAL), at: [0, 0] },
     { node: chip('s-out-console', 'console stdout', TEAL), at: [0, 1] },
     { node: chip('s-out-files', 'Files', TEAL), at: [0, 2] },
@@ -282,7 +302,7 @@ const output = container(
 
 const pipeline = group(
   's-pipeline',
-  weighted({ cols: [2, 4, 14, 4, 2.4, 2], rows: [1], gap: 0.35, padding: 0 }, [
+  wgrid({ cols: [2, 4, 14, 4, 2.4, 2], rows: [1], gap: 0.35, padding: 0 }, [
     { node: sources, at: [0, 0] },
     { node: readApi, at: [1, 0] },
     { node: dfLane, at: [2, 0] },
@@ -296,7 +316,7 @@ const pipeline = group(
 
 const triggers = container(
   { id: 's-trigger', label: 'Triggers', color: ORANGE },
-  weighted({ cols: [1, 1], rows: [1, 1, 1], gap: G, padding: P }, [
+  wgrid({ cols: [1, 1], rows: [1, 1, 1], gap: G, padding: P }, [
     { node: chip('s-tr-default', 'default', ORANGE), at: [0, 0] },
     { node: chip('s-tr-ptime', 'processingTime', ORANGE), at: [1, 0] },
     { node: chip('s-tr-once', 'once', ORANGE), at: [0, 1] },
@@ -307,7 +327,7 @@ const triggers = container(
 
 const checkpoint = container(
   { id: 's-checkpoint', label: 'Checkpoint', color: BLUE },
-  weighted({ cols: [1, 1], rows: [1, 1, 1], gap: G, padding: P }, [
+  wgrid({ cols: [1, 1], rows: [1, 1, 1], gap: G, padding: P }, [
     { node: chip('s-ck-offsets', 'offsets', BLUE), at: [0, 0] },
     { node: chip('s-ck-commits', 'commits', BLUE), at: [1, 0] },
     { node: chip('s-ck-state', 'state', BLUE), at: [0, 1] },
@@ -318,7 +338,7 @@ const checkpoint = container(
 
 const stateStore = container(
   { id: 's-statestore', label: 'State store', color: PURPLE },
-  weighted({ cols: [1, 1], rows: [1, 1], gap: G, padding: P }, [
+  wgrid({ cols: [1, 1], rows: [1, 1], gap: G, padding: P }, [
     { node: chip('s-ss-hdfs', 'HDFSBacked', PURPLE), at: [0, 0] },
     { node: chip('s-ss-rocks', 'RocksDB', PURPLE), at: [1, 0] },
     { node: chip('s-ss-num', 'numStateStoreInst.', PURPLE), at: [0, 1] },
@@ -328,7 +348,7 @@ const stateStore = container(
 
 const concerns = container(
   { id: 's-concerns', label: 'Streaming Concerns', color: GRAY },
-  weighted({ cols: [1, 1, 1], rows: [1], gap: 0.3, padding: P }, [
+  wgrid({ cols: [1, 1, 1], rows: [1], gap: 0.3, padding: P }, [
     { node: triggers, at: [0, 0] },
     { node: checkpoint, at: [1, 0] },
     { node: stateStore, at: [2, 0] },
@@ -341,7 +361,7 @@ const concerns = container(
 
 const root = group(
   'spark-streaming-root',
-  weighted({ cols: [1], rows: [2.4, 13.6, 2.4], gap: 0.5, padding: 0.4 }, [
+  wgrid({ cols: [1], rows: [2.4, 13.6, 2.4], gap: 0.5, padding: 0.4 }, [
     { node: setup, at: [0, 0] },
     { node: pipeline, at: [0, 1] },
     { node: concerns, at: [0, 2] },

@@ -1,5 +1,12 @@
 import type { SceneSpec } from '../engine/types.ts'
-import { container, group, weighted, type NodeSeed } from '../engine/patterns.ts'
+import {
+  container,
+  group,
+  type NodeSeed,
+  type PatternResult,
+  type WeightedSeed,
+  type WeightedSpec,
+} from '../engine/patterns.ts'
 import { BLUE, GRAY, GREEN, ORANGE, PURPLE, RED, TEAL, YELLOW } from '../engine/colors.ts'
 
 // The WHOLE Spark BATCH API on one 16:9 wall — ported from NodeMap's
@@ -9,10 +16,11 @@ import { BLUE, GRAY, GREEN, ORANGE, PURPLE, RED, TEAL, YELLOW } from '../engine/
 // manifest `focus`/`highlight`, so the learner builds one retained mental map.
 //
 // The source used NodeMap's WEIGHTED grid tracks (`layout.cols/rows` = relative
-// weights, `cell` = track index); graphl-ux lowers that to a uniform grid via
-// `weighted()`, so the transcription is faithful (ids, labels, colors, and track
-// weights all come straight from the source). Source ids are preserved (e.g.
-// `b-ses-create`) so they stay stable spotlight targets for the module manifests.
+// weights, `cell` = track index); graphl-ux's resolver now supports those tracks
+// NATIVELY (a grid's `cols`/`rows` can be weight arrays), so the transcription is
+// faithful (ids, labels, colors, and track weights all come straight from the
+// source). `wgrid()` below is the thin authoring shim. Source ids are preserved
+// (e.g. `b-ses-create`) so they stay stable spotlight targets for the module manifests.
 //
 // Palette: graphl-ux has no YELLOW, and amber is spotlight-only — but here YELLOW
 // carries a whole lane (pandas-on-Spark) that must stay distinct from the
@@ -26,14 +34,37 @@ const P = 0.22
 // left/right margins at P; PT reclaims that so each chip fills the box width.
 const PT = 0.01
 
-/** A filled leaf chip — the text IS the concept (graphl-ux `term`). */
+/**
+ * A filled leaf chip — the text IS the value (graphl-ux `term`). The default for
+ * everything OUTSIDE the four big API lanes: Setup, the Read/Write rails, the I/O
+ * sources/output, and Performance Tuning — those regions read fine as chips.
+ */
 const chip = (id: string, label: string, color: string): NodeSeed => ({ id, label, color, kind: 'term' })
+
+/**
+ * A bare LABEL leaf — text only, no chip rectangle (graphl-ux `label`). Used ONLY in
+ * the four dense API lanes (SQL, pandas, DataFrame, RDD), where ~150 method names as
+ * filled chips were a clipped wall of clutter; bare text reads as quiet method lists.
+ */
+const lbl = (id: string, label: string, color: string): NodeSeed => ({ id, label, color, kind: 'label' })
+
+/**
+ * Native weighted-track authoring: the grid carries the relative track WEIGHTS
+ * (`engine/grid.ts` resolves arrays directly), and each child's `at` becomes its
+ * `cell`, indexing those tracks 1:1. Same `{ node, at }` ergonomics as the old
+ * lowering helper, minus the integer-lowering step — unequal widths are a
+ * first-class grid feature now, so the resolver places them straight.
+ */
+const wgrid = (spec: WeightedSpec, children: WeightedSeed[]): PatternResult => ({
+  grid: spec,
+  nodes: children.map(({ node, at }) => ({ ...node, cell: at })),
+})
 
 // ─── SETUP BAND (fully built — proves the term → container → weighted port) ────
 
 const session = container(
   { id: 'b-session', label: 'SparkSession.builder', color: PURPLE },
-  weighted({ cols: [1, 1, 1], rows: [1, 1], gap: G, padding: P }, [
+  wgrid({ cols: [1, 1, 1], rows: [1, 1], gap: G, padding: P }, [
     { node: chip('b-ses-appname', 'appName', PURPLE), at: [0, 0] },
     { node: chip('b-ses-master', 'master', PURPLE), at: [1, 0] },
     { node: chip('b-ses-remote', 'remote', PURPLE), at: [2, 0] },
@@ -45,7 +76,7 @@ const session = container(
 
 const explain = container(
   { id: 'b-explain', label: 'df.explain() modes', color: YELLOW },
-  weighted({ cols: [1, 1, 1], rows: [1, 1], gap: G, padding: P }, [
+  wgrid({ cols: [1, 1, 1], rows: [1, 1], gap: G, padding: P }, [
     { node: chip('b-ex-simple', 'simple', YELLOW), at: [0, 0] },
     { node: chip('b-ex-extended', 'extended', YELLOW), at: [1, 0] },
     { node: chip('b-ex-formatted', 'formatted', YELLOW), at: [2, 0] },
@@ -56,7 +87,7 @@ const explain = container(
 
 const cli = container(
   { id: 'b-cli', label: 'CLI commands', color: BLUE },
-  weighted({ cols: [1, 1, 1], rows: [1, 1], gap: G, padding: P }, [
+  wgrid({ cols: [1, 1, 1], rows: [1, 1], gap: G, padding: P }, [
     { node: chip('b-cli-shell', 'spark-shell', BLUE), at: [0, 0] },
     { node: chip('b-cli-submit', 'spark-submit', BLUE), at: [1, 0] },
     { node: chip('b-cli-sql', 'spark-sql', BLUE), at: [2, 0] },
@@ -67,7 +98,7 @@ const cli = container(
 
 const setup = container(
   { id: 'b-setup', label: 'Setup', color: PURPLE },
-  weighted({ cols: [1.2, 1, 1.2], rows: [1], gap: 0.3, padding: P }, [
+  wgrid({ cols: [1.2, 1, 1.2], rows: [1], gap: 0.3, padding: P }, [
     { node: session, at: [0, 0] },
     { node: explain, at: [1, 0] },
     { node: cli, at: [2, 0] },
@@ -78,7 +109,7 @@ const setup = container(
 
 const sources = container(
   { id: 'b-sources', label: 'Input Sources', color: TEAL },
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
+  wgrid({ cols: [1], rows: [1, 1, 1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-src-csv', 'CSV', TEAL), at: [0, 0] },
     { node: chip('b-src-parquet', 'Parquet', TEAL), at: [0, 1] },
     { node: chip('b-src-json', 'JSON', TEAL), at: [0, 2] },
@@ -94,7 +125,7 @@ const sources = container(
 
 const formatOptions = container(
   { id: 'b-read-fmt', label: 'Format options', color: BLUE },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
+  wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-r-header', 'header', BLUE), at: [0, 0] },
     { node: chip('b-r-sep', 'sep', BLUE), at: [0, 1] },
     { node: chip('b-r-merge', 'mergeSchema', BLUE), at: [0, 2] },
@@ -104,7 +135,7 @@ const formatOptions = container(
 
 const badRecord = container(
   { id: 'b-read-mode', label: 'Bad-record mode()', color: RED },
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
+  wgrid({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-r-permissive', 'permissive', RED), at: [0, 0] },
     { node: chip('b-r-failfast', 'failFast', RED), at: [0, 1] },
     { node: chip('b-r-drop', 'dropMalformed', RED), at: [0, 2] },
@@ -115,7 +146,7 @@ const badRecord = container(
 
 const multiFile = container(
   { id: 'b-read-multi', label: 'Multi-file lookup', color: YELLOW },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
+  wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-r-glob', 'glob', YELLOW), at: [0, 0] },
     { node: chip('b-r-regex', 'regex', YELLOW), at: [0, 1] },
     { node: chip('b-r-paths', 'multiple paths', YELLOW), at: [0, 2] },
@@ -125,7 +156,7 @@ const multiFile = container(
 
 const jdbcReads = container(
   { id: 'b-read-jdbc', label: 'JDBC parallel reads', color: PURPLE },
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
+  wgrid({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-r-pcol', 'partitionColumn', PURPLE), at: [0, 0] },
     { node: chip('b-r-lower', 'lowerBound', PURPLE), at: [0, 1] },
     { node: chip('b-r-upper', 'upperBound', PURPLE), at: [0, 2] },
@@ -136,7 +167,7 @@ const jdbcReads = container(
 
 const readApi = container(
   { id: 'b-read', label: 'Read API  (spark.read)', color: BLUE },
-  weighted({ cols: [1], rows: [4, 5, 4, 5], gap: 0.22, padding: P }, [
+  wgrid({ cols: [1], rows: [4, 5, 4, 5], gap: 0.22, padding: P }, [
     { node: formatOptions, at: [0, 0] },
     { node: badRecord, at: [0, 1] },
     { node: multiFile, at: [0, 2] },
@@ -148,7 +179,7 @@ const readApi = container(
 
 const writeMode = container(
   { id: 'b-w-mode', label: 'mode()', color: ORANGE },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
+  wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-w-m-over', 'overwrite', ORANGE), at: [0, 0] },
     { node: chip('b-w-m-append', 'append', ORANGE), at: [0, 1] },
     { node: chip('b-w-m-error', 'error', ORANGE), at: [0, 2] },
@@ -158,7 +189,7 @@ const writeMode = container(
 
 const writeLayout = container(
   { id: 'b-w-layout', label: 'Layout', color: GREEN },
-  weighted({ cols: [1], rows: [1, 1, 1], gap: G, padding: PT }, [
+  wgrid({ cols: [1], rows: [1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-w-partby', 'partitionBy', GREEN), at: [0, 0] },
     { node: chip('b-w-bucket', 'bucketBy', GREEN), at: [0, 1] },
     { node: chip('b-w-sortby', 'sortBy', GREEN), at: [0, 2] },
@@ -167,7 +198,7 @@ const writeLayout = container(
 
 const writeSinks = container(
   { id: 'b-w-sinks', label: 'Sinks', color: PURPLE },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
+  wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-w-save', 'save', PURPLE), at: [0, 0] },
     { node: chip('b-w-saveTbl', 'saveAsTable', PURPLE), at: [0, 1] },
     { node: chip('b-w-jdbc', 'jdbc', PURPLE), at: [0, 2] },
@@ -177,7 +208,7 @@ const writeSinks = container(
 
 const writeFormat = container(
   { id: 'b-w-fmt', label: 'Format', color: TEAL },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
+  wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-w-fmt-pq', 'parquet', TEAL), at: [0, 0] },
     { node: chip('b-w-fmt-csv', 'csv', TEAL), at: [0, 1] },
     { node: chip('b-w-fmt-json', 'json', TEAL), at: [0, 2] },
@@ -187,7 +218,7 @@ const writeFormat = container(
 
 const writeApi = container(
   { id: 'b-write', label: 'Write API  (df.write)', color: BLUE },
-  weighted({ cols: [1], rows: [1.2, 1, 1, 1], gap: 0.22, padding: P }, [
+  wgrid({ cols: [1], rows: [1.2, 1, 1, 1], gap: 0.22, padding: P }, [
     { node: writeMode, at: [0, 0] },
     { node: writeLayout, at: [0, 1] },
     { node: writeSinks, at: [0, 2] },
@@ -199,7 +230,7 @@ const writeApi = container(
 
 const output = container(
   { id: 'b-output', label: 'Output', color: TEAL },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
+  wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: chip('b-out-files', 'Files', TEAL), at: [0, 0] },
     { node: chip('b-out-hive', 'Hive table', TEAL), at: [0, 1] },
     { node: chip('b-out-jdbc', 'JDBC target', TEAL), at: [0, 2] },
@@ -212,73 +243,73 @@ const output = container(
 
 const rddCreate = container(
   { id: 'b-rdd-create', label: 'Creation', color: RED },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('b-rdd-parallelize', 'parallelize', RED), at: [0, 0] },
-    { node: chip('b-rdd-numslices', 'numSlices', RED), at: [0, 1] },
-    { node: chip('b-rdd-textfile', 'textFile', RED), at: [0, 2] },
-    { node: chip('b-rdd-whole', 'wholeTextFiles', RED), at: [0, 3] },
+  wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
+    { node: lbl('b-rdd-parallelize', 'parallelize', RED), at: [0, 0] },
+    { node: lbl('b-rdd-numslices', 'numSlices', RED), at: [0, 1] },
+    { node: lbl('b-rdd-textfile', 'textFile', RED), at: [0, 2] },
+    { node: lbl('b-rdd-whole', 'wholeTextFiles', RED), at: [0, 3] },
   ]),
 )
 
 const rddNarrow = container(
   { id: 'b-rdd-narrow', label: 'Narrow (local)', color: GREEN },
-  weighted({ cols: [1, 1], rows: [1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('b-rdd-map', 'map', GREEN), at: [0, 0] },
-    { node: chip('b-rdd-mappart', 'mapPartitions', GREEN), at: [1, 0] },
-    { node: chip('b-rdd-flatmap', 'flatMap', GREEN), at: [0, 1] },
-    { node: chip('b-rdd-repart', 'repartition', GREEN), at: [1, 1] },
-    { node: chip('b-rdd-filter', 'filter', GREEN), at: [0, 2] },
-    { node: chip('b-rdd-coalesce', 'coalesce', GREEN), at: [1, 2] },
+  wgrid({ cols: [1, 1], rows: [1, 1, 1], gap: G, padding: PT }, [
+    { node: lbl('b-rdd-map', 'map', GREEN), at: [0, 0] },
+    { node: lbl('b-rdd-mappart', 'mapPartitions', GREEN), at: [1, 0] },
+    { node: lbl('b-rdd-flatmap', 'flatMap', GREEN), at: [0, 1] },
+    { node: lbl('b-rdd-repart', 'repartition', GREEN), at: [1, 1] },
+    { node: lbl('b-rdd-filter', 'filter', GREEN), at: [0, 2] },
+    { node: lbl('b-rdd-coalesce', 'coalesce', GREEN), at: [1, 2] },
   ]),
 )
 
 const rddWide = container(
   { id: 'b-rdd-wide', label: 'Wide (shuffle)', color: ORANGE },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('b-rdd-union', 'union', ORANGE), at: [0, 0] },
-    { node: chip('b-rdd-distinct', 'distinct', ORANGE), at: [1, 0] },
-    { node: chip('b-rdd-inter', 'intersection', ORANGE), at: [0, 1] },
-    { node: chip('b-rdd-sortbykey', 'sortByKey', ORANGE), at: [1, 1] },
-    { node: chip('b-rdd-subtract', 'subtract', ORANGE), at: [0, 2] },
-    { node: chip('b-rdd-join', 'join', ORANGE), at: [1, 2] },
-    { node: chip('b-rdd-cart', 'cartesian', ORANGE), at: [0, 3] },
-    { node: chip('b-rdd-cogroup', 'cogroup', ORANGE), at: [1, 3] },
+  wgrid({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
+    { node: lbl('b-rdd-union', 'union', ORANGE), at: [0, 0] },
+    { node: lbl('b-rdd-distinct', 'distinct', ORANGE), at: [1, 0] },
+    { node: lbl('b-rdd-inter', 'intersection', ORANGE), at: [0, 1] },
+    { node: lbl('b-rdd-sortbykey', 'sortByKey', ORANGE), at: [1, 1] },
+    { node: lbl('b-rdd-subtract', 'subtract', ORANGE), at: [0, 2] },
+    { node: lbl('b-rdd-join', 'join', ORANGE), at: [1, 2] },
+    { node: lbl('b-rdd-cart', 'cartesian', ORANGE), at: [0, 3] },
+    { node: lbl('b-rdd-cogroup', 'cogroup', ORANGE), at: [1, 3] },
   ]),
 )
 
 const rddPair = container(
   { id: 'b-rdd-pair', label: 'Pair RDD — byKey', color: PURPLE },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('b-rdd-maptopair', 'mapToPair', PURPLE), at: [0, 0] },
-    { node: chip('b-rdd-rbk', 'reduceByKey', PURPLE), at: [1, 0] },
-    { node: chip('b-rdd-gbk', 'groupByKey', PURPLE), at: [0, 1] },
-    { node: chip('b-rdd-abk', 'aggregateByKey', PURPLE), at: [1, 1] },
-    { node: chip('b-rdd-fbk', 'foldByKey', PURPLE), at: [0, 2] },
-    { node: chip('b-rdd-cbk', 'combineByKey', PURPLE), at: [1, 2] },
-    { node: chip('b-rdd-cntbk', 'countByKey', PURPLE), at: [0, 3] },
-    { node: chip('b-rdd-sampbk', 'sampleByKey', PURPLE), at: [1, 3] },
+  wgrid({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
+    { node: lbl('b-rdd-maptopair', 'mapToPair', PURPLE), at: [0, 0] },
+    { node: lbl('b-rdd-rbk', 'reduceByKey', PURPLE), at: [1, 0] },
+    { node: lbl('b-rdd-gbk', 'groupByKey', PURPLE), at: [0, 1] },
+    { node: lbl('b-rdd-abk', 'aggregateByKey', PURPLE), at: [1, 1] },
+    { node: lbl('b-rdd-fbk', 'foldByKey', PURPLE), at: [0, 2] },
+    { node: lbl('b-rdd-cbk', 'combineByKey', PURPLE), at: [1, 2] },
+    { node: lbl('b-rdd-cntbk', 'countByKey', PURPLE), at: [0, 3] },
+    { node: lbl('b-rdd-sampbk', 'sampleByKey', PURPLE), at: [1, 3] },
   ]),
 )
 
 const rddActions = container(
   { id: 'b-rdd-actions', label: 'Actions + Misc', color: TEAL },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('b-rdd-collect', 'collect', TEAL), at: [0, 0] },
-    { node: chip('b-rdd-count', 'count', TEAL), at: [1, 0] },
-    { node: chip('b-rdd-take', 'take', TEAL), at: [0, 1] },
-    { node: chip('b-rdd-first', 'first', TEAL), at: [1, 1] },
-    { node: chip('b-rdd-reduce', 'reduce', TEAL), at: [0, 2] },
-    { node: chip('b-rdd-fold', 'fold', TEAL), at: [1, 2] },
-    { node: chip('b-rdd-agg', 'aggregate', TEAL), at: [0, 3] },
-    { node: chip('b-rdd-savetxt', 'saveAsTextFile', TEAL), at: [1, 3] },
-    { node: chip('b-rdd-bcast', 'broadcast', TEAL), at: [0, 4] },
-    { node: chip('b-rdd-acc', 'accumulator', TEAL), at: [1, 4] },
+  wgrid({ cols: [1, 1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
+    { node: lbl('b-rdd-collect', 'collect', TEAL), at: [0, 0] },
+    { node: lbl('b-rdd-count', 'count', TEAL), at: [1, 0] },
+    { node: lbl('b-rdd-take', 'take', TEAL), at: [0, 1] },
+    { node: lbl('b-rdd-first', 'first', TEAL), at: [1, 1] },
+    { node: lbl('b-rdd-reduce', 'reduce', TEAL), at: [0, 2] },
+    { node: lbl('b-rdd-fold', 'fold', TEAL), at: [1, 2] },
+    { node: lbl('b-rdd-agg', 'aggregate', TEAL), at: [0, 3] },
+    { node: lbl('b-rdd-savetxt', 'saveAsTextFile', TEAL), at: [1, 3] },
+    { node: lbl('b-rdd-bcast', 'broadcast', TEAL), at: [0, 4] },
+    { node: lbl('b-rdd-acc', 'accumulator', TEAL), at: [1, 4] },
   ]),
 )
 
 const rddLane = container(
   { id: 'b-rdd', label: 'RDD API', color: RED },
-  weighted({ cols: [1, 1.2, 1.4, 1.4, 1.5], rows: [1], gap: 0.22, padding: P }, [
+  wgrid({ cols: [1, 1.2, 1.4, 1.4, 1.5], rows: [1], gap: 0.22, padding: P }, [
     { node: rddCreate, at: [0, 0] },
     { node: rddNarrow, at: [1, 0] },
     { node: rddWide, at: [2, 0] },
@@ -292,50 +323,50 @@ const rddLane = container(
 
 const psCreate = container(
   { id: 'b-ps-create', label: 'Creation', color: YELLOW },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('b-ps-dfdict', 'ps.DataFrame(dict)', YELLOW), at: [0, 0] },
-    { node: chip('b-ps-read', 'read_csv/json/parquet', YELLOW), at: [0, 1] },
-    { node: chip('b-ps-papi', 'sdf.pandas_api()', YELLOW), at: [0, 2] },
-    { node: chip('b-ps-fp', 'ps.from_pandas(pdf)', YELLOW), at: [0, 3] },
+  wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
+    { node: lbl('b-ps-dfdict', 'ps.DataFrame(dict)', YELLOW), at: [0, 0] },
+    { node: lbl('b-ps-read', 'read_csv/json/parquet', YELLOW), at: [0, 1] },
+    { node: lbl('b-ps-papi', 'sdf.pandas_api()', YELLOW), at: [0, 2] },
+    { node: lbl('b-ps-fp', 'ps.from_pandas(pdf)', YELLOW), at: [0, 3] },
   ]),
 )
 
 const psTrans = container(
   { id: 'b-ps-trans', label: 'Transformations', color: GREEN },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('b-ps-t-col', 'select/asgn', GREEN), at: [0, 0] },
-    { node: chip('b-ps-t-filter', 'filter/qry', GREEN), at: [1, 0] },
-    { node: chip('b-ps-t-group', 'groupby/agg', GREEN), at: [0, 1] },
-    { node: chip('b-ps-t-join', 'merge/join', GREEN), at: [1, 1] },
-    { node: chip('b-ps-t-clean', 'na/rename', GREEN), at: [0, 2] },
-    { node: chip('b-ps-t-fns', 'str/dt/num', GREEN), at: [1, 2] },
-    { node: chip('b-ps-t-row', 'apply/trans', GREEN), at: [0, 3] },
+  wgrid({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
+    { node: lbl('b-ps-t-col', 'select/asgn', GREEN), at: [0, 0] },
+    { node: lbl('b-ps-t-filter', 'filter/qry', GREEN), at: [1, 0] },
+    { node: lbl('b-ps-t-group', 'groupby/agg', GREEN), at: [0, 1] },
+    { node: lbl('b-ps-t-join', 'merge/join', GREEN), at: [1, 1] },
+    { node: lbl('b-ps-t-clean', 'na/rename', GREEN), at: [0, 2] },
+    { node: lbl('b-ps-t-fns', 'str/dt/num', GREEN), at: [1, 2] },
+    { node: lbl('b-ps-t-row', 'apply/trans', GREEN), at: [0, 3] },
   ]),
 )
 
 const psActions = container(
   { id: 'b-ps-actions', label: 'Actions', color: TEAL },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('b-ps-tc', 'to_csv', TEAL), at: [0, 0] },
-    { node: chip('b-ps-tp', 'to_parquet', TEAL), at: [0, 1] },
-    { node: chip('b-ps-tj', 'to_json', TEAL), at: [0, 2] },
-    { node: chip('b-ps-tpd', 'to_pandas', TEAL), at: [0, 3] },
+  wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
+    { node: lbl('b-ps-tc', 'to_csv', TEAL), at: [0, 0] },
+    { node: lbl('b-ps-tp', 'to_parquet', TEAL), at: [0, 1] },
+    { node: lbl('b-ps-tj', 'to_json', TEAL), at: [0, 2] },
+    { node: lbl('b-ps-tpd', 'to_pandas', TEAL), at: [0, 3] },
   ]),
 )
 
 const psIndex = container(
   { id: 'b-ps-index', label: 'Index Strategies', color: PURPLE },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('b-ps-idx-seq', 'sequence', PURPLE), at: [0, 0] },
-    { node: chip('b-ps-idx-dist', 'distributed', PURPLE), at: [0, 1] },
-    { node: chip('b-ps-idx-ds', 'distributed-sequence', PURPLE), at: [0, 2] },
-    { node: chip('b-ps-idx-cfg', 'compute.ops_on_diff', PURPLE), at: [0, 3] },
+  wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
+    { node: lbl('b-ps-idx-seq', 'sequence', PURPLE), at: [0, 0] },
+    { node: lbl('b-ps-idx-dist', 'distributed', PURPLE), at: [0, 1] },
+    { node: lbl('b-ps-idx-ds', 'distributed-sequence', PURPLE), at: [0, 2] },
+    { node: lbl('b-ps-idx-cfg', 'compute.ops_on_diff', PURPLE), at: [0, 3] },
   ]),
 )
 
 const pandasLane = container(
   { id: 'b-ps', label: 'pandas API on Spark (ps)', color: YELLOW },
-  weighted({ cols: [1, 1, 1, 1], rows: [1], gap: 0.22, padding: P }, [
+  wgrid({ cols: [1, 1, 1, 1], rows: [1], gap: 0.22, padding: P }, [
     { node: psCreate, at: [0, 0] },
     { node: psTrans, at: [1, 0] },
     { node: psActions, at: [2, 0] },
@@ -349,85 +380,85 @@ const pandasLane = container(
 
 const sqlViews = container(
   { id: 'b-sql-views', label: 'Views + Catalog', color: GREEN },
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('b-sql-temp', 'createTempView', GREEN), at: [0, 0] },
-    { node: chip('b-sql-gtemp', 'createGlobalTempView', GREEN), at: [0, 1] },
-    { node: chip('b-sql-savetbl', 'saveAsTable', GREEN), at: [0, 2] },
-    { node: chip('b-sql-listtbl', 'catalog.listTables', GREEN), at: [0, 3] },
-    { node: chip('b-sql-listcol', 'catalog.listColumns', GREEN), at: [0, 4] },
+  wgrid({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
+    { node: lbl('b-sql-temp', 'createTempView', GREEN), at: [0, 0] },
+    { node: lbl('b-sql-gtemp', 'createGlobalTempView', GREEN), at: [0, 1] },
+    { node: lbl('b-sql-savetbl', 'saveAsTable', GREEN), at: [0, 2] },
+    { node: lbl('b-sql-listtbl', 'catalog.listTables', GREEN), at: [0, 3] },
+    { node: lbl('b-sql-listcol', 'catalog.listColumns', GREEN), at: [0, 4] },
   ]),
 )
 
 const sqlQueries = container(
   { id: 'b-sql-queries', label: 'Queries', color: ORANGE },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('b-sql-select', 'SELECT', ORANGE), at: [0, 0] },
-    { node: chip('b-sql-from', 'FROM', ORANGE), at: [1, 0] },
-    { node: chip('b-sql-where', 'WHERE', ORANGE), at: [0, 1] },
-    { node: chip('b-sql-group', 'GROUP BY', ORANGE), at: [1, 1] },
-    { node: chip('b-sql-having', 'HAVING', ORANGE), at: [0, 2] },
-    { node: chip('b-sql-order', 'ORDER BY', ORANGE), at: [1, 2] },
-    { node: chip('b-sql-limit', 'LIMIT', ORANGE), at: [0, 3] },
-    { node: chip('b-sql-offset', 'OFFSET', ORANGE), at: [1, 3] },
+  wgrid({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
+    { node: lbl('b-sql-select', 'SELECT', ORANGE), at: [0, 0] },
+    { node: lbl('b-sql-from', 'FROM', ORANGE), at: [1, 0] },
+    { node: lbl('b-sql-where', 'WHERE', ORANGE), at: [0, 1] },
+    { node: lbl('b-sql-group', 'GROUP BY', ORANGE), at: [1, 1] },
+    { node: lbl('b-sql-having', 'HAVING', ORANGE), at: [0, 2] },
+    { node: lbl('b-sql-order', 'ORDER BY', ORANGE), at: [1, 2] },
+    { node: lbl('b-sql-limit', 'LIMIT', ORANGE), at: [0, 3] },
+    { node: lbl('b-sql-offset', 'OFFSET', ORANGE), at: [1, 3] },
   ]),
 )
 
 const sqlJoins = container(
   { id: 'b-sql-joins', label: 'Joins + Sets + CTE', color: PURPLE },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('b-sql-j-inner', 'INNER JOIN', PURPLE), at: [0, 0] },
-    { node: chip('b-sql-j-left', 'LEFT JOIN', PURPLE), at: [1, 0] },
-    { node: chip('b-sql-j-full', 'FULL JOIN', PURPLE), at: [0, 1] },
-    { node: chip('b-sql-j-semi', 'SEMI/ANTI', PURPLE), at: [1, 1] },
-    { node: chip('b-sql-set-u', 'UNION', PURPLE), at: [0, 2] },
-    { node: chip('b-sql-set-i', 'INTERSECT', PURPLE), at: [1, 2] },
-    { node: chip('b-sql-cte', 'WITH (CTE)', PURPLE), at: [0, 3] },
-    { node: chip('b-sql-sub', 'subquery', PURPLE), at: [1, 3] },
+  wgrid({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
+    { node: lbl('b-sql-j-inner', 'INNER JOIN', PURPLE), at: [0, 0] },
+    { node: lbl('b-sql-j-left', 'LEFT JOIN', PURPLE), at: [1, 0] },
+    { node: lbl('b-sql-j-full', 'FULL JOIN', PURPLE), at: [0, 1] },
+    { node: lbl('b-sql-j-semi', 'SEMI/ANTI', PURPLE), at: [1, 1] },
+    { node: lbl('b-sql-set-u', 'UNION', PURPLE), at: [0, 2] },
+    { node: lbl('b-sql-set-i', 'INTERSECT', PURPLE), at: [1, 2] },
+    { node: lbl('b-sql-cte', 'WITH (CTE)', PURPLE), at: [0, 3] },
+    { node: lbl('b-sql-sub', 'subquery', PURPLE), at: [1, 3] },
   ]),
 )
 
 const sqlAgg = container(
   { id: 'b-sql-agg', label: 'Aggregates + Window', color: TEAL },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('b-sql-avg', 'AVG', TEAL), at: [0, 0] },
-    { node: chip('b-sql-sum', 'SUM', TEAL), at: [1, 0] },
-    { node: chip('b-sql-minmax', 'MIN/MAX', TEAL), at: [0, 1] },
-    { node: chip('b-sql-count', 'COUNT', TEAL), at: [1, 1] },
-    { node: chip('b-sql-rownum', 'ROW_NUMBER', TEAL), at: [0, 2] },
-    { node: chip('b-sql-rank', 'RANK', TEAL), at: [1, 2] },
-    { node: chip('b-sql-lag', 'LAG/LEAD', TEAL), at: [0, 3] },
-    { node: chip('b-sql-cume', 'CUME_DIST', TEAL), at: [1, 3] },
+  wgrid({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
+    { node: lbl('b-sql-avg', 'AVG', TEAL), at: [0, 0] },
+    { node: lbl('b-sql-sum', 'SUM', TEAL), at: [1, 0] },
+    { node: lbl('b-sql-minmax', 'MIN/MAX', TEAL), at: [0, 1] },
+    { node: lbl('b-sql-count', 'COUNT', TEAL), at: [1, 1] },
+    { node: lbl('b-sql-rownum', 'ROW_NUMBER', TEAL), at: [0, 2] },
+    { node: lbl('b-sql-rank', 'RANK', TEAL), at: [1, 2] },
+    { node: lbl('b-sql-lag', 'LAG/LEAD', TEAL), at: [0, 3] },
+    { node: lbl('b-sql-cume', 'CUME_DIST', TEAL), at: [1, 3] },
   ]),
 )
 
 const sqlFns = container(
   { id: 'b-sql-fns', label: 'Functions', color: BLUE },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('b-sql-fn-acf', 'abs/ceil/floor', BLUE), at: [0, 0] },
-    { node: chip('b-sql-fn-rsl', 'round/sqrt/log', BLUE), at: [1, 0] },
-    { node: chip('b-sql-fn-str1', 'concat/substring', BLUE), at: [0, 1] },
-    { node: chip('b-sql-fn-str2', 'upper/lower/trim', BLUE), at: [1, 1] },
-    { node: chip('b-sql-fn-dt1', 'current_date / ts', BLUE), at: [0, 2] },
-    { node: chip('b-sql-fn-dt2', 'date_add / format', BLUE), at: [1, 2] },
-    { node: chip('b-sql-fn-a1', 'array_contains', BLUE), at: [0, 3] },
-    { node: chip('b-sql-fn-a2', 'array_sort/union', BLUE), at: [1, 3] },
+  wgrid({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
+    { node: lbl('b-sql-fn-acf', 'abs/ceil/floor', BLUE), at: [0, 0] },
+    { node: lbl('b-sql-fn-rsl', 'round/sqrt/log', BLUE), at: [1, 0] },
+    { node: lbl('b-sql-fn-str1', 'concat/substring', BLUE), at: [0, 1] },
+    { node: lbl('b-sql-fn-str2', 'upper/lower/trim', BLUE), at: [1, 1] },
+    { node: lbl('b-sql-fn-dt1', 'current_date / ts', BLUE), at: [0, 2] },
+    { node: lbl('b-sql-fn-dt2', 'date_add / format', BLUE), at: [1, 2] },
+    { node: lbl('b-sql-fn-a1', 'array_contains', BLUE), at: [0, 3] },
+    { node: lbl('b-sql-fn-a2', 'array_sort/union', BLUE), at: [1, 3] },
   ]),
 )
 
 const sqlNull = container(
   { id: 'b-sql-null', label: 'Null semantics', color: RED },
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('b-sql-n-eq', '=', RED), at: [0, 0] },
-    { node: chip('b-sql-n-neq', '<==>', RED), at: [0, 1] },
-    { node: chip('b-sql-n-isn', 'IS NULL', RED), at: [0, 2] },
-    { node: chip('b-sql-n-coa', 'COALESCE', RED), at: [0, 3] },
-    { node: chip('b-sql-n-nif', 'NULLIF', RED), at: [0, 4] },
+  wgrid({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
+    { node: lbl('b-sql-n-eq', '=', RED), at: [0, 0] },
+    { node: lbl('b-sql-n-neq', '<==>', RED), at: [0, 1] },
+    { node: lbl('b-sql-n-isn', 'IS NULL', RED), at: [0, 2] },
+    { node: lbl('b-sql-n-coa', 'COALESCE', RED), at: [0, 3] },
+    { node: lbl('b-sql-n-nif', 'NULLIF', RED), at: [0, 4] },
   ]),
 )
 
 const sqlLane = container(
   { id: 'b-sql', label: 'SQL API', color: GREEN },
-  weighted({ cols: [1, 1.2, 1.2, 1.1, 1.4, 1.1], rows: [1], gap: 0.22, padding: P }, [
+  wgrid({ cols: [1, 1.2, 1.2, 1.1, 1.4, 1.1], rows: [1], gap: 0.22, padding: P }, [
     { node: sqlViews, at: [0, 0] },
     { node: sqlQueries, at: [1, 0] },
     { node: sqlJoins, at: [2, 0] },
@@ -443,102 +474,102 @@ const sqlLane = container(
 
 const dfCreate = container(
   { id: 'b-df-create', label: 'Schema + Creation', color: ORANGE },
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('b-df-structtype', 'StructType', ORANGE), at: [0, 0] },
-    { node: chip('b-df-ddl', 'DDL string', ORANGE), at: [0, 1] },
-    { node: chip('b-df-createdf', 'createDataFrame', ORANGE), at: [0, 2] },
-    { node: chip('b-df-sql-create', 'spark.sql()', ORANGE), at: [0, 3] },
-    { node: chip('b-df-read', 'spark.read', ORANGE), at: [0, 4] },
+  wgrid({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
+    { node: lbl('b-df-structtype', 'StructType', ORANGE), at: [0, 0] },
+    { node: lbl('b-df-ddl', 'DDL string', ORANGE), at: [0, 1] },
+    { node: lbl('b-df-createdf', 'createDataFrame', ORANGE), at: [0, 2] },
+    { node: lbl('b-df-sql-create', 'spark.sql()', ORANGE), at: [0, 3] },
+    { node: lbl('b-df-read', 'spark.read', ORANGE), at: [0, 4] },
   ]),
 )
 
 const dfCol = container(
   { id: 'b-df-col', label: 'Column ref + when', color: YELLOW },
-  weighted({ cols: [1], rows: [1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('b-df-colstr', '"name"', YELLOW), at: [0, 0] },
-    { node: chip('b-df-colfn', 'col("n")', YELLOW), at: [0, 1] },
-    { node: chip('b-df-expr', 'expr("…")', YELLOW), at: [0, 2] },
-    { node: chip('b-df-dfcol', 'df.col("n")', YELLOW), at: [0, 3] },
-    { node: chip('b-df-dfidx', 'df["n"]', YELLOW), at: [0, 4] },
-    { node: chip('b-df-when', 'when/otherwise', YELLOW), at: [0, 5] },
+  wgrid({ cols: [1], rows: [1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
+    { node: lbl('b-df-colstr', '"name"', YELLOW), at: [0, 0] },
+    { node: lbl('b-df-colfn', 'col("n")', YELLOW), at: [0, 1] },
+    { node: lbl('b-df-expr', 'expr("…")', YELLOW), at: [0, 2] },
+    { node: lbl('b-df-dfcol', 'df.col("n")', YELLOW), at: [0, 3] },
+    { node: lbl('b-df-dfidx', 'df["n"]', YELLOW), at: [0, 4] },
+    { node: lbl('b-df-when', 'when/otherwise', YELLOW), at: [0, 5] },
   ]),
 )
 
 const dfTrans = container(
   { id: 'b-df-trans', label: 'Transformations', color: GREEN },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('b-df-t-select', 'select', GREEN), at: [0, 0] },
-    { node: chip('b-df-t-selectexpr', 'selectExpr', GREEN), at: [1, 0] },
-    { node: chip('b-df-t-withcol', 'withColumn', GREEN), at: [0, 1] },
-    { node: chip('b-df-t-rename', 'withColumnRenamed', GREEN), at: [1, 1] },
-    { node: chip('b-df-t-drop', 'drop', GREEN), at: [0, 2] },
-    { node: chip('b-df-t-filter', 'filter / where', GREEN), at: [1, 2] },
-    { node: chip('b-df-t-nadrop', 'na.drop', GREEN), at: [0, 3] },
-    { node: chip('b-df-t-nafill', 'na.fill', GREEN), at: [1, 3] },
-    { node: chip('b-df-t-cast', 'cast', GREEN), at: [0, 4] },
-    { node: chip('b-df-t-orderby', 'orderBy / sort', GREEN), at: [1, 4] },
-    { node: chip('b-df-t-dedupe', 'dropDuplicates', GREEN), at: [0, 5] },
-    { node: chip('b-df-t-distinct', 'distinct', GREEN), at: [1, 5] },
+  wgrid({ cols: [1, 1], rows: [1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
+    { node: lbl('b-df-t-select', 'select', GREEN), at: [0, 0] },
+    { node: lbl('b-df-t-selectexpr', 'selectExpr', GREEN), at: [1, 0] },
+    { node: lbl('b-df-t-withcol', 'withColumn', GREEN), at: [0, 1] },
+    { node: lbl('b-df-t-rename', 'withColumnRenamed', GREEN), at: [1, 1] },
+    { node: lbl('b-df-t-drop', 'drop', GREEN), at: [0, 2] },
+    { node: lbl('b-df-t-filter', 'filter / where', GREEN), at: [1, 2] },
+    { node: lbl('b-df-t-nadrop', 'na.drop', GREEN), at: [0, 3] },
+    { node: lbl('b-df-t-nafill', 'na.fill', GREEN), at: [1, 3] },
+    { node: lbl('b-df-t-cast', 'cast', GREEN), at: [0, 4] },
+    { node: lbl('b-df-t-orderby', 'orderBy / sort', GREEN), at: [1, 4] },
+    { node: lbl('b-df-t-dedupe', 'dropDuplicates', GREEN), at: [0, 5] },
+    { node: lbl('b-df-t-distinct', 'distinct', GREEN), at: [1, 5] },
   ]),
 )
 
 const dfFns = container(
   { id: 'b-df-fns', label: 'pyspark.sql.functions', color: BLUE },
-  weighted({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('b-df-fn-str', 'string fns', BLUE), at: [0, 0] },
-    { node: chip('b-df-fn-date', 'date/time fns', BLUE), at: [0, 1] },
-    { node: chip('b-df-fn-array', 'array fns', BLUE), at: [0, 2] },
-    { node: chip('b-df-fn-udf', 'UDF / pandas_udf', BLUE), at: [0, 3] },
+  wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
+    { node: lbl('b-df-fn-str', 'string fns', BLUE), at: [0, 0] },
+    { node: lbl('b-df-fn-date', 'date/time fns', BLUE), at: [0, 1] },
+    { node: lbl('b-df-fn-array', 'array fns', BLUE), at: [0, 2] },
+    { node: lbl('b-df-fn-udf', 'UDF / pandas_udf', BLUE), at: [0, 3] },
   ]),
 )
 
 const dfJoins = container(
   { id: 'b-df-joins', label: 'Joins + Set ops', color: PURPLE },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('b-df-j-inner', 'inner', PURPLE), at: [0, 0] },
-    { node: chip('b-df-j-left', 'left', PURPLE), at: [1, 0] },
-    { node: chip('b-df-j-right', 'right', PURPLE), at: [0, 1] },
-    { node: chip('b-df-j-outer', 'outer', PURPLE), at: [1, 1] },
-    { node: chip('b-df-j-semi', 'semi/anti', PURPLE), at: [0, 2] },
-    { node: chip('b-df-j-cross', 'cross', PURPLE), at: [1, 2] },
-    { node: chip('b-df-set-union', 'union', PURPLE), at: [0, 3] },
-    { node: chip('b-df-set-inter', 'intersect', PURPLE), at: [1, 3] },
+  wgrid({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
+    { node: lbl('b-df-j-inner', 'inner', PURPLE), at: [0, 0] },
+    { node: lbl('b-df-j-left', 'left', PURPLE), at: [1, 0] },
+    { node: lbl('b-df-j-right', 'right', PURPLE), at: [0, 1] },
+    { node: lbl('b-df-j-outer', 'outer', PURPLE), at: [1, 1] },
+    { node: lbl('b-df-j-semi', 'semi/anti', PURPLE), at: [0, 2] },
+    { node: lbl('b-df-j-cross', 'cross', PURPLE), at: [1, 2] },
+    { node: lbl('b-df-set-union', 'union', PURPLE), at: [0, 3] },
+    { node: lbl('b-df-set-inter', 'intersect', PURPLE), at: [1, 3] },
   ]),
 )
 
 const dfAgg = container(
   { id: 'b-df-agg', label: 'Aggregations + Window', color: TEAL },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('b-df-a-groupby', 'groupBy', TEAL), at: [0, 0] },
-    { node: chip('b-df-a-agg', 'agg', TEAL), at: [1, 0] },
-    { node: chip('b-df-a-cntdist', 'countDistinct', TEAL), at: [0, 1] },
-    { node: chip('b-df-a-rollup', 'rollup/cube', TEAL), at: [1, 1] },
-    { node: chip('b-df-a-pivot', 'pivot', TEAL), at: [0, 2] },
-    { node: chip('b-df-a-stack', 'stack/melt', TEAL), at: [1, 2] },
-    { node: chip('b-df-w-over', 'Window.over', TEAL), at: [0, 3] },
-    { node: chip('b-df-w-rank', 'rank/row_num', TEAL), at: [1, 3] },
+  wgrid({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
+    { node: lbl('b-df-a-groupby', 'groupBy', TEAL), at: [0, 0] },
+    { node: lbl('b-df-a-agg', 'agg', TEAL), at: [1, 0] },
+    { node: lbl('b-df-a-cntdist', 'countDistinct', TEAL), at: [0, 1] },
+    { node: lbl('b-df-a-rollup', 'rollup/cube', TEAL), at: [1, 1] },
+    { node: lbl('b-df-a-pivot', 'pivot', TEAL), at: [0, 2] },
+    { node: lbl('b-df-a-stack', 'stack/melt', TEAL), at: [1, 2] },
+    { node: lbl('b-df-w-over', 'Window.over', TEAL), at: [0, 3] },
+    { node: lbl('b-df-w-rank', 'rank/row_num', TEAL), at: [1, 3] },
   ]),
 )
 
 const dfActions = container(
   { id: 'b-df-actions', label: 'Actions + Persistence + Explore', color: RED },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('b-df-act-collect', 'collect', RED), at: [0, 0] },
-    { node: chip('b-df-act-count', 'count', RED), at: [1, 0] },
-    { node: chip('b-df-act-show', 'show', RED), at: [0, 1] },
-    { node: chip('b-df-act-take', 'take', RED), at: [1, 1] },
-    { node: chip('b-df-act-cache', 'cache', RED), at: [0, 2] },
-    { node: chip('b-df-act-persist', 'persist', RED), at: [1, 2] },
-    { node: chip('b-df-act-print', 'printSchema', RED), at: [0, 3] },
-    { node: chip('b-df-act-desc', 'describe', RED), at: [1, 3] },
-    { node: chip('b-df-act-sample', 'sample', RED), at: [0, 4] },
-    { node: chip('b-df-act-sampby', 'sampleBy', RED), at: [1, 4] },
+  wgrid({ cols: [1, 1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
+    { node: lbl('b-df-act-collect', 'collect', RED), at: [0, 0] },
+    { node: lbl('b-df-act-count', 'count', RED), at: [1, 0] },
+    { node: lbl('b-df-act-show', 'show', RED), at: [0, 1] },
+    { node: lbl('b-df-act-take', 'take', RED), at: [1, 1] },
+    { node: lbl('b-df-act-cache', 'cache', RED), at: [0, 2] },
+    { node: lbl('b-df-act-persist', 'persist', RED), at: [1, 2] },
+    { node: lbl('b-df-act-print', 'printSchema', RED), at: [0, 3] },
+    { node: lbl('b-df-act-desc', 'describe', RED), at: [1, 3] },
+    { node: lbl('b-df-act-sample', 'sample', RED), at: [0, 4] },
+    { node: lbl('b-df-act-sampby', 'sampleBy', RED), at: [1, 4] },
   ]),
 )
 
 const dfLane = container(
   { id: 'b-df', label: 'DataFrame API', color: ORANGE },
-  weighted({ cols: [1, 1, 1.4, 1.2, 1.2, 1.2, 1.2], rows: [1], gap: 0.22, padding: P }, [
+  wgrid({ cols: [1, 1, 1.4, 1.2, 1.2, 1.2, 1.2], rows: [1], gap: 0.22, padding: P }, [
     { node: dfCreate, at: [0, 0] },
     { node: dfCol, at: [1, 0] },
     { node: dfTrans, at: [2, 0] },
@@ -556,7 +587,7 @@ const dfLane = container(
 
 const apiLanes = group(
   'b-apis',
-  weighted({ cols: [1], rows: [1, 0.7, 1, 1], gap: 0.3, padding: 0 }, [
+  wgrid({ cols: [1], rows: [1, 0.7, 1, 1], gap: 0.3, padding: 0 }, [
     { node: sqlLane, at: [0, 0] },
     { node: pandasLane, at: [0, 1] },
     { node: dfLane, at: [0, 2] },
@@ -566,7 +597,7 @@ const apiLanes = group(
 
 const pipeline = group(
   'b-pipeline',
-  weighted({ cols: [2, 3.5, 18, 4, 2], rows: [1], gap: 0.35, padding: 0 }, [
+  wgrid({ cols: [2, 3.5, 18, 4, 2], rows: [1], gap: 0.35, padding: 0 }, [
     { node: sources, at: [0, 0] },
     { node: readApi, at: [1, 0] },
     { node: apiLanes, at: [2, 0] },
@@ -580,7 +611,7 @@ const pipeline = group(
 
 const perfPart = container(
   { id: 'b-perf-part', label: 'Partitioning', color: ORANGE },
-  weighted({ cols: [1], rows: [1, 1, 1], gap: G, padding: P }, [
+  wgrid({ cols: [1], rows: [1, 1, 1], gap: G, padding: P }, [
     { node: chip('b-perf-rp', 'repartition', ORANGE), at: [0, 0] },
     { node: chip('b-perf-co', 'coalesce', ORANGE), at: [0, 1] },
     { node: chip('b-perf-pb', 'partitionBy', ORANGE), at: [0, 2] },
@@ -589,7 +620,7 @@ const perfPart = container(
 
 const perfShuffle = container(
   { id: 'b-perf-shuffle', label: 'Shuffle', color: RED },
-  weighted({ cols: [1], rows: [1, 1], gap: G, padding: P }, [
+  wgrid({ cols: [1], rows: [1, 1], gap: G, padding: P }, [
     { node: chip('b-perf-smj', 'sortMergeJoin', RED), at: [0, 0] },
     { node: chip('b-perf-sp', 'shuffle partitions', RED), at: [0, 1] },
   ]),
@@ -597,7 +628,7 @@ const perfShuffle = container(
 
 const perfCache = container(
   { id: 'b-perf-cache', label: 'Cache vs Persist', color: BLUE },
-  weighted({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
+  wgrid({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: P }, [
     { node: chip('b-perf-cache-c', 'cache', BLUE), at: [0, 0] },
     { node: chip('b-perf-cache-p', 'persist', BLUE), at: [1, 0] },
     { node: chip('b-perf-cache-u', 'unpersist', BLUE), at: [0, 1] },
@@ -610,7 +641,7 @@ const perfCache = container(
 
 const perfBcast = container(
   { id: 'b-perf-bcast', label: 'Broadcast joins', color: PURPLE },
-  weighted({ cols: [1], rows: [1, 1], gap: G, padding: P }, [
+  wgrid({ cols: [1], rows: [1, 1], gap: G, padding: P }, [
     { node: chip('b-perf-bc-fn', 'broadcast(df)', PURPLE), at: [0, 0] },
     { node: chip('b-perf-bc-cfg', 'autoBroadcastJoin', PURPLE), at: [0, 1] },
   ]),
@@ -621,7 +652,7 @@ const perf = container(
   // Tight inter-container gap (was 0.3): the four sub-containers were narrower
   // than needed, clipping long chip labels (repartition, MEMORY_AND_DISK_2). The
   // reclaimed gap space widens every container — chips get the width to fit.
-  weighted({ cols: [1, 1, 1, 1], rows: [1], gap: 0.15, padding: P }, [
+  wgrid({ cols: [1, 1, 1, 1], rows: [1], gap: 0.15, padding: P }, [
     { node: perfPart, at: [0, 0] },
     { node: perfShuffle, at: [1, 0] },
     { node: perfCache, at: [2, 0] },
@@ -635,7 +666,7 @@ const perf = container(
 
 const root = group(
   'spark-batch-root',
-  weighted({ cols: [1], rows: [2.2, 14, 2.2], gap: 0.5, padding: 0.4 }, [
+  wgrid({ cols: [1], rows: [2.2, 14, 2.2], gap: 0.5, padding: 0.4 }, [
     { node: setup, at: [0, 0] },
     { node: pipeline, at: [0, 1] },
     { node: perf, at: [0, 2] },
