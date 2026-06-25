@@ -30,8 +30,17 @@ const P = 0.22
 // margins at P; PT reclaims that so each long label fills the box width.
 const PT = 0.01
 
-/** A filled leaf chip — the text IS the concept (graphl-ux `term`). */
+/** A filled leaf chip — the text IS the value (graphl-ux `term`). The default
+ *  outside the dense DataFrame-API lane: rails, sinks, option groups read fine. */
 const chip = (id: string, label: string, color: string): NodeSeed => ({ id, label, color, kind: 'term' })
+
+/**
+ * A bare LABEL leaf — text only, no chip rectangle (graphl-ux `label`). Used ONLY in
+ * the dense DataFrame API (streaming) lane (stateless/windows/watermark/stateful/
+ * joins), matching the batch map: filled chips there stretched into tall boxes with
+ * a short-word-bigger font; bare text reads as a quiet, even method list.
+ */
+const lbl = (id: string, label: string, color: string): NodeSeed => ({ id, label, color, kind: 'label' })
 
 /**
  * Native weighted-track authoring: the grid carries the relative track WEIGHTS
@@ -158,59 +167,59 @@ const readApi = container(
 const dfStateless = container(
   { id: 's-df-stateless', label: 'Stateless transforms', color: GREEN },
   wgrid({ cols: [1], rows: [1, 1, 1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('s-df-t-select', 'select', GREEN), at: [0, 0] },
-    { node: chip('s-df-t-selectexpr', 'selectExpr', GREEN), at: [0, 1] },
-    { node: chip('s-df-t-filter', 'filter', GREEN), at: [0, 2] },
-    { node: chip('s-df-t-withcol', 'withColumn', GREEN), at: [0, 3] },
-    { node: chip('s-df-t-drop', 'drop', GREEN), at: [0, 4] },
-    { node: chip('s-df-t-cast', 'cast', GREEN), at: [0, 5] },
-    { node: chip('s-df-t-nadrop', 'na.drop', GREEN), at: [0, 6] },
-    { node: chip('s-df-t-nafill', 'na.fill', GREEN), at: [0, 7] },
+    { node: lbl('s-df-t-select', 'select', GREEN), at: [0, 0] },
+    { node: lbl('s-df-t-selectexpr', 'selectExpr', GREEN), at: [0, 1] },
+    { node: lbl('s-df-t-filter', 'filter', GREEN), at: [0, 2] },
+    { node: lbl('s-df-t-withcol', 'withColumn', GREEN), at: [0, 3] },
+    { node: lbl('s-df-t-drop', 'drop', GREEN), at: [0, 4] },
+    { node: lbl('s-df-t-cast', 'cast', GREEN), at: [0, 5] },
+    { node: lbl('s-df-t-nadrop', 'na.drop', GREEN), at: [0, 6] },
+    { node: lbl('s-df-t-nafill', 'na.fill', GREEN), at: [0, 7] },
   ]),
 )
 
 const dfWindow = container(
   { id: 's-df-window', label: 'Windows (event time)', color: TEAL },
   wgrid({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('s-df-w-window', 'window(col, dur)', TEAL), at: [0, 0] },
-    { node: chip('s-df-w-session', 'session_window', TEAL), at: [0, 1] },
-    { node: chip('s-df-w-tumb', 'tumbling', TEAL), at: [0, 2] },
-    { node: chip('s-df-w-slide', 'sliding', TEAL), at: [0, 3] },
-    { node: chip('s-df-w-sess', 'session', TEAL), at: [0, 4] },
+    { node: lbl('s-df-w-window', 'window(col, dur)', TEAL), at: [0, 0] },
+    { node: lbl('s-df-w-session', 'session_window', TEAL), at: [0, 1] },
+    { node: lbl('s-df-w-tumb', 'tumbling', TEAL), at: [0, 2] },
+    { node: lbl('s-df-w-slide', 'sliding', TEAL), at: [0, 3] },
+    { node: lbl('s-df-w-sess', 'session', TEAL), at: [0, 4] },
   ]),
 )
 
 const dfWatermark = container(
   { id: 's-df-water', label: 'Watermark', color: RED },
   wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('s-df-wm-fn', 'withWatermark', RED), at: [0, 0] },
-    { node: chip('s-df-wm-event', 'eventTime col', RED), at: [0, 1] },
-    { node: chip('s-df-wm-delay', 'delay', RED), at: [0, 2] },
-    { node: chip('s-df-wm-late', 'late drop', RED), at: [0, 3] },
+    { node: lbl('s-df-wm-fn', 'withWatermark', RED), at: [0, 0] },
+    { node: lbl('s-df-wm-event', 'eventTime col', RED), at: [0, 1] },
+    { node: lbl('s-df-wm-delay', 'delay', RED), at: [0, 2] },
+    { node: lbl('s-df-wm-late', 'late drop', RED), at: [0, 3] },
   ]),
 )
 
 const dfState = container(
   { id: 's-df-state', label: 'Stateful ops', color: PURPLE },
   wgrid({ cols: [1], rows: [1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('s-df-st-gbk', 'groupBy + agg', PURPLE), at: [0, 0] },
-    { node: chip('s-df-st-dedup', 'dropDuplicates', PURPLE), at: [0, 1] },
-    { node: chip('s-df-st-mgws', 'mapGroupsWithState', PURPLE), at: [0, 2] },
-    { node: chip('s-df-st-fmgws', 'flatMapGroupsWithState', PURPLE), at: [0, 3] },
-    { node: chip('s-df-st-aipws', 'applyInPandasWithState', PURPLE), at: [0, 4] },
-    { node: chip('s-df-st-gst', 'GroupStateTimeout', PURPLE), at: [0, 5] },
+    { node: lbl('s-df-st-gbk', 'groupBy + agg', PURPLE), at: [0, 0] },
+    { node: lbl('s-df-st-dedup', 'dropDuplicates', PURPLE), at: [0, 1] },
+    { node: lbl('s-df-st-mgws', 'mapGroupsWithState', PURPLE), at: [0, 2] },
+    { node: lbl('s-df-st-fmgws', 'flatMapGroupsWithState', PURPLE), at: [0, 3] },
+    { node: lbl('s-df-st-aipws', 'applyInPandasWithState', PURPLE), at: [0, 4] },
+    { node: lbl('s-df-st-gst', 'GroupStateTimeout', PURPLE), at: [0, 5] },
   ]),
 )
 
 const dfJoins = container(
   { id: 's-df-joins', label: 'Joins', color: BLUE },
   wgrid({ cols: [1], rows: [1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('s-df-j-static', 'stream-static', BLUE), at: [0, 0] },
-    { node: chip('s-df-j-bcast', 'broadcast(dim)', BLUE), at: [0, 1] },
-    { node: chip('s-df-j-ssi', 'stream-stream inner', BLUE), at: [0, 2] },
-    { node: chip('s-df-j-ssl', 'stream-stream left', BLUE), at: [0, 3] },
-    { node: chip('s-df-j-ssr', 'stream-stream right', BLUE), at: [0, 4] },
-    { node: chip('s-df-j-wmboth', 'watermark on both', BLUE), at: [0, 5] },
+    { node: lbl('s-df-j-static', 'stream-static', BLUE), at: [0, 0] },
+    { node: lbl('s-df-j-bcast', 'broadcast(dim)', BLUE), at: [0, 1] },
+    { node: lbl('s-df-j-ssi', 'stream-stream inner', BLUE), at: [0, 2] },
+    { node: lbl('s-df-j-ssl', 'stream-stream left', BLUE), at: [0, 3] },
+    { node: lbl('s-df-j-ssr', 'stream-stream right', BLUE), at: [0, 4] },
+    { node: lbl('s-df-j-wmboth', 'watermark on both', BLUE), at: [0, 5] },
   ]),
 )
 
