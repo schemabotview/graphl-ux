@@ -49,6 +49,14 @@ const chip = (id: string, label: string, color: string): NodeSeed => ({ id, labe
 const lbl = (id: string, label: string, color: string): NodeSeed => ({ id, label, color, kind: 'label' })
 
 /**
+ * A COMPONENT leaf — an icon glyph + label (graphl-ux `symbol`). Used for the I/O
+ * ENDPOINTS in the Input sources / Output rails (CSV, Parquet, Kafka, Delta …) —
+ * they're systems/formats, like the data sources in the architecture map, so a glyph
+ * reads better than a chip and sets the pipeline's ends apart from the option groups.
+ */
+const comp = (id: string, label: string, color: string): NodeSeed => ({ id, label, color, kind: 'symbol' })
+
+/**
  * Native weighted-track authoring: the grid carries the relative track WEIGHTS
  * (`engine/grid.ts` resolves arrays directly), and each child's `at` becomes its
  * `cell`, indexing those tracks 1:1. Same `{ node, at }` ergonomics as the old
@@ -110,14 +118,14 @@ const setup = container(
 const sources = container(
   { id: 'b-sources', label: 'Input Sources', color: TEAL },
   wgrid({ cols: [1], rows: [1, 1, 1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('b-src-csv', 'CSV', TEAL), at: [0, 0] },
-    { node: chip('b-src-parquet', 'Parquet', TEAL), at: [0, 1] },
-    { node: chip('b-src-json', 'JSON', TEAL), at: [0, 2] },
-    { node: chip('b-src-orc', 'ORC', TEAL), at: [0, 3] },
-    { node: chip('b-src-jdbc', 'JDBC', TEAL), at: [0, 4] },
-    { node: chip('b-src-hive', 'Hive', TEAL), at: [0, 5] },
-    { node: chip('b-src-files', 'Files', TEAL), at: [0, 6] },
-    { node: chip('b-src-delta', 'Delta', TEAL), at: [0, 7] },
+    { node: comp('b-src-csv', 'CSV', TEAL), at: [0, 0] },
+    { node: comp('b-src-parquet', 'Parquet', TEAL), at: [0, 1] },
+    { node: comp('b-src-json', 'JSON', TEAL), at: [0, 2] },
+    { node: comp('b-src-orc', 'ORC', TEAL), at: [0, 3] },
+    { node: comp('b-src-jdbc', 'JDBC', TEAL), at: [0, 4] },
+    { node: comp('b-src-hive', 'Hive', TEAL), at: [0, 5] },
+    { node: comp('b-src-files', 'Files', TEAL), at: [0, 6] },
+    { node: comp('b-src-delta', 'Delta', TEAL), at: [0, 7] },
   ]),
 )
 
@@ -231,10 +239,10 @@ const writeApi = container(
 const output = container(
   { id: 'b-output', label: 'Output', color: TEAL },
   wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('b-out-files', 'Files', TEAL), at: [0, 0] },
-    { node: chip('b-out-hive', 'Hive table', TEAL), at: [0, 1] },
-    { node: chip('b-out-jdbc', 'JDBC target', TEAL), at: [0, 2] },
-    { node: chip('b-out-delta', 'Delta table', TEAL), at: [0, 3] },
+    { node: comp('b-out-files', 'Files', TEAL), at: [0, 0] },
+    { node: comp('b-out-hive', 'Hive table', TEAL), at: [0, 1] },
+    { node: comp('b-out-jdbc', 'JDBC target', TEAL), at: [0, 2] },
+    { node: comp('b-out-delta', 'Delta table', TEAL), at: [0, 3] },
   ]),
 )
 

@@ -30,9 +30,17 @@ const P = 0.22
 // margins at P; PT reclaims that so each long label fills the box width.
 const PT = 0.01
 
-/** A filled leaf chip — the text IS the value (graphl-ux `term`). The default
- *  outside the dense DataFrame-API lane: rails, sinks, option groups read fine. */
+/** A filled leaf chip — the text IS the value (graphl-ux `term`). The default for
+ *  option groups (format/file/kafka opts, modes, triggers, checkpoint, …). */
 const chip = (id: string, label: string, color: string): NodeSeed => ({ id, label, color, kind: 'term' })
+
+/**
+ * A COMPONENT leaf — an icon glyph + label (graphl-ux `symbol`). Used for the I/O
+ * ENDPOINTS in the sources / sinks / output rails (kafka, delta, file, console …) —
+ * they're systems, like the data sources in the architecture map, so a glyph reads
+ * better than a chip and sets the pipeline's ends apart from the option groups.
+ */
+const comp = (id: string, label: string, color: string): NodeSeed => ({ id, label, color, kind: 'symbol' })
 
 /**
  * A bare LABEL leaf — text only, no chip rectangle (graphl-ux `label`). Used ONLY in
@@ -108,12 +116,12 @@ const setup = container(
 const sources = container(
   { id: 's-sources', label: 'Streaming Sources', color: TEAL },
   wgrid({ cols: [1], rows: [1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('s-src-rate', 'rate', TEAL), at: [0, 0] },
-    { node: chip('s-src-ratepm', 'rate-per-microbatch', TEAL), at: [0, 1] },
-    { node: chip('s-src-socket', 'socket', TEAL), at: [0, 2] },
-    { node: chip('s-src-file', 'file', TEAL), at: [0, 3] },
-    { node: chip('s-src-kafka', 'kafka', TEAL), at: [0, 4] },
-    { node: chip('s-src-delta', 'delta', TEAL), at: [0, 5] },
+    { node: comp('s-src-rate', 'rate', TEAL), at: [0, 0] },
+    { node: comp('s-src-ratepm', 'rate-per-microbatch', TEAL), at: [0, 1] },
+    { node: comp('s-src-socket', 'socket', TEAL), at: [0, 2] },
+    { node: comp('s-src-file', 'file', TEAL), at: [0, 3] },
+    { node: comp('s-src-kafka', 'kafka', TEAL), at: [0, 4] },
+    { node: comp('s-src-delta', 'delta', TEAL), at: [0, 5] },
   ]),
 )
 
@@ -282,13 +290,13 @@ const writeApi = container(
 const sinks = container(
   { id: 's-sinks', label: 'Sinks', color: PURPLE },
   wgrid({ cols: [1], rows: [1, 1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('s-sink-mem', 'memory', PURPLE), at: [0, 0] },
-    { node: chip('s-sink-console', 'console', PURPLE), at: [0, 1] },
-    { node: chip('s-sink-file', 'file', PURPLE), at: [0, 2] },
-    { node: chip('s-sink-kafka', 'kafka', PURPLE), at: [0, 3] },
-    { node: chip('s-sink-delta', 'delta', PURPLE), at: [0, 4] },
-    { node: chip('s-sink-fb', 'foreachBatch', PURPLE), at: [0, 5] },
-    { node: chip('s-sink-fe', 'foreach', PURPLE), at: [0, 6] },
+    { node: comp('s-sink-mem', 'memory', PURPLE), at: [0, 0] },
+    { node: comp('s-sink-console', 'console', PURPLE), at: [0, 1] },
+    { node: comp('s-sink-file', 'file', PURPLE), at: [0, 2] },
+    { node: comp('s-sink-kafka', 'kafka', PURPLE), at: [0, 3] },
+    { node: comp('s-sink-delta', 'delta', PURPLE), at: [0, 4] },
+    { node: comp('s-sink-fb', 'foreachBatch', PURPLE), at: [0, 5] },
+    { node: comp('s-sink-fe', 'foreach', PURPLE), at: [0, 6] },
   ]),
 )
 
@@ -297,11 +305,11 @@ const sinks = container(
 const output = container(
   { id: 's-output', label: 'Output', color: TEAL },
   wgrid({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
-    { node: chip('s-out-mem', 'in-memory view', TEAL), at: [0, 0] },
-    { node: chip('s-out-console', 'console stdout', TEAL), at: [0, 1] },
-    { node: chip('s-out-files', 'Files', TEAL), at: [0, 2] },
-    { node: chip('s-out-kafka', 'Kafka topic', TEAL), at: [0, 3] },
-    { node: chip('s-out-delta', 'Delta table', TEAL), at: [0, 4] },
+    { node: comp('s-out-mem', 'in-memory view', TEAL), at: [0, 0] },
+    { node: comp('s-out-console', 'console stdout', TEAL), at: [0, 1] },
+    { node: comp('s-out-files', 'Files', TEAL), at: [0, 2] },
+    { node: comp('s-out-kafka', 'Kafka topic', TEAL), at: [0, 3] },
+    { node: comp('s-out-delta', 'Delta table', TEAL), at: [0, 4] },
   ]),
 )
 
