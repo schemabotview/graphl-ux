@@ -38,7 +38,9 @@ const wgrid = (spec: WeightedSpec, children: WeightedSeed[]): PatternResult => (
 
 const modelRow = container(
   { id: 'ja-model', label: 'Model — class hierarchy   |   abstract + interface ▸ class ▸ subclass', color: PURPLE },
-  wgrid({ cols: [1, 1], rows: [1, 1, 1], gap: 0.3, padding: 0.4 }, [
+  // Wide vertical gap so the three inheritance tiers (parents ▸ class ▸ subclass)
+  // spread across the row's height and the extends/implements arrows have room.
+  wgrid({ cols: [1, 1], rows: [1, 1, 1], gap: 0.7, padding: 0.4 }, [
     { node: lbl('ja-oop-animal', 'abstract class  Animal', PURPLE), at: [0, 0] },
     { node: lbl('ja-oop-walker', 'interface  Walker', PURPLE), at: [1, 0] },
     { node: lbl('ja-oop-mammal', 'class  Mammal   extends Animal   implements Walker', PURPLE), at: [0, 1, 2, 1] },
@@ -222,7 +224,7 @@ const returnRow = container(
 
 const content = group(
   'ja-content',
-  wgrid({ cols: [1], rows: [3.5, 5.5, 5.5, 2], gap: 0.5, padding: 0 }, [
+  wgrid({ cols: [1], rows: [4.5, 5.5, 5.5, 2], gap: 0.5, padding: 0 }, [
     { node: modelRow, at: [0, 0] },
     { node: initializeRow, at: [0, 1] },
     { node: transformRow, at: [0, 2] },
@@ -259,7 +261,7 @@ export const javaAnatomy: SceneSpec = {
   subtitle: 'Model ▸ Initialize ▸ Transform ▸ Return, and where values live',
   // Taller canvas (source was 24×18) so the stacked rhythm rows get vertical room and
   // the dense leaf lists (Primitives, Stream Ops) stop reading squeezed.
-  canvas: { width: 1380, height: 1180 },
+  canvas: { width: 1380, height: 1240 },
   grid: { cols: 1, rows: 1, gap: 0, padding: 0.04 },
   nodes: [root],
   edges: [
