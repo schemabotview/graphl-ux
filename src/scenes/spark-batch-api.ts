@@ -166,7 +166,7 @@ const jdbcReads = container(
 )
 
 const readApi = container(
-  { id: 'b-read', label: 'Read API  (spark.read)', color: BLUE },
+  { id: 'b-read', label: 'Read API', color: BLUE },
   wgrid({ cols: [1], rows: [4, 5, 4, 5], gap: 0.22, padding: P }, [
     { node: formatOptions, at: [0, 0] },
     { node: badRecord, at: [0, 1] },
@@ -217,7 +217,7 @@ const writeFormat = container(
 )
 
 const writeApi = container(
-  { id: 'b-write', label: 'Write API  (df.write)', color: BLUE },
+  { id: 'b-write', label: 'Write API', color: BLUE },
   wgrid({ cols: [1], rows: [1.2, 1, 1, 1], gap: 0.22, padding: P }, [
     { node: writeMode, at: [0, 0] },
     { node: writeLayout, at: [0, 1] },
@@ -418,7 +418,7 @@ const sqlJoins = container(
 )
 
 const sqlAgg = container(
-  { id: 'b-sql-agg', label: 'Aggregates + Window', color: TEAL },
+  { id: 'b-sql-agg', label: 'Aggregates', color: TEAL },
   wgrid({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: lbl('b-sql-avg', 'AVG', TEAL), at: [0, 0] },
     { node: lbl('b-sql-sum', 'SUM', TEAL), at: [1, 0] },
@@ -514,7 +514,7 @@ const dfTrans = container(
 )
 
 const dfFns = container(
-  { id: 'b-df-fns', label: 'pyspark.sql.functions', color: BLUE },
+  { id: 'b-df-fns', label: 'Functions', color: BLUE },
   wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: lbl('b-df-fn-str', 'string fns', BLUE), at: [0, 0] },
     { node: lbl('b-df-fn-date', 'date/time fns', BLUE), at: [0, 1] },
@@ -538,7 +538,7 @@ const dfJoins = container(
 )
 
 const dfAgg = container(
-  { id: 'b-df-agg', label: 'Aggregations + Window', color: TEAL },
+  { id: 'b-df-agg', label: 'Aggregations', color: TEAL },
   wgrid({ cols: [1, 1], rows: [1, 1, 1, 1], gap: G, padding: PT }, [
     { node: lbl('b-df-a-groupby', 'groupBy', TEAL), at: [0, 0] },
     { node: lbl('b-df-a-agg', 'agg', TEAL), at: [1, 0] },
@@ -552,7 +552,7 @@ const dfAgg = container(
 )
 
 const dfActions = container(
-  { id: 'b-df-actions', label: 'Actions + Persistence + Explore', color: RED },
+  { id: 'b-df-actions', label: 'Actions', color: RED },
   wgrid({ cols: [1, 1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: lbl('b-df-act-collect', 'collect', RED), at: [0, 0] },
     { node: lbl('b-df-act-count', 'count', RED), at: [1, 0] },

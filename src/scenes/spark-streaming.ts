@@ -154,7 +154,7 @@ const readKafka = container(
 )
 
 const readApi = container(
-  { id: 's-read', label: 'Read API  (spark.readStream)', color: BLUE },
+  { id: 's-read', label: 'Read API', color: BLUE },
   wgrid({ cols: [1], rows: [3, 4, 5], gap: 0.22, padding: P }, [
     { node: readFmt, at: [0, 0] },
     { node: readFile, at: [0, 1] },
@@ -165,7 +165,7 @@ const readApi = container(
 // ─── DATAFRAME LANE (streaming) ────────────────────────────────────────────────
 
 const dfStateless = container(
-  { id: 's-df-stateless', label: 'Stateless transforms', color: GREEN },
+  { id: 's-df-stateless', label: 'Stateless', color: GREEN },
   wgrid({ cols: [1], rows: [1, 1, 1, 1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: lbl('s-df-t-select', 'select', GREEN), at: [0, 0] },
     { node: lbl('s-df-t-selectexpr', 'selectExpr', GREEN), at: [0, 1] },
@@ -179,7 +179,7 @@ const dfStateless = container(
 )
 
 const dfWindow = container(
-  { id: 's-df-window', label: 'Windows (event time)', color: TEAL },
+  { id: 's-df-window', label: 'Windows', color: TEAL },
   wgrid({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: PT }, [
     { node: lbl('s-df-w-window', 'window(col, dur)', TEAL), at: [0, 0] },
     { node: lbl('s-df-w-session', 'session_window', TEAL), at: [0, 1] },
@@ -269,7 +269,7 @@ const writeKafka = container(
 )
 
 const writeApi = container(
-  { id: 's-write', label: 'Write API  (df.writeStream)', color: BLUE },
+  { id: 's-write', label: 'Write API', color: BLUE },
   wgrid({ cols: [1], rows: [1, 1, 1], gap: 0.22, padding: P }, [
     { node: writeCore, at: [0, 0] },
     { node: outputModes, at: [0, 1] },

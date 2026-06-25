@@ -112,7 +112,11 @@
   transform: translateY(-50%);
   display: flex;
   align-items: center;
-  max-width: none;
+  /* Stay within the container: the font is fitted (SceneNode.fitTitlePx), and this
+     clamps width so a title still too long at the font floor clips cleanly inside
+     its own box instead of overlapping a neighbour. */
+  max-width: calc(100% - 14px);
+  overflow: hidden;
   padding: 0 4px;
   background: color-mix(in srgb, var(--node-color) 12%, var(--base));
 }
@@ -132,6 +136,7 @@
   letter-spacing: 0.03em;
   text-transform: uppercase;
   white-space: nowrap;
+  overflow: hidden;
   color: color-mix(in srgb, var(--node-color) 70%, #cfd4dc);
 }
 

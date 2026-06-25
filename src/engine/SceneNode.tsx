@@ -39,6 +39,20 @@ function fitFontPx(label: string, width: number, height: number, kind: NodeKind)
   return Math.max(6, Math.min(byWidth, byHeight, max))
 }
 
+/**
+ * Fit a container's on-border TITLE to its box width. Unlike fitFontPx (which fits
+ * the longest WORD, right for wrapping leaves), a title is ONE nowrap, uppercase,
+ * letter-spaced line, so we fit the WHOLE string length. Clamped so it shrinks to
+ * fit a narrow rail without going microscopic; scene.css adds an ellipsis safety net
+ * for the rare title still too long at the floor.
+ */
+function fitTitlePx(label: string, width: number): number {
+  // Uppercase + 0.03em letter-spacing runs wide; ~0.66em/char is conservative.
+  const avail = Math.max(width - 18, 8) // left inset (9px) + title h-padding + margin
+  const px = avail / (Math.max(label.length, 1) * 0.66)
+  return Math.max(7, Math.min(px, 13))
+}
+
 export interface SceneNodeData {
   label: string
   sub?: string
@@ -78,7 +92,9 @@ export function SceneNode({ data }: NodeProps) {
         // Title rides the top-left border (NodeMap-style): just the colored
         // label, masking the border line behind it — no badge, no body cost.
         <span className="scene-node__title">
-          <span className="scene-node__label">{d.label}</span>
+          <span className="scene-node__label" style={{ fontSize: fitTitlePx(d.label, d.width) }}>
+            {d.label}
+          </span>
         </span>
       )}
       {d.kind === 'symbol' &&
