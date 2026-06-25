@@ -12,6 +12,7 @@ import { scalaAnatomy } from './scala-anatomy.ts'
 import { pythonCpython } from './python-cpython.ts'
 import { pythonAnatomy } from './python-anatomy.ts'
 import { dsa } from './dsa.ts'
+import { sql } from './sql.ts'
 
 // Scene registry: the manifest references scenes by id; this maps id → SceneSpec.
 // Modules run on one dense scene each (01 = spark-execution, 02 = spark-rdd-api);
@@ -29,6 +30,10 @@ import { dsa } from './dsa.ts'
 // Linear/Static · Linear/Dynamic · Non-Linear/Tree · Non-Linear/Graph · Hashing), each
 // cell a boxed sequence or node-link diagram. Shared across all dsa-content modules via
 // that repo's manifest (camera frames one category/structure box per section).
+// sql is the SQL concept's single wide map (ported from NodeMap): DDL ▸ catalog ▸
+// storage ▸ the query pipeline (logical execution order) ▸ transactions ▸ set ops.
+// Shared across all sql-content modules via that repo's manifest (camera frames one
+// clause / subsystem per section).
 export const scenes: Record<string, SceneSpec> = {
   'spark-execution': sparkExecution,
   'spark-rdd-api': sparkRddApi,
@@ -43,4 +48,5 @@ export const scenes: Record<string, SceneSpec> = {
   'python-cpython': pythonCpython,
   'python-anatomy': pythonAnatomy,
   dsa: dsa,
+  sql: sql,
 }

@@ -16,7 +16,7 @@
 // each content repo owns *what's inside that one concept* (manifest + notebooks +
 // audio). Mirror of src/scenes/index.ts (app owns the registry).
 
-import { BLUE, GREEN, ORANGE, PURPLE, RED } from '../engine/colors.ts'
+import { BLUE, GREEN, ORANGE, PURPLE, RED, TEAL } from '../engine/colors.ts'
 
 export interface Concept {
   /** Slug; also the hash-route id, e.g. 'apache-spark'. */
@@ -72,6 +72,13 @@ export const concepts: Concept[] = [
     accent: GREEN,
     blurb: 'From memory layout and Big O to trees, heaps, and interview patterns',
     contentBaseUrl: 'https://raw.githubusercontent.com/schemabotview/dsa-content/main',
+  },
+  {
+    id: 'sql',
+    label: 'SQL',
+    accent: TEAL,
+    blurb: 'The relational query language — from the data model to query planning',
+    contentBaseUrl: 'https://raw.githubusercontent.com/schemabotview/sql-content/main',
   },
 ]
 
