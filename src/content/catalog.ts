@@ -16,7 +16,7 @@
 // each content repo owns *what's inside that one concept* (manifest + notebooks +
 // audio). Mirror of src/scenes/index.ts (app owns the registry).
 
-import { ORANGE, PURPLE, RED } from '../engine/colors.ts'
+import { BLUE, ORANGE, PURPLE, RED } from '../engine/colors.ts'
 
 export interface Concept {
   /** Slug; also the hash-route id, e.g. 'apache-spark'. */
@@ -58,6 +58,13 @@ export const concepts: Concept[] = [
     accent: RED,
     blurb: 'Scala 3 on the JVM — functional + OOP, a path to Spark',
     contentBaseUrl: 'https://raw.githubusercontent.com/schemabotview/scala-content/main',
+  },
+  {
+    id: 'python',
+    label: 'Python',
+    accent: BLUE,
+    blurb: 'The language, CPython, and the data/ML ecosystem',
+    contentBaseUrl: 'https://raw.githubusercontent.com/schemabotview/python-content/main',
   },
 ]
 
