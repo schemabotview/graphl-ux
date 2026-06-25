@@ -176,7 +176,7 @@ const ramGraph = container(
 
 const ramColumn = group(
   'dsa-ram',
-  wgrid({ cols: [1], rows: [1.3, 1.3, 1, 1.4, 1, 1.4, 1.4], gap: 0.35, padding: 0.5 }, [
+  wgrid({ cols: [1], rows: [1.3, 1.3, 1, 1.4, 1, 1.4, 1.4], gap: 0.35, padding: 0.05 }, [
     { node: ramPrimitive, at: [0, 0] },
     { node: ramArray, at: [0, 1] },
     { node: ramLinkedList, at: [0, 2] },
@@ -191,7 +191,7 @@ const ramColumn = group(
 
 const root = group(
   'dsa-scene-root',
-  wgrid({ cols: [1.2, 2], rows: [1], gap: 0.05, padding: 0.5 }, [
+  wgrid({ cols: [1.2, 0.7], rows: [1], gap: 0.05, padding: 0.5 }, [
     { node: taxonomy, at: [0, 0] },
     { node: ramColumn, at: [1, 0] },
   ]),
