@@ -113,18 +113,22 @@ body {
   pointer-events: none;
   background: linear-gradient(to bottom, rgba(37, 37, 37, 0.9), rgba(37, 37, 37, 0));
 }
-/* Bare logo button — the icon is a self-contained tile, so no circle/border/bg.
-   Padding keeps a comfortable tap target around the small glyph. */
+/* Bare logo + concept button — both the icon and the label return home, so they
+   share one button. It takes the row's free space (flex: 1) to push the ☰ menu to
+   the right edge, the way the standalone concept span used to. */
 .scene-brandbar__home {
   pointer-events: auto;
-  display: grid;
-  place-items: center;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 6px;
   border: none;
   background: none;
+  text-align: left;
   cursor: pointer;
 }
-.scene-brandbar__home:active {
+.scene-brandbar__home:active img {
   transform: scale(0.92);
 }
 .scene-brandbar__home:focus,
@@ -135,7 +139,6 @@ body {
   display: block;
 }
 .scene-brandbar__concept {
-  flex: 1;
   font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.01em;

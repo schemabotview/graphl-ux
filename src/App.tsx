@@ -5,8 +5,9 @@ import { RightPanel } from './components/RightPanel.tsx'
 import { buildPages, type ModuleManifest, type Page } from './content/module.ts'
 import { contentUrl, fetchManifest, fetchNotebook } from './content/client.ts'
 import { conceptById } from './content/catalog.ts'
-import { navigate, replaceRoute, useRoute } from './router.ts'
+import { replaceRoute, useRoute } from './router.ts'
 import { Home } from './components/Home.tsx'
+import { Header } from './components/Header.tsx'
 
 // Narration is per-page: each slide wires its own clip via the manifest
 // (`page.audio`, a content-repo-relative path resolved against
@@ -62,10 +63,8 @@ export default function App() {
   // so they persist in localStorage across refreshes rather than in the URL.
   const [panelOpen, setPanelOpen] = useState(() => readPanelOpen())
   const [panelWidth, setPanelWidth] = useState(() => readPanelWidth())
-  const [pickerOpen, setPickerOpen] = useState(false)
 
   const audioRef = useRef<HTMLAudioElement>(null)
-  const menuRef = useRef<HTMLDivElement>(null)
   // Mirror `playing` in a ref so the page-change effect can read the live play
   // state without depending on it (else it would reset the clip on every toggle).
   const playingRef = useRef(false)
@@ -181,18 +180,6 @@ export default function App() {
     } catch { /* ignore */ }
   }, [panelWidth])
 
-  // Close the module picker when clicking outside the menu wrapper.
-  useEffect(() => {
-    if (!pickerOpen) return
-    const onDown = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setPickerOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', onDown)
-    return () => document.removeEventListener('mousedown', onDown)
-  }, [pickerOpen])
-
   // Derive the active page + scene once content has loaded.
   const page = pages[pageIdx]
   const scene = page ? (scenes[page.sceneId] ?? Object.values(scenes)[0]) : undefined
@@ -285,52 +272,7 @@ export default function App() {
             focus={page.focus}
           />
 
-          {/* Top brand bar: glyph (→ home/concept catalog) + the current concept.
-              Floats over the scene; only the glyph button takes pointer events so
-              the canvas/tap-zones underneath stay interactive. (☰ menu — module +
-              concept picker — comes with the module-switch slice.) */}
-          <div className="scene-brandbar">
-            <button
-              className="scene-brandbar__home"
-              onClick={(e) => {
-                e.currentTarget.blur()
-                navigate('')
-              }}
-              aria-label="Home — all concepts"
-            >
-              <img src="/icon.svg" alt="" width={28} height={28} />
-            </button>
-            <span className="scene-brandbar__concept">{concept.label}</span>
-            {allModules.length > 1 && (
-              <div className="scene-brandbar__menu" ref={menuRef}>
-                <button
-                  className="scene-brandbar__menu-btn"
-                  onClick={() => setPickerOpen((o) => !o)}
-                  aria-label="Switch module"
-                  aria-expanded={pickerOpen}
-                >
-                  ☰
-                </button>
-                {pickerOpen && (
-                  <div className="scene-modulepicker" role="menu">
-                    {allModules.map((m) => (
-                      <button
-                        key={m.id}
-                        className={`scene-modulepicker__item${m.id === page.moduleId ? ' scene-modulepicker__item--active' : ''}`}
-                        role="menuitem"
-                        onClick={() => {
-                          navigate(concept.id, m.id)
-                          setPickerOpen(false)
-                        }}
-                      >
-                        {m.title}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          <Header concept={concept} modules={allModules} activeModuleId={page.moduleId} />
 
           {/* Story-style tap zones (mobile only — desktop pages with arrow keys):
               left third = prev, right third = next, upper area so the bottom
