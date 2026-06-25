@@ -365,12 +365,17 @@ export default function App() {
       </div>
 
       {panelOpen && (
+        // Contents list is scoped to the CURRENT module (one notebook), not the flat
+        // cross-module page list. The module's pages are contiguous, so its first
+        // global index is pageIdx - page.moduleIndex; jumps map back by adding it.
         <RightPanel
           section={{ heading: page.heading, body: page.body }}
-          index={pageIdx}
-          headings={pages.map((p) => p.heading)}
+          index={page.moduleIndex}
+          headings={pages
+            .slice(pageIdx - page.moduleIndex, pageIdx - page.moduleIndex + page.moduleCount)
+            .map((p) => p.heading)}
           width={panelWidth}
-          onJump={goto}
+          onJump={(i) => goto(pageIdx - page.moduleIndex + i)}
           onClose={() => setPanelOpen(false)}
           onResizeStart={startResize}
         />
