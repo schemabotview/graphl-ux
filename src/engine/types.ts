@@ -2,7 +2,7 @@
 // on purpose (an AI generator may emit this later). Nodes are placed on a grid by
 // `cell`; the grid resolver turns cells into pixel boxes for React Flow.
 
-export type NodeKind = 'symbol' | 'term' | 'label' | 'container' | 'group'
+export type NodeKind = 'symbol' | 'term' | 'label' | 'code' | 'container' | 'group'
 
 export interface SceneNodeSpec {
   id: string
@@ -15,9 +15,10 @@ export interface SceneNodeSpec {
    * 'symbol' = icon glyph + label (a component); 'term' = filled chip whose text
    * IS the concept (an option/value); 'label' = bare text leaf — no glyph, no fill —
    * for plain enumerations inside a labelled container (stage partitions, tasks);
-   * 'container' = titled box whose `children` lay out INSIDE it (title band
-   * reserved at top); 'group' = invisible container (no chrome) that only
-   * sub-arranges its children.
+   * 'code' = a syntax-highlighted source snippet (its `label` is the raw code,
+   * `lang` the highlight.js grammar) on a dark IDE-style card; 'container' = titled
+   * box whose `children` lay out INSIDE it (title band reserved at top); 'group' =
+   * invisible container (no chrome) that only sub-arranges its children.
    */
   kind?: NodeKind
   /**
@@ -28,6 +29,8 @@ export interface SceneNodeSpec {
   shape?: 'circle'
   /** Optional smaller caption under the label. */
   sub?: string
+  /** For `kind: 'code'`: the highlight.js language of `label`. Defaults to 'scala'. */
+  lang?: string
   /**
    * Optional glyph for a `symbol` leaf: an image URL, or a short literal (e.g. an
    * emoji / 2-3 letters). When omitted, the renderer derives initials from `label`

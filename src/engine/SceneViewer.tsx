@@ -88,6 +88,7 @@ export function SceneViewer({
           label: n.label,
           sub: n.sub,
           icon: n.icon,
+          lang: n.lang,
           color: n.color ?? GRAY,
           kind: n.kind ?? 'symbol',
           shape: n.shape,

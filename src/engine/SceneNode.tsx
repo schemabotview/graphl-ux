@@ -2,6 +2,7 @@ import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { GRAY } from './colors.ts'
 import type { NodeKind } from './types.ts'
 import { SceneGlyph } from './SceneGlyph.tsx'
+import { highlightCode } from './highlight.ts'
 
 /** Glyph edge length for a `symbol` leaf: ~40% of the box's smaller side (so it
  *  reads as an identity tile with the label beside it), clamped to a sane range. */
@@ -61,6 +62,8 @@ export interface SceneNodeData {
   sub?: string
   /** Optional glyph for a `symbol` leaf (image URL or short literal); see types.ts. */
   icon?: string
+  /** For a `code` leaf: the highlight.js language of `label`. */
+  lang?: string
   color: string
   kind: NodeKind
   /** Optional render shape ('circle' rounds a leaf chip); see types.ts. */
@@ -120,6 +123,22 @@ export function SceneNode({ data }: NodeProps) {
             </>
           )
         })()}
+      {d.kind === 'code' && (
+        // A syntax-highlighted source snippet on a dark IDE card. `sub` (if present)
+        // is the card's own top-left header — no wrapping container needed. `label`
+        // is the raw code; hljs token spans get their colors from the app's
+        // atom-one-dark theme (loaded once in main.tsx). Fixed mono font in logical
+        // coords — fitView scales the canvas.
+        <>
+          {d.sub && <span className="scene-node__codetitle">{d.sub}</span>}
+          <pre className="scene-node__code">
+            <code
+              className="hljs"
+              dangerouslySetInnerHTML={{ __html: highlightCode(d.label, d.lang) }}
+            />
+          </pre>
+        </>
+      )}
       {(d.kind === 'term' || d.kind === 'label') && (
         // 'label' is a bare text leaf (no glyph, no fill); like 'term' it uses the
         // whole box for font-fit, just without the chip chrome (styled in scene.css).
@@ -130,7 +149,9 @@ export function SceneNode({ data }: NodeProps) {
           {d.label}
         </span>
       )}
-      {d.kind !== 'group' && d.sub && <span className="scene-node__sub">{d.sub}</span>}
+      {d.kind !== 'group' && d.kind !== 'code' && d.sub && (
+        <span className="scene-node__sub">{d.sub}</span>
+      )}
       <Handle type="source" position={sourcePos} className="scene-handle" isConnectable={false} />
     </div>
   )

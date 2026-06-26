@@ -33,7 +33,7 @@
 /* term leaves brighten their fill; containers keep their calm panel fill so a lit
    box doesn't read as a solid block. symbol leaves have no fill — they spotlight
    via their label (below), so they're excluded here too. */
-.scene-node--highlighted:not(.scene-node--container):not(.scene-node--symbol):not(.scene-node--label) {
+.scene-node--highlighted:not(.scene-node--container):not(.scene-node--symbol):not(.scene-node--label):not(.scene-node--code) {
   background: color-mix(in srgb, var(--node-color, #9aa3b2) 42%, var(--base));
 }
 
@@ -87,6 +87,55 @@
      words shrink to fit instead of clipping. Tracks padX in SceneNode.fitFontPx. */
   padding: 4px 7px;
   background: color-mix(in srgb, var(--node-color) 34%, var(--base));
+}
+
+/* 'code' nodes are syntax-highlighted source snippets on a dark IDE-style card.
+   Calm per DESIGN.md: a flat near-black body + a left color accent in the role hue,
+   NO glow/box-shadow. Top-left aligned so code reads as code, not centered text. */
+.scene-node--code {
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 12px 16px;
+  background: color-mix(in srgb, var(--node-color) 8%, #141619);
+  border: 1px solid color-mix(in srgb, var(--node-color) 28%, var(--base));
+  border-left: 3px solid var(--node-color, #9aa3b2);
+}
+
+/* The code card's own top-left header (from the node's `sub`). Small, uppercase,
+   role-hued — so a snippet labels itself without a wrapping container. */
+.scene-node__codetitle {
+  align-self: flex-start;
+  max-width: 100%;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: color-mix(in srgb, var(--node-color) 78%, #cfd4dc);
+}
+
+.scene-node__code {
+  margin: 0;
+  font-family: ui-monospace, 'SF Mono', Menlo, 'Cascadia Code', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  /* Keep indentation; let an over-long line wrap rather than clip. */
+  white-space: pre-wrap;
+  word-break: break-word;
+  text-align: left;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Token colors come from the app's atom-one-dark theme (main.tsx). Neutralize that
+   theme's own block chrome so the node's card background and our <pre> layout win. */
+.scene-node__code .hljs {
+  background: transparent;
+  padding: 0;
+  display: inline;
 }
 
 /* 'circle' shape: round a leaf chip (border-radius 50%). Author its cell square so

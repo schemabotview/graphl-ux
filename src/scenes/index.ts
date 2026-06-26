@@ -9,6 +9,7 @@ import { javaJvm } from './java-jvm.ts'
 import { javaAnatomy } from './java-anatomy.ts'
 import { scalaJvm } from './scala-jvm.ts'
 import { scalaAnatomy } from './scala-anatomy.ts'
+import { scalaGrammar } from './scala-grammar.ts'
 import { pythonCpython } from './python-cpython.ts'
 import { pythonAnatomy } from './python-anatomy.ts'
 import { dsa } from './dsa.ts'
@@ -45,6 +46,7 @@ export const scenes: Record<string, SceneSpec> = {
   'java-anatomy': javaAnatomy,
   'scala-jvm': scalaJvm,
   'scala-anatomy': scalaAnatomy,
+  'scala-grammar': scalaGrammar,
   'python-cpython': pythonCpython,
   'python-anatomy': pythonAnatomy,
   dsa: dsa,

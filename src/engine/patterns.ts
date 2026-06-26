@@ -155,6 +155,22 @@ export function section(meta: ContainerMeta, bands: Chip[][], opts: WrapOpts = {
   return container(meta, content, opts)
 }
 
+/**
+ * A `code` leaf seed: a syntax-highlighted source snippet on a dark IDE card.
+ * `source` is the raw multi-line code (its `label`); `title` (optional) renders as
+ * a small uppercase header at the card's top-left (carried in `sub`); `lang` is the
+ * highlight.js grammar. Drop it into a `columns`/`rows`/`container` like any seed.
+ */
+export function code(
+  id: string,
+  source: string,
+  color: string,
+  title?: string,
+  lang = 'scala',
+): NodeSeed {
+  return { id, label: source, color, kind: 'code', sub: title, lang }
+}
+
 /** Like `container`, but an invisible wrapper (no border/label) — sub-arranges. */
 export function group(id: string, content: PatternResult, opts: WrapOpts = {}): SceneNodeSpec {
   return {
