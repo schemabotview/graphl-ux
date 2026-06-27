@@ -203,8 +203,9 @@ export const pythonCpython: SceneSpec = {
   topic: 'python',
   title: 'Python on CPython',
   subtitle: 'Source → import system → runtime → execution engine → CPU',
-  // ~24:17 canvas so the wide runtime grid renders with roughly square cells.
-  canvas: { width: 1440, height: 1020 },
+  // Taller-than-16:9 canvas (~6:5): fills the panel-open reading view's vertical
+  // space; accepts a little left/right pillarbox in the panel-closed 16:9 frame.
+  canvas: { width: 1440, height: 1180 },
   grid: { cols: 1, rows: 1, gap: 0, padding: 0.04 },
   nodes: [root],
   edges: [
