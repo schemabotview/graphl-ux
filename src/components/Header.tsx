@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Concept } from '../content/catalog.ts'
-import { concepts } from '../content/catalog.ts'
+import { buildConceptMenu, concepts } from '../content/catalog.ts'
 import type { ModuleManifest } from '../content/module.ts'
 import { navigate } from '../router.ts'
 
@@ -19,16 +19,24 @@ interface HeaderProps {
 // underneath stay live. Owns both pickers' open state + outside-click close.
 export function Header({ concept, modules, activeModuleId }: HeaderProps) {
   const [conceptOpen, setConceptOpen] = useState(false)
+  // Which category submenu is expanded (hover on desktop, tap on touch). Reset
+  // whenever the concept dropdown closes.
+  const [openCategory, setOpenCategory] = useState<string | null>(null)
   const [moduleOpen, setModuleOpen] = useState(false)
   const conceptRef = useRef<HTMLDivElement>(null)
   const moduleRef = useRef<HTMLDivElement>(null)
+
+  const conceptMenu = useMemo(() => buildConceptMenu(concepts), [])
 
   // Close either picker when clicking outside its wrapper.
   useEffect(() => {
     if (!conceptOpen && !moduleOpen) return
     const onDown = (e: MouseEvent) => {
       const t = e.target as Node
-      if (conceptRef.current && !conceptRef.current.contains(t)) setConceptOpen(false)
+      if (conceptRef.current && !conceptRef.current.contains(t)) {
+        setConceptOpen(false)
+        setOpenCategory(null)
+      }
       if (moduleRef.current && !moduleRef.current.contains(t)) setModuleOpen(false)
     }
     document.addEventListener('mousedown', onDown)
@@ -54,7 +62,10 @@ export function Header({ concept, modules, activeModuleId }: HeaderProps) {
         <button
           className="scene-brandbar__concept-btn"
           onClick={() => {
-            setConceptOpen((o) => !o)
+            setConceptOpen((o) => {
+              if (o) setOpenCategory(null)
+              return !o
+            })
             setModuleOpen(false)
           }}
           aria-label="Switch concept"
@@ -65,19 +76,50 @@ export function Header({ concept, modules, activeModuleId }: HeaderProps) {
         </button>
         {conceptOpen && (
           <div className="scene-modulepicker" role="menu">
-            {concepts.map((c) => (
-              <button
-                key={c.id}
-                className={`scene-modulepicker__item${c.id === concept.id ? ' scene-modulepicker__item--active' : ''}`}
-                role="menuitem"
-                onClick={() => {
-                  if (c.id !== concept.id) navigate(c.id)
-                  setConceptOpen(false)
-                }}
-              >
-                {c.label}
-              </button>
-            ))}
+            {conceptMenu.map((cat) => {
+              const catActive = cat.concepts.some((c) => c.id === concept.id)
+              const catOpen = openCategory === cat.label
+              return (
+                <div
+                  key={cat.label}
+                  className="scene-modulepicker__group"
+                  onMouseEnter={() => setOpenCategory(cat.label)}
+                  onMouseLeave={() => setOpenCategory(null)}
+                >
+                  <button
+                    type="button"
+                    role="menuitem"
+                    aria-haspopup="menu"
+                    aria-expanded={catOpen}
+                    // Tap toggles the submenu on touch (where hover never fires).
+                    onClick={() => setOpenCategory((o) => (o === cat.label ? null : cat.label))}
+                    className={`scene-modulepicker__item scene-modulepicker__item--parent${catActive ? ' scene-modulepicker__item--active' : ''}`}
+                  >
+                    <span>{cat.label}</span>
+                    <span className="scene-modulepicker__submenu-caret" aria-hidden>›</span>
+                  </button>
+                  {catOpen && (
+                    <div className="scene-modulepicker scene-modulepicker__submenu" role="menu">
+                      {cat.concepts.map((c) => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          role="menuitem"
+                          className={`scene-modulepicker__item${c.id === concept.id ? ' scene-modulepicker__item--active' : ''}`}
+                          onClick={() => {
+                            if (c.id !== concept.id) navigate(c.id)
+                            setConceptOpen(false)
+                            setOpenCategory(null)
+                          }}
+                        >
+                          {c.variantLabel ?? c.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         )}
       </div>

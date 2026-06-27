@@ -230,6 +230,40 @@ body {
   font-weight: 600;
 }
 
+/* Cascading concept dropdown: category rows that reveal a concept submenu.
+   The outer dropdown must NOT clip (its submenu sits outside the box), and the
+   submenu anchors to the right of the row, overriding the concept-wrap left rule. */
+.scene-brandbar__concept-wrap > .scene-modulepicker {
+  overflow: visible;
+  min-width: 132px;
+}
+/* Compact rows for the concept switcher (its labels are short). */
+.scene-brandbar__concept-wrap .scene-modulepicker__item {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+.scene-modulepicker__group {
+  position: relative;
+}
+.scene-modulepicker__item--parent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.scene-modulepicker__submenu-caret {
+  font-size: 13px;
+  line-height: 1;
+  color: rgba(244, 245, 247, 0.45);
+}
+.scene-brandbar__concept-wrap .scene-modulepicker__submenu {
+  top: -5px;
+  left: 100%;
+  right: auto;
+  margin-left: 4px;
+  min-width: 120px;
+}
+
 /* Bare control icon: no chip/border/bg — calm chrome matching the brand-bar ☰.
    Keeps a 44×44 hit area for touch; the dark caption scrim behind the cluster
    gives contrast. Active/toggle state reads via COLOR (no bg to fill). */

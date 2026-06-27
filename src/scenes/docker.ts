@@ -341,9 +341,13 @@ const detail = group(
 
 // ─── ARCHITECTURE FRAME ──────────────────────────────────────────────────────
 
-const architecture: SceneNodeSpec = container(
-  { id: 'docker', label: 'Docker', color: BLUE },
-  wgrid({ cols: [1], rows: [4.5, 3.5], gap: 0.5, padding: 0.12 }, [
+// No outer "Docker" container: the concept name already lives in the brand bar +
+// caption, so a labeled wrapper frame is a redundant tautology that only steals a
+// title band + padding gutter from the two bands. An invisible `group` keeps the
+// 4.5/3.5 spine-over-detail split without the chrome.
+const architecture: SceneNodeSpec = group(
+  'dk-root',
+  wgrid({ cols: [1], rows: [4.5, 3.5], gap: 0.5, padding: 0.04 }, [
     { node: spine, at: [0, 0] },
     { node: detail, at: [0, 1] },
   ]),
