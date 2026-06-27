@@ -259,4 +259,56 @@ export const scalaModel: SceneSpec = {
     { from: 'sa-verbs', to: 'sa-memory', label: 'operates on', color: ORANGE },
     { from: 'sa-memory', to: 'sa-results', label: 'yields', color: GREEN },
   ],
+  // scala-content's manifest still wires every scala-model section to the OLD
+  // `scala-grammar` ids (`sg-*`), which this merge folded into the anatomy bands under
+  // `sa-*` ids — so without this map all 117 sections' spotlight/camera resolved to
+  // nothing. The grammar taxonomy (vt/oop/fn/pm/co/gx) is orthogonal to the anatomy
+  // bands (Model/Init/Transform/Return) and a few grammar leaves (curry, variance,
+  // ext, given, future) have no own node, so this is closest-fit, not 1:1. Each leaf
+  // resolves to a node INSIDE its group's focus frame (group → one or more anchor
+  // boxes), so the camera always contains the lit node. Edit the map here, not the
+  // manifest — the manifest stays source-of-truth wiring.
+  aliases: {
+    // Values & types → the Initialize (binding anatomy) band
+    'sg-vt': ['sa-init-row'],
+    'sg-vt-val': ['sa-kind'], //          val / var / lazy val / def
+    'sg-vt-types': ['sa-type'], //        the ": Type" shapes
+    'sg-vt-str': ['sa-primitive'], //     String/char primitives
+    'sg-vt-expr': ['sa-value'], //        expressions yield values (method body)
+
+    // Functions → the Transform band's fn-family cards
+    'sg-fn': ['sa-verbs'],
+    'sg-fn-def': ['sa-code-methods'],
+    'sg-fn-lambda': ['sa-code-functions'],
+    'sg-fn-hof': ['sa-code-functions'], //   HOF shares the functions card
+    'sg-fn-curry': ['sa-code-functions'], //  no own node — nearest is functions
+
+    // Collections → shapes live in Initialize, ops in Transform (spans two bands)
+    'sg-co': ['sa-type-coll', 'sa-code-collops'],
+    'sg-co-shapes': ['sa-type-coll'], //  List / Vector / Map / Set
+    'sg-co-mff': ['sa-code-collops'], //  map / filter / flatMap
+    'sg-co-fold': ['sa-code-collops'], // fold / reduce / groupBy
+    'sg-co-ops': ['sa-code-collops'], //  zip / sort / take / drop
+
+    // OOP → the type-shapes OOP sub-grid (class/object/trait/case class/enum)
+    'sg-oop': ['sa-type-oop'],
+    'sg-oop-class': ['sa-class', 'sa-object'], // class + object/companion
+    'sg-oop-trait': ['sa-trait'],
+    'sg-oop-case': ['sa-case-class'],
+    'sg-oop-enum': ['sa-enum'],
+
+    // Pattern matching & typed results → pattern card (Transform) + Option/Try (Return)
+    'sg-pm': ['sa-code-pattern', 'sa-typed-failure'],
+    'sg-pm-match': ['sa-code-pattern'],
+    'sg-pm-typed': ['sa-typed-failure'], //  Option / Try / Either
+    'sg-pm-try': ['sa-typed-failure'], //    try/catch + Try
+    'sg-pm-future': ['sa-typed-failure'], // Future[A] — a typed async result wrapper
+
+    // Generics & type-level features → the ": Type" band (generics / ADTs)
+    'sg-gx': ['sa-type'],
+    'sg-gx-generics': ['sa-generic'],
+    'sg-gx-variance': ['sa-generic'], //  variance constrains generic params
+    'sg-gx-ext': ['sa-adt'], //           intersection/union/match types ≈ sealed ADT
+    'sg-gx-given': ['sa-generic'], //     implicits/using/given — no own node
+  },
 }

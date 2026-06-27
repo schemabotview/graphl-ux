@@ -85,4 +85,13 @@ export interface SceneSpec {
    * `{ width: 1424, height: 800 }`.
    */
   canvas?: { width: number; height: number }
+  /**
+   * Optional manifest-id → node-id(s) alias map. Lets a content `manifest.json`
+   * keep `highlight`/`focus` ids from a SOURCE scene that was merged into this one
+   * (whose node ids differ). Each manifest id resolves to one or more real node ids
+   * before spotlight/camera use; a list lets a coarse source group frame several
+   * anchors so its camera box still contains whichever leaf is lit. Ids absent from
+   * the map pass through unchanged. See `scala-model` (merged from scala-grammar).
+   */
+  aliases?: Record<string, string[]>
 }

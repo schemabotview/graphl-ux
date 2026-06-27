@@ -62,8 +62,24 @@ export function SceneViewer({
 }) {
   const direction =
     tracks(scene.grid.cols).length > tracks(scene.grid.rows).length ? 'horizontal' : 'vertical'
-  const highlightKey = highlight?.join(',') ?? ''
-  const focusIds = useMemo(() => (Array.isArray(focus) ? focus : focus ? [focus] : []), [focus])
+
+  // Resolve manifest ids through the scene's alias map (if any) so a content repo can
+  // reference a merged-away source scene's ids. Unmapped ids pass through unchanged.
+  const aliases = scene.aliases
+  const resolveIds = useCallback(
+    (ids: string[]) => ids.flatMap((id) => aliases?.[id] ?? [id]),
+    [aliases],
+  )
+
+  const resolvedHighlight = useMemo(
+    () => (highlight ? resolveIds(highlight) : highlight),
+    [highlight, resolveIds],
+  )
+  const highlightKey = resolvedHighlight?.join(',') ?? ''
+  const focusIds = useMemo(
+    () => resolveIds(Array.isArray(focus) ? focus : focus ? [focus] : []),
+    [focus, resolveIds],
+  )
 
   // Resolved geometry, shared by node placement AND the camera (so framing a
   // focus region reuses the exact boxes React Flow renders).
@@ -72,7 +88,7 @@ export function SceneViewer({
   // The spotlight set (null = nothing highlighted), shared by nodes AND edges so an
   // edge can fade in step with the nodes it connects.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const lit = useMemo(() => expandHighlight(scene.nodes, highlight), [scene, highlightKey])
+  const lit = useMemo(() => expandHighlight(scene.nodes, resolvedHighlight), [scene, highlightKey])
 
   const nodes = useMemo<Node<SceneNodeData>[]>(() => {
     const flat = flattenNodes(scene.nodes)
