@@ -29,10 +29,36 @@ export function contentUrl(path: string, base: string = FALLBACK_BASE): string {
   return `${base.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`
 }
 
+// raw.githubusercontent.com (Fastly/HTTP2) intermittently rejects a request from a
+// concurrent burst with a transient 400/429/5xx or a dropped connection — not a real
+// "file missing" (that's a 404). So we retry those a few times with exponential
+// backoff before giving up; a 404 stays fatal (no point spinning on an absent file).
+const TRANSIENT_STATUS = new Set([400, 408, 425, 429, 500, 502, 503, 504])
+const RETRY_DELAYS_MS = [250, 500, 1000] // attempts = delays.length + 1
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
 async function fetchText(path: string, base: string): Promise<string> {
-  const res = await fetch(contentUrl(path, base))
-  if (!res.ok) throw new Error(`content fetch failed: ${path} (HTTP ${res.status})`)
-  return res.text()
+  const url = contentUrl(path, base)
+  let lastErr: unknown
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+    let res: Response
+    try {
+      res = await fetch(url)
+    } catch (e) {
+      // Network/connection error (fetch rejects) — transient, retry it.
+      lastErr = e
+      if (attempt < RETRY_DELAYS_MS.length) await sleep(RETRY_DELAYS_MS[attempt])
+      continue
+    }
+    if (res.ok) return res.text()
+    const err = new Error(`content fetch failed: ${path} (HTTP ${res.status})`)
+    // Non-transient HTTP error (e.g. 404 missing file) — fail immediately, no retry.
+    if (!TRANSIENT_STATUS.has(res.status)) throw err
+    lastErr = err
+    if (attempt < RETRY_DELAYS_MS.length) await sleep(RETRY_DELAYS_MS[attempt])
+  }
+  throw lastErr instanceof Error ? lastErr : new Error(`content fetch failed: ${path}`)
 }
 
 /** Fetch and parse a concept's manifest (wires modules → notebook + overlays). */

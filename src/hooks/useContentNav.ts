@@ -4,6 +4,26 @@ import { fetchManifest, fetchNotebook } from '../content/client.ts'
 import type { Concept } from '../content/catalog.ts'
 import { replaceRoute } from '../router.ts'
 
+// Map `items` through `fn` with at most `limit` calls in flight at once, returning
+// results in the original order. A tiny worker-pool — keeps us from firing every
+// notebook fetch in one concurrent burst (see the call site for why that matters).
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length)
+  let next = 0
+  async function worker() {
+    while (next < items.length) {
+      const i = next++
+      results[i] = await fn(items[i])
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker))
+  return results
+}
+
 // Owns the content/navigation state for a concept: fetches every module, flattens
 // them into one continuous page list, tracks the current page index, restores the
 // position from a deep link, and keeps the URL in sync as the user pages. The shell
@@ -38,8 +58,14 @@ export function useContentNav(
     void (async () => {
       try {
         const manifest = await fetchManifest(concept.contentBaseUrl)
-        const notebooks = await Promise.all(
-          manifest.presentations.map((p) => fetchNotebook(p.notebook, concept.contentBaseUrl)),
+        // Fetch notebooks with a small concurrency cap rather than all at once:
+        // bursting every module's notebook at raw.githubusercontent.com is what
+        // provokes Fastly's intermittent transient rejections. Order is preserved so
+        // `buildPages(notebooks[i], p)` below still lines up with `presentations[i]`.
+        const notebooks = await mapWithConcurrency(
+          manifest.presentations,
+          3,
+          (p) => fetchNotebook(p.notebook, concept.contentBaseUrl),
         )
         if (cancelled) return
         const flat = manifest.presentations.flatMap((p, i) => buildPages(notebooks[i], p))
