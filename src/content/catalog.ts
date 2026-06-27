@@ -16,7 +16,7 @@
 // each content repo owns *what's inside that one concept* (manifest + notebooks +
 // audio). Mirror of src/scenes/index.ts (app owns the registry).
 
-import { BLUE, GREEN, ORANGE, PURPLE, RED, TEAL } from '../engine/colors.ts'
+import { BLUE, GREEN, ORANGE, PURPLE, RED, TEAL, YELLOW } from '../engine/colors.ts'
 
 export interface Concept {
   /** Slug; also the hash-route id, e.g. 'apache-spark'. */
@@ -79,6 +79,20 @@ export const concepts: Concept[] = [
     accent: TEAL,
     blurb: 'The relational query language — from the data model to query planning',
     contentBaseUrl: 'https://raw.githubusercontent.com/schemabotview/sql-content/main',
+  },
+  {
+    id: 'linux',
+    label: 'Linux',
+    accent: YELLOW,
+    blurb: 'From the shell to the kernel — a beginner-to-LFCS tour of the OS',
+    contentBaseUrl: 'https://raw.githubusercontent.com/schemabotview/linux-content/main',
+  },
+  {
+    id: 'docker',
+    label: 'Docker',
+    accent: BLUE,
+    blurb: 'Containers from zero to DCA — images, networking, Compose, Swarm, security',
+    contentBaseUrl: 'https://raw.githubusercontent.com/schemabotview/docker-content/main',
   },
 ]
 

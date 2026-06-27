@@ -13,6 +13,8 @@ import { pythonCpython } from './python-cpython.ts'
 import { pythonModel } from './python-model.ts'
 import { dsa } from './dsa.ts'
 import { sql } from './sql.ts'
+import { linux } from './linux.ts'
+import { docker } from './docker.ts'
 
 // Scene registry: the manifest references scenes by id; this maps id → SceneSpec.
 // Modules run on one dense scene each (01 = spark-execution, 02 = spark-rdd-api);
@@ -55,4 +57,15 @@ export const scenes: Record<string, SceneSpec> = {
   'python-model': pythonModel,
   dsa: dsa,
   sql: sql,
+  // The whole Linux system on one wide map (ported from NodeMap's linux.ts): five
+  // stacked privilege bands (userspace → libc → syscall → kernel → hardware).
+  // The single dense scene every linux-content module rides; the manifest frames
+  // one subsystem per section via highlight/focus.
+  linux: linux,
+  // The whole Docker platform on one wide map (ported from NodeMap's docker.ts):
+  // top spine = Client | Docker Host (Engine·Images·Containers) | Registry; bottom
+  // detail = Author | Resources | Orchestrate (Compose·Swarm·Cluster net·Security).
+  // The single dense scene every docker-content module rides; the manifest frames
+  // one subsystem per section via highlight.
+  docker: docker,
 }
