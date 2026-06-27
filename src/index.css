@@ -260,7 +260,7 @@ body {
   top: -5px;
   left: 100%;
   right: auto;
-  margin-left: 4px;
+  margin-left: 0;
   min-width: 120px;
 }
 
