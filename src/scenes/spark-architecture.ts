@@ -30,7 +30,13 @@ const P = 0.3
  * Use for parts of the system that do/hold/flow something (Driver, Executor, Kafka,
  * Bronze, …). The glyph derives initials from the label unless an `icon` is given.
  */
-const comp = (id: string, label: string, color: string): NodeSeed => ({ id, label, color, kind: 'symbol' })
+const comp = (id: string, label: string, color: string, icon?: string): NodeSeed => ({
+  id,
+  label,
+  color,
+  kind: 'symbol',
+  ...(icon ? { icon } : {}),
+})
 
 /**
  * A LABEL chip — a filled chip whose text IS the value (graphl-ux `term`). Use for
@@ -142,14 +148,15 @@ const master = container(
 
 const clusterMgr = container(
   { id: 'cluster-mgr', label: 'Cluster Mgr', color: BLUE },
-  // Small padding (1-column stack — see Master note) so the mode chips are wide
-  // enough for their labels ("standalone", "Databricks") instead of clipping.
+  // Symbol leaves (icon glyph + label) so the deployment backends read as
+  // identities, not bare text. Small padding (1-column stack — see Master note)
+  // so labels ("standalone", "Databricks") stay wide enough not to clip.
   wgrid({ cols: [1], rows: [1, 1, 1, 1, 1], gap: G, padding: 0.08 }, [
-    { node: chip('mode-local', 'local', GRAY), at: [0, 0] },
-    { node: chip('mode-standalone', 'standalone', BLUE), at: [0, 1] },
-    { node: chip('mode-yarn', 'YARN', ORANGE), at: [0, 2] },
-    { node: chip('mode-k8s', 'k8s', PURPLE), at: [0, 3] },
-    { node: chip('mode-databricks', 'Databricks', RED), at: [0, 4] },
+    { node: comp('mode-local', 'local', GRAY), at: [0, 0] },
+    { node: comp('mode-standalone', 'standalone', BLUE), at: [0, 1] },
+    { node: comp('mode-yarn', 'YARN', ORANGE), at: [0, 2] },
+    { node: comp('mode-k8s', 'k8s', PURPLE), at: [0, 3] },
+    { node: comp('mode-databricks', 'Databricks', RED), at: [0, 4] },
   ]),
 )
 
