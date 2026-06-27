@@ -19,6 +19,10 @@ export function useContentNav(
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [error, setError] = useState<string>()
   const [pageIdx, setPageIdx] = useState(0)
+  // Which concept the current `pages` belong to. Guards the URL-sync below so it never
+  // writes the new concept's id against the previous concept's still-loaded pages
+  // (which would corrupt the deep link the instant you switch concepts).
+  const [loadedConceptId, setLoadedConceptId] = useState<string>()
 
   // Load the selected concept and flatten EVERY module into one continuous page list,
   // so paging runs straight across module boundaries (end of module 1 → start of
@@ -29,6 +33,8 @@ export function useContentNav(
     let cancelled = false
     setStatus('loading')
     setPageIdx(0)
+    setPages([])
+    setAllModules([])
     void (async () => {
       try {
         const manifest = await fetchManifest(concept.contentBaseUrl)
@@ -39,6 +45,7 @@ export function useContentNav(
         const flat = manifest.presentations.flatMap((p, i) => buildPages(notebooks[i], p))
         setAllModules(manifest.presentations)
         setPages(flat)
+        setLoadedConceptId(concept.id)
         setStatus('ready')
       } catch (e) {
         if (cancelled) return
@@ -67,10 +74,10 @@ export function useContentNav(
   // the current slide (concept/module/slug). `replaceRoute` uses replaceState so it
   // neither fires `hashchange` (no effect loop) nor adds Back/Forward churn.
   useEffect(() => {
-    if (pages.length === 0 || !concept) return
+    if (pages.length === 0 || !concept || loadedConceptId !== concept.id) return
     const p = pages[pageIdx]
     if (p) replaceRoute(concept.id, p.moduleId, p.slug)
-  }, [pageIdx, pages, concept])
+  }, [pageIdx, pages, concept, loadedConceptId])
 
   // Clamped index setter — the one way the shell moves between slides.
   const goto = (next: number) => setPageIdx(Math.min(pages.length - 1, Math.max(0, next)))
