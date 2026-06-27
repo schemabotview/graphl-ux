@@ -1,5 +1,6 @@
 import type { SceneSpec } from '../engine/types.ts'
 import {
+  code,
   container,
   group,
   type NodeSeed,
@@ -9,20 +10,18 @@ import {
 } from '../engine/patterns.ts'
 import { BLUE, GRAY, GREEN, ORANGE, PURPLE, RED, TEAL, YELLOW } from '../engine/colors.ts'
 
-// Python's grammar of a program on one wide map — ported from NodeMap's
-// `python-anatomy.ts`. Four stacked rhythm rows on the left (Model ▸ Bind ▸
-// Transform ▸ Return) and a Memory side column on the right. Model is upstream of
-// Bind: you sketch the type hierarchy first, then instantiate. Python has no
-// val/var split and no type keyword — names just label heap objects, so the Bind
-// row follows `x [: Type] = value` (no "Kind" slot Scala/Java use). Transform gives
-// Comprehensions the biggest cell — that's Python's identity move. Return centers on
-// exceptions (EAFP) rather than typed Option/Either. The mirror of `java-anatomy` /
-// `scala-anatomy` for the Python concept. Geometry is faithful to the source's
-// WEIGHTED grid tracks, which graphl-ux's resolver supports natively. Node ids are
-// preserved verbatim so python-content's manifest `highlight`/`focus` references resolve.
+// Python's mirror of `scala-model` / `java-model`: it REPLACES the old
+// `python-anatomy` (token-chip) scene. Keep anatomy's four-row spine — Model ▸ Bind ▸
+// Transform ▸ Return + the Memory side column — but render the TRANSFORM band as
+// actual `kind: 'code'` cards instead of token chips, so "what you do" reads as code
+// you'd actually write. Model / Bind / Return stay as the structural token view on
+// purpose: there the SHAPE is the lesson, and code would over-fill the cells. All
+// structural `pa-*` ids are preserved verbatim so python-content's manifest
+// highlight/focus references resolve; the Transform chips that became code cards are
+// re-pointed via `aliases` (bottom).
 
-// A bare TEXT leaf — no glyph, no fill (graphl-ux `label`). The default for the
-// enumerated tokens (keywords, types, ops) and the class-hierarchy boxes.
+// A bare TEXT leaf — no glyph, no fill (graphl-ux `label`). Default for the enumerated
+// tokens (keywords, types, ops) and the class-hierarchy boxes in the untouched bands.
 const lbl = (id: string, label: string, color: string): NodeSeed => ({ id, label, color, kind: 'label' })
 
 // A filled CHIP whose text IS the concept (graphl-ux `term`). Kept for the Return row
@@ -41,8 +40,7 @@ const wgrid = (spec: WeightedSpec, children: WeightedSeed[]): PatternResult => (
 // =============== ROW 0: MODEL — class hierarchy ===============
 // Python's twist is true multiple inheritance via MRO (C3 linearization): no
 // `implements` keyword — every parent goes in the same `(...)`. ABC marks nominal
-// abstracts; Protocol marks structural (duck-typed) interfaces. Connections labelled
-// `inherits` point UP from child to parent.
+// abstracts; Protocol marks structural (duck-typed) interfaces.
 
 const modelRow = container(
   { id: 'pa-model', label: 'Model — class hierarchy   |   ABC + Protocol ▸ class ▸ subclass   (MRO linearizes)', color: PURPLE },
@@ -103,76 +101,65 @@ const bindRow = container(
   ]),
 )
 
-// =============== ROW 2: TRANSFORM — what you do ===============
-// Comprehensions get the biggest cell — Python's identity move, collapsing
-// filter+map into one expression. match is recent (3.10+) and still secondary.
+// =============== ROW 2: TRANSFORM — what you do (NOW REAL CODE) ===============
+// The merge payoff: the SAME six "verbs" as anatomy (comprehend ▸ branch ▸ loop ▸
+// call ▸ unpack ▸ match) rendered as `code` cards in a 3×2 grid so each card has the
+// width/height real code needs to stay legible. Comprehensions lead — Python's
+// identity move. Colors mirror anatomy: comp/functions ORANGE, control-family YELLOW.
 
-const comprehensions = container(
-  { id: 'pa-comp', label: 'Comprehensions', color: ORANGE },
-  wgrid({ cols: [1, 1], rows: [1, 1], gap: 0.15, padding: 0.3 }, [
-    { node: lbl('pa-comp-list', '[f(x) for x in xs if p(x)]', GRAY), at: [0, 0] },
-    { node: lbl('pa-comp-dict', '{k: f(v) for k,v in d.items()}', GRAY), at: [1, 0] },
-    { node: lbl('pa-comp-set', '{f(x) for x in xs}', GRAY), at: [0, 1] },
-    { node: lbl('pa-comp-gen', '(f(x) for x in xs)   → lazy gen', GRAY), at: [1, 1] },
-  ]),
+const codeComp = code(
+  'pa-code-comp',
+  '[f(x) for x in xs if p(x)]      # list\n{k: f(v) for k,v in d.items()}  # dict\n{f(x) for x in xs}              # set\n(f(x) for x in xs)              # lazy gen',
+  ORANGE,
+  'Comprehensions  ·  list · dict · set · gen',
 )
 
-const control = container(
-  { id: 'pa-control', label: 'Control', color: YELLOW },
-  wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: 0.15, padding: 0.3 }, [
-    { node: lbl('pa-ctrl-if', 'if / elif / else', GRAY), at: [0, 0] },
-    { node: lbl('pa-ctrl-tern', 'a if c else b   (expr)', GRAY), at: [0, 1] },
-    { node: lbl('pa-ctrl-walrus', 'walrus  x := expr', GRAY), at: [0, 2] },
-    { node: lbl('pa-ctrl-bool', 'and / or  short-circuit', GRAY), at: [0, 3] },
-  ]),
+const codeControl = code(
+  'pa-code-control',
+  's = "+" if x > 0 else "-"    # ternary expr\nif (n := len(xs)) > 9: ...   # walrus\na and b   /   a or b         # short-circuit',
+  YELLOW,
+  'Control  ·  ternary · walrus',
 )
 
-const loops = container(
-  { id: 'pa-loops', label: 'Loops', color: YELLOW },
-  wgrid({ cols: [1], rows: [1, 1, 1, 1, 1], gap: 0.12, padding: 0.3 }, [
-    { node: lbl('pa-loop-for', 'for x in iterable', GRAY), at: [0, 0] },
-    { node: lbl('pa-loop-while', 'while c:', GRAY), at: [0, 1] },
-    { node: lbl('pa-loop-util', 'enumerate / zip / map', GRAY), at: [0, 2] },
-    { node: lbl('pa-loop-break', 'break / continue / else', GRAY), at: [0, 3] },
-    { node: lbl('pa-loop-yield', 'yield  → generator', GRAY), at: [0, 4] },
-  ]),
+const codeLoops = code(
+  'pa-code-loops',
+  'for x in xs: ...\nfor i, x in enumerate(xs): ...\nwhile c: ...\nyield x * x                  # → generator',
+  YELLOW,
+  'Loops  ·  for · yield',
 )
 
-const functions = container(
-  { id: 'pa-fn', label: 'Functions', color: ORANGE },
-  wgrid({ cols: [1], rows: [1, 1, 1], gap: 0.15, padding: 0.3 }, [
-    { node: lbl('pa-fn-def', 'def / lambda', GRAY), at: [0, 0] },
-    { node: lbl('pa-fn-deco', '@decorator', GRAY), at: [0, 1] },
-    { node: lbl('pa-fn-varargs', '*args  **kwargs', GRAY), at: [0, 2] },
-  ]),
+const codeFunctions = code(
+  'pa-code-functions',
+  'inc = lambda x: x + 1\ndef twice(g): return g(g(0))   # HOF\n@cache\ndef fib(n): ...                # decorator',
+  ORANGE,
+  'Functions  ·  lambda · HOF · deco',
 )
 
-const context = container(
-  { id: 'pa-context', label: 'with  /  unpack', color: YELLOW },
-  wgrid({ cols: [1], rows: [1, 1, 1], gap: 0.15, padding: 0.3 }, [
-    { node: lbl('pa-ctx-with', 'with open(p) as f:', GRAY), at: [0, 0] },
-    { node: lbl('pa-ctx-unpack', 'a, b = pair', GRAY), at: [0, 1] },
-    { node: lbl('pa-ctx-star', 'a, *rest = xs', GRAY), at: [0, 2] },
-  ]),
+const codeContext = code(
+  'pa-code-context',
+  'with open(p) as f:           # context mgr\n    data = f.read()\na, b = pair                  # unpack\na, *rest = xs                # star',
+  YELLOW,
+  'with / unpack',
 )
 
-const matchCase = container(
-  { id: 'pa-match', label: 'match  (3.10+)', color: YELLOW },
-  wgrid({ cols: [1], rows: [1, 1], gap: 0.15, padding: 0.3 }, [
-    { node: lbl('pa-match-stmt', 'match x: case ...', GRAY), at: [0, 0] },
-    { node: lbl('pa-match-dest', 'destructure + guard', GRAY), at: [0, 1] },
-  ]),
+const codeMatch = code(
+  'pa-code-match',
+  'match cmd:\n  case 0:           "zero"   # literal\n  case n if n > 9:  "big"    # guard\n  case (a, b):      a + b    # destructure\n  case _:           "other"  # wildcard',
+  YELLOW,
+  'match  (3.10+)',
 )
 
 const transformRow = container(
-  { id: 'pa-verbs', label: 'Transform — what you do   |   comprehend ▸ branch ▸ loop ▸ call ▸ unpack ▸ match', color: ORANGE },
-  wgrid({ cols: [1.6, 0.9, 1.0, 1.0, 0.9, 1.0], rows: [1], gap: 0.25, padding: 0.4 }, [
-    { node: comprehensions, at: [0, 0] },
-    { node: control, at: [1, 0] },
-    { node: loops, at: [2, 0] },
-    { node: functions, at: [3, 0] },
-    { node: context, at: [4, 0] },
-    { node: matchCase, at: [5, 0] },
+  { id: 'pa-verbs', label: 'Transform — what you do   |   real code:  comprehend ▸ branch ▸ loop ▸ call ▸ unpack ▸ match', color: ORANGE },
+  // Tight gap/padding so the inner code cards claim the band's width/height; the
+  // border-riding card titles need no extra top room.
+  wgrid({ cols: [1, 1, 1], rows: [1, 1], gap: 0.18, padding: 0.15 }, [
+    { node: codeComp, at: [0, 0] },
+    { node: codeControl, at: [1, 0] },
+    { node: codeLoops, at: [2, 0] },
+    { node: codeFunctions, at: [0, 1] },
+    { node: codeContext, at: [1, 1] },
+    { node: codeMatch, at: [2, 1] },
   ]),
 )
 
@@ -191,10 +178,12 @@ const returnRow = container(
 )
 
 // =============== LEFT CONTENT BLOCK: four rhythm rows stacked ===============
+// Transform gets MORE height now (9 vs 5) because it holds real multi-line code in a
+// 3×2 grid, not one row of token chips.
 
 const content = group(
   'pa-content',
-  wgrid({ cols: [1], rows: [4, 4, 5, 2], gap: 0.5, padding: 0 }, [
+  wgrid({ cols: [1], rows: [4, 4, 9, 2], gap: 0.5, padding: 0 }, [
     { node: modelRow, at: [0, 0] },
     { node: bindRow, at: [0, 1] },
     { node: transformRow, at: [0, 2] },
@@ -238,13 +227,14 @@ const root = group(
   ]),
 )
 
-export const pythonAnatomy: SceneSpec = {
-  id: 'python-anatomy',
+export const pythonModel: SceneSpec = {
+  id: 'python-model',
   topic: 'python',
-  title: 'Python — Anatomy',
-  subtitle: 'Model ▸ Bind ▸ Transform ▸ Return, and where values live',
-  // Taller canvas (source was 24×18) so the stacked rhythm rows get vertical room.
-  canvas: { width: 1380, height: 1240 },
+  title: 'Python — Model (anatomy + code)',
+  subtitle: 'Model ▸ Bind ▸ Transform (real code) ▸ Return, and where values live',
+  // Taller than python-anatomy (1240 → 1520) so the Transform band's heavier weight
+  // gives the 3×2 code grid vertical room without squeezing Model / Bind.
+  canvas: { width: 1380, height: 1520 },
   grid: { cols: 1, rows: 1, gap: 0, padding: 0.04 },
   nodes: [root],
   edges: [
@@ -265,4 +255,49 @@ export const pythonAnatomy: SceneSpec = {
     { from: 'pa-verbs', to: 'pa-memory', label: 'reads/mutates', color: ORANGE },
     { from: 'pa-memory', to: 'pa-results', label: 'yields', color: GREEN },
   ],
+  // python-content's manifest still wires Transform sections to the OLD python-anatomy
+  // chip ids (`pa-comp`, `pa-control`, `pa-loops`, `pa-fn`, `pa-context`, `pa-match`,
+  // and their leaves) which this merge folded into six `code` cards. Each old id
+  // resolves to the card that now shows that concept, so existing highlight/focus
+  // references keep lighting the right place. Edit the map here, not the manifest.
+  aliases: {
+    // Comprehensions chip + leaves → the comprehensions code card
+    'pa-comp': ['pa-code-comp'],
+    'pa-comp-list': ['pa-code-comp'],
+    'pa-comp-dict': ['pa-code-comp'],
+    'pa-comp-set': ['pa-code-comp'],
+    'pa-comp-gen': ['pa-code-comp'],
+
+    // Control chip + leaves → the control code card
+    'pa-control': ['pa-code-control'],
+    'pa-ctrl-if': ['pa-code-control'],
+    'pa-ctrl-tern': ['pa-code-control'],
+    'pa-ctrl-walrus': ['pa-code-control'],
+    'pa-ctrl-bool': ['pa-code-control'],
+
+    // Loops chip + leaves → the loops code card (yield lives here too)
+    'pa-loops': ['pa-code-loops'],
+    'pa-loop-for': ['pa-code-loops'],
+    'pa-loop-while': ['pa-code-loops'],
+    'pa-loop-util': ['pa-code-loops'],
+    'pa-loop-break': ['pa-code-loops'],
+    'pa-loop-yield': ['pa-code-loops'],
+
+    // Functions chip + leaves → the functions code card
+    'pa-fn': ['pa-code-functions'],
+    'pa-fn-def': ['pa-code-functions'],
+    'pa-fn-deco': ['pa-code-functions'],
+    'pa-fn-varargs': ['pa-code-functions'],
+
+    // with / unpack chip + leaves → the context code card
+    'pa-context': ['pa-code-context'],
+    'pa-ctx-with': ['pa-code-context'],
+    'pa-ctx-unpack': ['pa-code-context'],
+    'pa-ctx-star': ['pa-code-context'],
+
+    // match chip + leaves → the match code card
+    'pa-match': ['pa-code-match'],
+    'pa-match-stmt': ['pa-code-match'],
+    'pa-match-dest': ['pa-code-match'],
+  },
 }

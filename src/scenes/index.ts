@@ -10,7 +10,7 @@ import { javaModel } from './java-model.ts'
 import { scalaJvm } from './scala-jvm.ts'
 import { scalaModel } from './scala-model.ts'
 import { pythonCpython } from './python-cpython.ts'
-import { pythonAnatomy } from './python-anatomy.ts'
+import { pythonModel } from './python-model.ts'
 import { dsa } from './dsa.ts'
 import { sql } from './sql.ts'
 
@@ -26,9 +26,11 @@ import { sql } from './sql.ts'
 // map (scalac/.scala) and scala-model — a merge of the old scala-anatomy structure
 // (`Kind Name : Type = Value`, Model ▸ Initialize ▸ Transform ▸ Return) with real
 // syntax-highlighted code in the Transform band (the old scala-grammar's snippets).
-// python-cpython + python-anatomy mirror them for the Python concept (python-content):
+// python-cpython + python-model mirror them for the Python concept (python-content):
 // the CPython runtime map (.py/compile()/import system) and Python's keyword-less
-// `Name : Type = Value` grammar (Model ▸ Bind ▸ Transform ▸ Return).
+// `Name : Type = Value` grammar (Model ▸ Bind ▸ Transform ▸ Return). python-model
+// REPLACED python-anatomy: same spine, Transform rebuilt as code cards (an `aliases`
+// map keeps the manifest's old chip ids resolving).
 // dsa is the Data Structures & Algorithms concept's single scene: the "top data
 // structures" poster laid out GROUPED BY the classical taxonomy category (Primitive ·
 // Linear/Static · Linear/Dynamic · Non-Linear/Tree · Non-Linear/Graph · Hashing), each
@@ -50,7 +52,7 @@ export const scenes: Record<string, SceneSpec> = {
   'scala-jvm': scalaJvm,
   'scala-model': scalaModel,
   'python-cpython': pythonCpython,
-  'python-anatomy': pythonAnatomy,
+  'python-model': pythonModel,
   dsa: dsa,
   sql: sql,
 }
