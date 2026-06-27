@@ -1,5 +1,6 @@
 import type { SceneSpec } from '../engine/types.ts'
 import {
+  code,
   container,
   group,
   type NodeSeed,
@@ -9,17 +10,17 @@ import {
 } from '../engine/patterns.ts'
 import { BLUE, GRAY, GREEN, ORANGE, PURPLE, RED, TEAL, YELLOW } from '../engine/colors.ts'
 
-// Java's grammar of a program on one wide map — ported from NodeMap's
-// `java-anatomy.ts`. Four stacked rhythm rows on the left (Model ▸ Initialize ▸
-// Transform ▸ Return) and a Memory side column on the right. Model is upstream of
-// Initialize: you sketch the type hierarchy first, then instantiate. The Initialize
-// row follows Java's binding grammar `[Modifier] Type Name = Value` (type BEFORE
-// name, modifier optional). Geometry is faithful to the source's WEIGHTED grid
-// tracks, which graphl-ux's resolver supports natively (see spark-architecture.ts).
+// Java's mirror of `scala-model`: it REPLACES the old `java-anatomy` (token-chip)
+// scene. Keep anatomy's four-row spine — Model ▸ Initialize ▸ Transform ▸ Return +
+// the Memory side column — but render the TRANSFORM band as actual `kind: 'code'`
+// cards instead of token chips, so "what you do" reads as code you'd actually write.
+// Model / Initialize / Return stay as the structural token view on purpose: there the
+// SHAPE is the lesson, and code would over-fill the cells. All structural `ja-*` ids
+// are preserved verbatim so java-content's manifest highlight/focus references resolve;
+// the Transform chips that became code cards are re-pointed via `aliases` (bottom).
 
-// A bare TEXT leaf — no glyph, no fill (graphl-ux `label`). The default for the
-// enumerated tokens (keywords, types, ops) and the class-hierarchy boxes: they read
-// as plain text inside their labelled containers, not as filled chips.
+// A bare TEXT leaf — no glyph, no fill (graphl-ux `label`). Default for the enumerated
+// tokens (keywords, types, ops) and the class-hierarchy boxes in the untouched bands.
 const lbl = (id: string, label: string, color: string): NodeSeed => ({ id, label, color, kind: 'label' })
 
 // A filled CHIP whose text IS the concept (graphl-ux `term`). Kept for the Return row.
@@ -35,11 +36,11 @@ const wgrid = (spec: WeightedSpec, children: WeightedSeed[]): PatternResult => (
 })
 
 // =============== ROW 0: MODEL — class hierarchy ===============
+// Java's twist vs Scala: a class extends ONE parent and `implements` any number of
+// interfaces (vs Scala's `with` trait mix-in).
 
 const modelRow = container(
   { id: 'ja-model', label: 'Model — class hierarchy   |   abstract + interface ▸ class ▸ subclass', color: PURPLE },
-  // Wide vertical gap so the three inheritance tiers (parents ▸ class ▸ subclass)
-  // spread across the row's height and the extends/implements arrows have room.
   wgrid({ cols: [1, 1], rows: [1, 1, 1], gap: 0.7, padding: 0.4 }, [
     { node: lbl('ja-oop-animal', 'abstract class  Animal', PURPLE), at: [0, 0] },
     { node: lbl('ja-oop-walker', 'interface  Walker', PURPLE), at: [1, 0] },
@@ -134,80 +135,70 @@ const initializeRow = container(
   ]),
 )
 
-// =============== ROW 2: TRANSFORM — what you do ===============
+// =============== ROW 2: TRANSFORM — what you do (NOW REAL CODE) ===============
+// The merge payoff: the SAME six "verbs" as anatomy (call ▸ fn ▸ ops ▸ branch ▸
+// match ▸ loop) rendered as `code` cards in a 3×2 grid so each card has the
+// width/height real code needs to stay legible. Colors mirror anatomy: fn-family
+// ORANGE, control-family YELLOW. The camera frames one card per section in the reel.
 
-const control = container(
-  { id: 'ja-control', label: 'Control', color: YELLOW },
-  wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: 0.15, padding: 0.3 }, [
-    { node: lbl('ja-ctrl-if', 'if/else', GRAY), at: [0, 0] },
-    { node: lbl('ja-ctrl-tern', 'ternary', GRAY), at: [0, 1] },
-    { node: lbl('ja-ctrl-switch', 'switch', GRAY), at: [0, 2] },
-    { node: lbl('ja-ctrl-guard', 'guard', GRAY), at: [0, 3] },
-  ]),
+const codeMethods = code(
+  'ja-code-methods',
+  'obj.foo(x)              // method call\nint area() { return w*h; }  // def\n"abc".length()          // stdlib method',
+  ORANGE,
+  'Methods  ·  call · def',
 )
 
-const patternMatch = container(
-  { id: 'ja-pattern', label: 'Pattern Match', color: YELLOW },
-  wgrid({ cols: [1], rows: [1, 1], gap: 0.15, padding: 0.3 }, [
-    { node: lbl('ja-pat-match', 'case', GRAY), at: [0, 0] },
-    { node: lbl('ja-pat-record', 'deconstruct', GRAY), at: [0, 1] },
-  ]),
+const codeFunctions = code(
+  'ja-code-functions',
+  'Function<Integer,Integer> inc = x -> x+1;\nUnaryOperator<Integer> f = n -> n + 1;\nlist.forEach(System.out::println); // ref',
+  ORANGE,
+  'Lambdas  ·  lambda · method ref',
 )
 
-const loops = container(
-  { id: 'ja-loops', label: 'Loops', color: YELLOW },
-  wgrid({ cols: [1, 1], rows: [1, 1, 1], gap: 0.15, padding: 0.3 }, [
-    { node: lbl('ja-loop-for', 'for', GRAY), at: [0, 0] },
-    { node: lbl('ja-loop-foreach', 'for-each', GRAY), at: [1, 0] },
-    { node: lbl('ja-loop-while', 'while', GRAY), at: [0, 1] },
-    { node: lbl('ja-loop-dowhile', 'do-while', GRAY), at: [1, 1] },
-    { node: lbl('ja-loop-break', 'break', GRAY), at: [0, 2] },
-    { node: lbl('ja-loop-continue', 'continue', GRAY), at: [1, 2] },
-  ]),
+const codeStreamOps = code(
+  'ja-code-streamops',
+  'xs.stream().map(x -> x * 2)\n  .filter(x -> x > 2)\n  .flatMap(n -> Stream.of(n, -n))\n  .toList();                  // collect\nxs.stream().reduce(0, Integer::sum); // sum\nxs.stream().collect(groupingBy(x->x%2));',
+  ORANGE,
+  'Stream Ops  ·  map · collect',
 )
 
-const methods = container(
-  { id: 'ja-methods', label: 'Methods', color: ORANGE },
-  wgrid({ cols: [1], rows: [1, 1], gap: 0.15, padding: 0.3 }, [
-    { node: lbl('ja-method-call', 'x.foo()', GRAY), at: [0, 0] },
-    { node: lbl('ja-method-def', 'method in class', GRAY), at: [0, 1] },
-  ]),
+const codeControl = code(
+  'ja-code-control',
+  'String s = x > 0 ? "+" : "-";  // ternary\n// switch expr (14+) IS an expression\nwhile (i < n) i += 1;   // statement',
+  YELLOW,
+  'Control  ·  branch (expression)',
 )
 
-const lambdas = container(
-  { id: 'ja-functions', label: 'Lambdas', color: ORANGE },
-  wgrid({ cols: [1], rows: [1, 1, 1], gap: 0.15, padding: 0.3 }, [
-    { node: lbl('ja-fn-lambda', 'lambda', GRAY), at: [0, 0] },
-    { node: lbl('ja-fn-methodref', 'method ref', GRAY), at: [0, 1] },
-    { node: lbl('ja-fn-iface', '@FunctionalInterface', GRAY), at: [0, 2] },
-  ]),
+const codePattern = code(
+  'ja-code-pattern',
+  'switch (o) {\n  case Integer i when i > 9 -> "big"; // guard\n  case Integer i            -> "int";\n  case Point(int x, int y)  -> x + y; // record\n  case null, default        -> "other";\n}',
+  YELLOW,
+  'Pattern Match  ·  switch / case',
 )
 
-const streamOps = container(
-  { id: 'ja-coll-ops', label: 'Stream Ops', color: ORANGE },
-  wgrid({ cols: [1, 1], rows: [1, 1, 1], gap: 0.15, padding: 0.3 }, [
-    { node: lbl('ja-op-map', 'map', GRAY), at: [0, 0] },
-    { node: lbl('ja-op-filter', 'filter', GRAY), at: [1, 0] },
-    { node: lbl('ja-op-flatmap', 'flatMap', GRAY), at: [0, 1] },
-    { node: lbl('ja-op-reduce', 'reduce', GRAY), at: [1, 1] },
-    { node: lbl('ja-op-collect', 'collect', GRAY), at: [0, 2] },
-    { node: lbl('ja-op-groupby', 'groupingBy', GRAY), at: [1, 2] },
-  ]),
+const codeLoops = code(
+  'ja-code-loops',
+  'for (int i = 0; i < n; i++) { ... }  // index\nfor (var x : xs) { ... }      // for-each\n// no for-yield — build via Stream:\nIntStream.range(0, n).map(i -> i*i);',
+  YELLOW,
+  'Loops  ·  for / for-each',
 )
 
 const transformRow = container(
-  { id: 'ja-verbs', label: 'Transform — what you do   |   branch ▸ match ▸ loop ▸ call ▸ lambda ▸ stream', color: ORANGE },
-  wgrid({ cols: [1.0, 0.9, 1.2, 0.9, 0.9, 1.4], rows: [1], gap: 0.25, padding: 0.4 }, [
-    { node: control, at: [0, 0] },
-    { node: patternMatch, at: [1, 0] },
-    { node: loops, at: [2, 0] },
-    { node: methods, at: [3, 0] },
-    { node: lambdas, at: [4, 0] },
-    { node: streamOps, at: [5, 0] },
+  { id: 'ja-verbs', label: 'Transform — what you do   |   real code:  call ▸ fn ▸ ops ▸ branch ▸ match ▸ loop', color: ORANGE },
+  // Tight gap/padding so the inner code cards claim the band's width/height; the
+  // border-riding card titles need no extra top room.
+  wgrid({ cols: [1, 1, 1], rows: [1, 1], gap: 0.18, padding: 0.15 }, [
+    { node: codeMethods, at: [0, 0] },
+    { node: codeFunctions, at: [1, 0] },
+    { node: codeStreamOps, at: [2, 0] },
+    { node: codeControl, at: [0, 1] },
+    { node: codePattern, at: [1, 1] },
+    { node: codeLoops, at: [2, 1] },
   ]),
 )
 
 // =============== ROW 3: RETURN — what comes back ===============
+// Effects chip stays GRAY on purpose — secondary, impure off-ramp from the pipeline.
 
 const returnRow = container(
   { id: 'ja-results', label: 'Return — what comes back', color: GREEN },
@@ -219,12 +210,12 @@ const returnRow = container(
 )
 
 // =============== LEFT CONTENT BLOCK: four rhythm rows stacked ===============
-// Row weights give the two dense rows (Initialize ⊃ the 6-item Primitives list,
-// Transform ⊃ the op grids) extra height so their leaf labels aren't squeezed.
+// Transform gets MORE height now (9 vs 5.5) because it holds real multi-line code in a
+// 3×2 grid, not one row of token chips.
 
 const content = group(
   'ja-content',
-  wgrid({ cols: [1], rows: [4.5, 5.5, 5.5, 2], gap: 0.5, padding: 0 }, [
+  wgrid({ cols: [1], rows: [4.5, 5.5, 9, 2], gap: 0.5, padding: 0 }, [
     { node: modelRow, at: [0, 0] },
     { node: initializeRow, at: [0, 1] },
     { node: transformRow, at: [0, 2] },
@@ -254,14 +245,14 @@ const root = group(
   ]),
 )
 
-export const javaAnatomy: SceneSpec = {
-  id: 'java-anatomy',
+export const javaModel: SceneSpec = {
+  id: 'java-model',
   topic: 'java',
-  title: 'Java — Anatomy',
-  subtitle: 'Model ▸ Initialize ▸ Transform ▸ Return, and where values live',
-  // Taller canvas (source was 24×18) so the stacked rhythm rows get vertical room and
-  // the dense leaf lists (Primitives, Stream Ops) stop reading squeezed.
-  canvas: { width: 1380, height: 1240 },
+  title: 'Java — Model (anatomy + code)',
+  subtitle: 'Model ▸ Initialize ▸ Transform (real code) ▸ Return, and where values live',
+  // Taller than java-anatomy (1240 → 1520) so the Transform band's heavier weight
+  // gives the 3×2 code grid vertical room without squeezing Model / Initialize.
+  canvas: { width: 1380, height: 1520 },
   grid: { cols: 1, rows: 1, gap: 0, padding: 0.04 },
   nodes: [root],
   edges: [
@@ -285,4 +276,52 @@ export const javaAnatomy: SceneSpec = {
     { from: 'ja-verbs', to: 'ja-memory', label: 'operates on', color: ORANGE },
     { from: 'ja-memory', to: 'ja-results', label: 'yields', color: GREEN },
   ],
+  // java-content's manifest still wires Transform sections to the OLD java-anatomy
+  // chip ids (`ja-control`, `ja-loops`, `ja-pattern`, `ja-methods`, `ja-functions`,
+  // `ja-coll-ops`, and their leaves) which this merge folded into six `code` cards.
+  // Each old id resolves to the card that now shows that concept, so existing
+  // highlight/focus references keep lighting the right place. Edit the map here, not
+  // the manifest — the manifest stays source-of-truth wiring.
+  aliases: {
+    // Methods chip + leaves → the methods code card
+    'ja-methods': ['ja-code-methods'],
+    'ja-method-call': ['ja-code-methods'],
+    'ja-method-def': ['ja-code-methods'],
+
+    // Lambdas chip + leaves → the functions code card
+    'ja-functions': ['ja-code-functions'],
+    'ja-fn-lambda': ['ja-code-functions'],
+    'ja-fn-methodref': ['ja-code-functions'],
+    'ja-fn-iface': ['ja-code-functions'],
+
+    // Stream Ops chip + leaves → the stream-ops code card
+    'ja-coll-ops': ['ja-code-streamops'],
+    'ja-op-map': ['ja-code-streamops'],
+    'ja-op-filter': ['ja-code-streamops'],
+    'ja-op-flatmap': ['ja-code-streamops'],
+    'ja-op-reduce': ['ja-code-streamops'],
+    'ja-op-collect': ['ja-code-streamops'],
+    'ja-op-groupby': ['ja-code-streamops'],
+
+    // Control chip + leaves → the control code card
+    'ja-control': ['ja-code-control'],
+    'ja-ctrl-if': ['ja-code-control'],
+    'ja-ctrl-tern': ['ja-code-control'],
+    'ja-ctrl-switch': ['ja-code-control'],
+    'ja-ctrl-guard': ['ja-code-pattern'], //  the guard example lives in the pattern card
+
+    // Pattern Match chip + leaves → the pattern code card
+    'ja-pattern': ['ja-code-pattern'],
+    'ja-pat-match': ['ja-code-pattern'],
+    'ja-pat-record': ['ja-code-pattern'],
+
+    // Loops chip + leaves → the loops code card
+    'ja-loops': ['ja-code-loops'],
+    'ja-loop-for': ['ja-code-loops'],
+    'ja-loop-foreach': ['ja-code-loops'],
+    'ja-loop-while': ['ja-code-loops'],
+    'ja-loop-dowhile': ['ja-code-loops'],
+    'ja-loop-break': ['ja-code-loops'],
+    'ja-loop-continue': ['ja-code-loops'],
+  },
 }

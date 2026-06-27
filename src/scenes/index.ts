@@ -6,7 +6,7 @@ import { sparkArchitecture } from './spark-architecture.ts'
 import { sparkBatchApi } from './spark-batch-api.ts'
 import { sparkStreaming } from './spark-streaming.ts'
 import { javaJvm } from './java-jvm.ts'
-import { javaAnatomy } from './java-anatomy.ts'
+import { javaModel } from './java-model.ts'
 import { scalaJvm } from './scala-jvm.ts'
 import { scalaModel } from './scala-model.ts'
 import { pythonCpython } from './python-cpython.ts'
@@ -18,8 +18,10 @@ import { sql } from './sql.ts'
 // Modules run on one dense scene each (01 = spark-execution, 02 = spark-rdd-api);
 // apache-spark-api-stack is kept available for reuse. spark-architecture is the
 // wide 16:9 "whole system" map (ported from NodeMap), not yet wired to a module.
-// java-jvm + java-anatomy are the Java concept's two dense maps (ported from
-// NodeMap), shared across the Java modules via java-content's manifest.
+// java-jvm + java-model are the Java concept's two dense maps, shared across the
+// Java modules via java-content's manifest. java-model mirrors scala-model: the old
+// java-anatomy token spine with the Transform band rebuilt as real code cards (it
+// REPLACED java-anatomy; an `aliases` map keeps the manifest's old chip ids resolving).
 // scala-jvm + scala-model serve the Scala concept (scala-content): the JVM runtime
 // map (scalac/.scala) and scala-model — a merge of the old scala-anatomy structure
 // (`Kind Name : Type = Value`, Model ▸ Initialize ▸ Transform ▸ Return) with real
@@ -44,7 +46,7 @@ export const scenes: Record<string, SceneSpec> = {
   'spark-batch-api': sparkBatchApi,
   'spark-streaming': sparkStreaming,
   'java-jvm': javaJvm,
-  'java-anatomy': javaAnatomy,
+  'java-model': javaModel,
   'scala-jvm': scalaJvm,
   'scala-model': scalaModel,
   'python-cpython': pythonCpython,
