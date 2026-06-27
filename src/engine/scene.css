@@ -93,35 +93,45 @@
    Calm per DESIGN.md: a flat near-black body + a left color accent in the role hue,
    NO glow/box-shadow. Top-left aligned so code reads as code, not centered text. */
 .scene-node--code {
+  position: relative;
+  /* Title rides the top border, so let it straddle (don't clip it). */
+  overflow: visible;
   align-items: flex-start;
   justify-content: flex-start;
-  padding: 12px 16px;
+  /* Extra top padding clears the border-riding title; tight elsewhere. */
+  padding: 9px 10px 7px;
   background: color-mix(in srgb, var(--node-color) 8%, #141619);
   border: 1px solid color-mix(in srgb, var(--node-color) 28%, var(--base));
   border-left: 3px solid var(--node-color, #9aa3b2);
 }
 
-/* The code card's own top-left header (from the node's `sub`). Small, uppercase,
-   role-hued — so a snippet labels itself without a wrapping container. */
+/* The code card's own header (from the node's `sub`). Rides the top-left BORDER —
+   straddling it the same way a container title does (NodeMap-style) — so the card
+   body is left fully free for code instead of the header eating a row inside it. Its
+   background masks the border line behind it (matches the code card's fill). */
 .scene-node__codetitle {
-  align-self: flex-start;
-  max-width: 100%;
-  margin-bottom: 6px;
-  font-size: 11px;
+  position: absolute;
+  top: 0;
+  left: 9px;
+  transform: translateY(-50%);
+  max-width: calc(100% - 14px);
+  padding: 0 4px;
+  font-size: 9px;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  background: color-mix(in srgb, var(--node-color) 8%, #141619);
   color: color-mix(in srgb, var(--node-color) 78%, #cfd4dc);
 }
 
 .scene-node__code {
   margin: 0;
   font-family: ui-monospace, 'SF Mono', Menlo, 'Cascadia Code', monospace;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 12px;
+  line-height: 1.4;
   /* Keep indentation; let an over-long line wrap rather than clip. */
   white-space: pre-wrap;
   word-break: break-word;

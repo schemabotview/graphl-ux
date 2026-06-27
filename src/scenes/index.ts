@@ -8,8 +8,7 @@ import { sparkStreaming } from './spark-streaming.ts'
 import { javaJvm } from './java-jvm.ts'
 import { javaAnatomy } from './java-anatomy.ts'
 import { scalaJvm } from './scala-jvm.ts'
-import { scalaAnatomy } from './scala-anatomy.ts'
-import { scalaGrammar } from './scala-grammar.ts'
+import { scalaModel } from './scala-model.ts'
 import { pythonCpython } from './python-cpython.ts'
 import { pythonAnatomy } from './python-anatomy.ts'
 import { dsa } from './dsa.ts'
@@ -21,8 +20,10 @@ import { sql } from './sql.ts'
 // wide 16:9 "whole system" map (ported from NodeMap), not yet wired to a module.
 // java-jvm + java-anatomy are the Java concept's two dense maps (ported from
 // NodeMap), shared across the Java modules via java-content's manifest.
-// scala-jvm + scala-anatomy mirror them for the Scala concept (scala-content):
-// same JVM runtime map (scalac/.scala), Scala's `Kind Name : Type = Value` grammar.
+// scala-jvm + scala-model serve the Scala concept (scala-content): the JVM runtime
+// map (scalac/.scala) and scala-model — a merge of the old scala-anatomy structure
+// (`Kind Name : Type = Value`, Model ▸ Initialize ▸ Transform ▸ Return) with real
+// syntax-highlighted code in the Transform band (the old scala-grammar's snippets).
 // python-cpython + python-anatomy mirror them for the Python concept (python-content):
 // the CPython runtime map (.py/compile()/import system) and Python's keyword-less
 // `Name : Type = Value` grammar (Model ▸ Bind ▸ Transform ▸ Return).
@@ -45,8 +46,7 @@ export const scenes: Record<string, SceneSpec> = {
   'java-jvm': javaJvm,
   'java-anatomy': javaAnatomy,
   'scala-jvm': scalaJvm,
-  'scala-anatomy': scalaAnatomy,
-  'scala-grammar': scalaGrammar,
+  'scala-model': scalaModel,
   'python-cpython': pythonCpython,
   'python-anatomy': pythonAnatomy,
   dsa: dsa,

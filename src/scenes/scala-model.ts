@@ -1,5 +1,6 @@
 import type { SceneSpec } from '../engine/types.ts'
 import {
+  code,
   container,
   group,
   type NodeSeed,
@@ -9,20 +10,16 @@ import {
 } from '../engine/patterns.ts'
 import { BLUE, GRAY, GREEN, ORANGE, PURPLE, RED, TEAL, YELLOW } from '../engine/colors.ts'
 
-// Scala's grammar of a program on one wide map — ported from NodeMap's
-// `scala-anatomy.ts`. Four stacked rhythm rows on the left (Model ▸ Initialize ▸
-// Transform ▸ Return) and a Memory side column on the right. Model is upstream of
-// Initialize: you sketch the type hierarchy first, then instantiate. The Initialize
-// row follows Scala's binding grammar `Kind  Name  : Type  =  Value` (the keyword
-// kind — val/var/lazy val/def — leads, type is annotated AFTER the name). Geometry
-// is faithful to the source's WEIGHTED grid tracks, which graphl-ux's resolver
-// supports natively (see java-anatomy.ts / spark-architecture.ts). Sibling of
-// `java-anatomy`: same four-row rhythm, Scala-specific tokens (trait/with,
-// case class/enum, for-yield, Option/Try/Either, HAMT-backed persistence).
+// MERGE of `scala-anatomy` (the structural mental model) and `scala-grammar`
+// (real syntax-highlighted code). Keep anatomy's four-row spine — Model ▸ Initialize
+// ▸ Transform ▸ Return + the Memory side column — but render the TRANSFORM band as
+// actual `kind: 'code'` cards instead of token chips, so "what you do" reads as code
+// you'd actually write. Model / Initialize / Return stay as the structural token view
+// on purpose: there the SHAPE is the lesson, and code would over-fill the cells. This
+// is the first slice (Transform only); Initialize/Return may gain code later.
 
-// A bare TEXT leaf — no glyph, no fill (graphl-ux `label`). The default for the
-// enumerated tokens (keywords, types, ops) and the class-hierarchy boxes: they read
-// as plain text inside their labelled containers, not as filled chips.
+// A bare TEXT leaf — no glyph, no fill (graphl-ux `label`). Default for the enumerated
+// tokens (keywords, types, ops) and the class-hierarchy boxes in the untouched bands.
 const lbl = (id: string, label: string, color: string): NodeSeed => ({ id, label, color, kind: 'label' })
 
 // A filled CHIP whose text IS the concept (graphl-ux `term`). Kept for the Return row.
@@ -118,74 +115,66 @@ const initializeRow = container(
   ]),
 )
 
-// =============== ROW 2: TRANSFORM — what you do ===============
+// =============== ROW 2: TRANSFORM — what you do (NOW REAL CODE) ===============
+// The merge payoff: this band is the SAME six "verbs" as anatomy (call ▸ fn ▸ ops ▸
+// branch ▸ match ▸ loop) but rendered as `code` cards (snippets lifted from
+// scala-grammar). Reflowed from one 6-wide row into a 3×2 grid so each card has the
+// width/height real code needs to stay legible; the camera frames one card per
+// section in the reel. Colors mirror anatomy: fn-family ORANGE, control-family YELLOW.
 
-const methods = container(
-  { id: 'sa-methods', label: 'Methods', color: ORANGE },
-  wgrid({ cols: [1], rows: [1, 1], gap: 0.15, padding: 0.3 }, [
-    { node: lbl('sa-method-call', 'x.foo()', GRAY), at: [0, 0] },
-    { node: lbl('sa-method-def', 'def in class', GRAY), at: [0, 1] },
-  ]),
+const codeMethods = code(
+  'sa-code-methods',
+  'obj.foo(x)              // method call\ndef area = w * h        // def in class\n"abc".length            // stdlib method',
+  ORANGE,
+  'Methods  ·  call · def',
 )
 
-const functions = container(
-  { id: 'sa-functions', label: 'Functions', color: ORANGE },
-  wgrid({ cols: [1], rows: [1, 1, 1], gap: 0.15, padding: 0.3 }, [
-    { node: lbl('sa-fn-lambda', 'lambda (x)=>...', GRAY), at: [0, 0] },
-    { node: lbl('sa-fn-hof', 'higher-order', GRAY), at: [0, 1] },
-    { node: lbl('sa-fn-closure', 'closure', GRAY), at: [0, 2] },
-  ]),
+const codeFunctions = code(
+  'sa-code-functions',
+  'val inc = (x: Int) => x + 1\nval f: Int => Int = _ + 1   // shorthand\ndef twice(g: Int=>Int) = g(g(0))  // HOF',
+  ORANGE,
+  'Functions  ·  lambda · HOF',
 )
 
-const collectionOps = container(
-  { id: 'sa-coll-ops', label: 'Collection Ops', color: ORANGE },
-  wgrid({ cols: [1, 1], rows: [1, 1, 1], gap: 0.15, padding: 0.3 }, [
-    { node: lbl('sa-op-map', 'map', GRAY), at: [0, 0] },
-    { node: lbl('sa-op-filter', 'filter', GRAY), at: [1, 0] },
-    { node: lbl('sa-op-flatmap', 'flatMap', GRAY), at: [0, 1] },
-    { node: lbl('sa-op-fold', 'fold', GRAY), at: [1, 1] },
-    { node: lbl('sa-op-groupby', 'groupBy', GRAY), at: [0, 2] },
-    { node: lbl('sa-op-zip', 'zip', GRAY), at: [1, 2] },
-  ]),
+const codeCollOps = code(
+  'sa-code-collops',
+  'xs.map(_ * 2)\nxs.filter(_ > 2)\nxs.flatMap(n => List(n, -n))\nxs.foldLeft(0)(_ + _)   // sum\nxs.groupBy(_ % 2)       // Map[Int,List]',
+  ORANGE,
+  'Collection Ops  ·  map · fold',
 )
 
-const control = container(
-  { id: 'sa-control', label: 'Control', color: YELLOW },
-  wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: 0.15, padding: 0.3 }, [
-    { node: lbl('sa-ctrl-if', 'if (c) a else b', GRAY), at: [0, 0] },
-    { node: lbl('sa-ctrl-then', 'if c then a else b   (S3)', GRAY), at: [0, 1] },
-    { node: lbl('sa-ctrl-expr', 'if-else IS an expression', GRAY), at: [0, 2] },
-    { node: lbl('sa-ctrl-guard', 'guard:  case x if p', GRAY), at: [0, 3] },
-  ]),
+const codeControl = code(
+  'sa-code-control',
+  'val s = if x > 0 then "+" else "-"\n// if-else IS an expression (returns)\nwhile i < n do i += 1   // the one stmt',
+  YELLOW,
+  'Control  ·  branch (expression)',
 )
 
-const patternMatch = container(
-  { id: 'sa-pattern', label: 'Pattern Match', color: YELLOW },
-  wgrid({ cols: [1], rows: [1, 1], gap: 0.15, padding: 0.3 }, [
-    { node: lbl('sa-pat-match', 'match / case', GRAY), at: [0, 0] },
-    { node: lbl('sa-pat-unapply', 'unapply binds', GRAY), at: [0, 1] },
-  ]),
+const codePattern = code(
+  'sa-code-pattern',
+  'x match\n  case 0          => "zero"   // literal\n  case n if n > 9 => "big"    // guard\n  case (a, b)     => a + b    // tuple\n  case h :: t     => h        // sequence\n  case _          => "other"  // wildcard',
+  YELLOW,
+  'Pattern Match  ·  match / case',
 )
 
-const loops = container(
-  { id: 'sa-loops', label: 'Loops', color: YELLOW },
-  wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: 0.15, padding: 0.3 }, [
-    { node: lbl('sa-loop-for', 'for x <- xs yield', GRAY), at: [0, 0] },
-    { node: lbl('sa-loop-multi', 'for { g1; g2 } yield', GRAY), at: [0, 1] },
-    { node: lbl('sa-loop-while', 'while (c) {}    (rare)', GRAY), at: [0, 2] },
-    { node: lbl('sa-loop-desugar', 'desugar to flatMap', GRAY), at: [0, 3] },
-  ]),
+const codeLoops = code(
+  'sa-code-loops',
+  'for x <- xs yield x * x      // comprehension\nfor\n  x <- xs; y <- ys          // multi-generator\nyield (x, y)\n// desugars to flatMap / map',
+  YELLOW,
+  'Loops  ·  for-yield',
 )
 
 const transformRow = container(
-  { id: 'sa-verbs', label: 'Transform — what you do   |   call ▸ fn ▸ ops ▸ branch ▸ match ▸ loop', color: ORANGE },
-  wgrid({ cols: [0.9, 0.9, 1.4, 1.0, 0.9, 1.0], rows: [1], gap: 0.25, padding: 0.4 }, [
-    { node: methods, at: [0, 0] },
-    { node: functions, at: [1, 0] },
-    { node: collectionOps, at: [2, 0] },
-    { node: control, at: [3, 0] },
-    { node: patternMatch, at: [4, 0] },
-    { node: loops, at: [5, 0] },
+  { id: 'sa-verbs', label: 'Transform — what you do   |   real code:  call ▸ fn ▸ ops ▸ branch ▸ match ▸ loop', color: ORANGE },
+  // Tight gap/padding so the inner code cards claim the band's width/height; the
+  // border-riding card titles need no extra top room.
+  wgrid({ cols: [1, 1, 1], rows: [1, 1], gap: 0.18, padding: 0.15 }, [
+    { node: codeMethods, at: [0, 0] },
+    { node: codeFunctions, at: [1, 0] },
+    { node: codeCollOps, at: [2, 0] },
+    { node: codeControl, at: [0, 1] },
+    { node: codePattern, at: [1, 1] },
+    { node: codeLoops, at: [2, 1] },
   ]),
 )
 
@@ -202,12 +191,12 @@ const returnRow = container(
 )
 
 // =============== LEFT CONTENT BLOCK: four rhythm rows stacked ===============
-// Row weights give the two dense rows (Initialize ⊃ the : Type grid, Transform ⊃
-// the op grids) extra height so their leaf labels aren't squeezed.
+// Transform gets MORE height now (8 vs 5.5) because it holds real multi-line code in a
+// 3×2 grid, not one row of token chips.
 
 const content = group(
   'sa-content',
-  wgrid({ cols: [1], rows: [4, 5.5, 5.5, 2], gap: 0.5, padding: 0 }, [
+  wgrid({ cols: [1], rows: [4, 5.5, 9, 2], gap: 0.5, padding: 0 }, [
     { node: modelRow, at: [0, 0] },
     { node: initializeRow, at: [0, 1] },
     { node: transformRow, at: [0, 2] },
@@ -239,14 +228,14 @@ const root = group(
   ]),
 )
 
-export const scalaAnatomy: SceneSpec = {
-  id: 'scala-anatomy',
+export const scalaModel: SceneSpec = {
+  id: 'scala-model',
   topic: 'scala',
-  title: 'Scala — Anatomy',
-  subtitle: 'Model ▸ Initialize ▸ Transform ▸ Return, and where values live',
-  // Taller canvas (source was 24×18) so the stacked rhythm rows get vertical room
-  // and the dense leaf lists (: Type, Collection Ops) stop reading squeezed.
-  canvas: { width: 1380, height: 1240 },
+  title: 'Scala — Model (anatomy + code)',
+  subtitle: 'Model ▸ Initialize ▸ Transform (real code) ▸ Return, and where values live',
+  // Taller than scala-anatomy (1240 → 1520) so the Transform band's heavier weight
+  // gives the 3×2 code grid vertical room without squeezing Model / Initialize.
+  canvas: { width: 1380, height: 1520 },
   grid: { cols: 1, rows: 1, gap: 0, padding: 0.04 },
   nodes: [root],
   edges: [
