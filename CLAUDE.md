@@ -114,7 +114,7 @@ These were settled by discussion. Don't relitigate without the owner.
   **progress line pinned to the bottom edge** (zero layout cost). Modeled on
   graphl-mobile's reel. The brand-bar logo is the **home affordance** —
   `navigate('')` returns to the concept catalog (see Navigation model).
-- **Caption = the hierarchy breadcrumb** (`App.tsx`, two lines): **module** title
+- **Caption = the hierarchy breadcrumb** (`components/ReelCaption.tsx`, two lines): **module** title
   (`moduleMeta.title`, e.g. "Foundations & Execution Model") · **section** title
   (`page.heading`) with the `N/M` counter dimmed on that same section line. The
   **concept** lives in the brand bar (top), not the caption — the old concept-kicker
@@ -141,7 +141,7 @@ These were settled by discussion. Don't relitigate without the owner.
   sections/module**.
   - **Horizontal = one continuous section flow across the WHOLE concept.** On load the
     app fetches *every* module's notebook and flattens them into a single page list
-    (`App.tsx`), so paging runs straight past a module boundary — module 1's last
+    (`hooks/useContentNav.ts`), so paging runs straight past a module boundary — module 1's last
     section → module 2's first — with **no refetch and no jump-to-start**. Touch:
     story **tap zones** (left third = prev, right third = next). Desktop: ← → arrow
     keys. A step swaps **scene + panel + caption + audio together**; the scene remounts
@@ -152,7 +152,7 @@ These were settled by discussion. Don't relitigate without the owner.
     *within the flat list* (no refetch). There is **no separate vertical/swipe axis**;
     paging across a boundary already crosses modules. (The earlier "vertical swipe =
     module" plan was dropped in favor of this continuous model.)
-  - **Audio follows navigation** (`playingRef` in `App.tsx`). Play state persists
+  - **Audio follows navigation** (`playingRef` in `hooks/useNarration.ts`). Play state persists
     across steps: if narration is on, the next slide's clip auto-plays; if paused, it
     stays paused. When a clip ends mid-playback it **auto-advances** to the next slide
     and keeps playing — a hands-free playthrough **bounded to the current module**
@@ -209,11 +209,21 @@ graphl-ux/                  # this repo — the render engine; ships no content
     scenes/                 #   one dense scene per module (+ extras kept for reuse)
       index.ts              #   scene registry (id → SceneSpec)
       spark-execution.ts, spark-rdd-api.ts, apache-spark-api-stack.ts
-    components/
+    components/              #   presentational pieces — props in, callbacks out (no own state)
       Home.tsx, home.css          # the concept catalog (home page)
       RightPanel.tsx, panel.css   # the content panel (markdown + contents list + resize)
+      Header.tsx                  # brand bar (logo→home + concept label + ☰ module picker)
+      ReelCaption.tsx             # bottom-left module · section breadcrumb + N/M counter
+      ReelControls.tsx            # bottom-right show-full / play / panel cluster
+      TapZones.tsx                # mobile prev/next/center-play tap zones
+      icons.tsx                   # the reel control SVGs (play-pause / panel / expand)
+    hooks/                  #   App's stateful logic, one concern per hook
+      useContentNav.ts            # fetch+flatten pages, pageIdx, deep-link restore, URL sync
+      useNarration.ts             # <audio> ref + play/progress + clip reset on page change
+      usePanelPrefs.ts            # panel open/width (localStorage) + drag-resize
     router.ts               # hash router #/<concept>/<module>/<section>; navigate / replaceRoute
-    App.tsx                 # the shell: flat cross-module pages + reel chrome + panel + nav
+    App.tsx                 # the shell: wires the hooks + components together; owns only the
+                            #   nav/narration seam (handleClipEnded, keyboard) + showFull/showHint
     index.css
 ```
 
