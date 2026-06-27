@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Concept } from '../content/catalog.ts'
+import { concepts } from '../content/catalog.ts'
 import type { ModuleManifest } from '../content/module.ts'
 import { navigate } from '../router.ts'
 
@@ -11,31 +12,34 @@ interface HeaderProps {
   activeModuleId: string
 }
 
-// Top brand bar: glyph + concept label (→ home/concept catalog) and the ☰ module
-// picker. Floats over the scene; only the interactive controls take pointer events
-// so the canvas/tap-zones underneath stay live. Owns the picker's open state +
-// outside-click close, since they exist only for this bar.
+// Top brand bar. Three affordances: the glyph returns home (concept catalog), the
+// concept label opens a concept switcher (jump straight to another concept without
+// a trip through home), and the ☰ opens the module picker. Floats over the scene;
+// only the interactive controls take pointer events so the canvas/tap-zones
+// underneath stay live. Owns both pickers' open state + outside-click close.
 export function Header({ concept, modules, activeModuleId }: HeaderProps) {
-  const [pickerOpen, setPickerOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
+  const [conceptOpen, setConceptOpen] = useState(false)
+  const [moduleOpen, setModuleOpen] = useState(false)
+  const conceptRef = useRef<HTMLDivElement>(null)
+  const moduleRef = useRef<HTMLDivElement>(null)
 
-  // Close the module picker when clicking outside the menu wrapper.
+  // Close either picker when clicking outside its wrapper.
   useEffect(() => {
-    if (!pickerOpen) return
+    if (!conceptOpen && !moduleOpen) return
     const onDown = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setPickerOpen(false)
-      }
+      const t = e.target as Node
+      if (conceptRef.current && !conceptRef.current.contains(t)) setConceptOpen(false)
+      if (moduleRef.current && !moduleRef.current.contains(t)) setModuleOpen(false)
     }
     document.addEventListener('mousedown', onDown)
     return () => document.removeEventListener('mousedown', onDown)
-  }, [pickerOpen])
+  }, [conceptOpen, moduleOpen])
 
   return (
     <div className="scene-brandbar">
-      {/* Logo + concept label are one button: clicking either returns home. */}
+      {/* Logo returns home (the concept catalog). */}
       <button
-        className="scene-brandbar__home"
+        className="scene-brandbar__logo"
         onClick={(e) => {
           e.currentTarget.blur()
           navigate('')
@@ -43,19 +47,55 @@ export function Header({ concept, modules, activeModuleId }: HeaderProps) {
         aria-label="Home — all concepts"
       >
         <img src="/icon.svg" alt="" width={28} height={28} />
-        <span className="scene-brandbar__concept">{concept.label}</span>
       </button>
+
+      {/* Concept label opens a switcher to jump straight to another concept. */}
+      <div className="scene-brandbar__concept-wrap" ref={conceptRef}>
+        <button
+          className="scene-brandbar__concept-btn"
+          onClick={() => {
+            setConceptOpen((o) => !o)
+            setModuleOpen(false)
+          }}
+          aria-label="Switch concept"
+          aria-expanded={conceptOpen}
+        >
+          <span className="scene-brandbar__concept">{concept.label}</span>
+          <span className="scene-brandbar__caret" aria-hidden>▾</span>
+        </button>
+        {conceptOpen && (
+          <div className="scene-modulepicker" role="menu">
+            {concepts.map((c) => (
+              <button
+                key={c.id}
+                className={`scene-modulepicker__item${c.id === concept.id ? ' scene-modulepicker__item--active' : ''}`}
+                role="menuitem"
+                onClick={() => {
+                  if (c.id !== concept.id) navigate(c.id)
+                  setConceptOpen(false)
+                }}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
       {modules.length > 1 && (
-        <div className="scene-brandbar__menu" ref={menuRef}>
+        <div className="scene-brandbar__menu" ref={moduleRef}>
           <button
             className="scene-brandbar__menu-btn"
-            onClick={() => setPickerOpen((o) => !o)}
+            onClick={() => {
+              setModuleOpen((o) => !o)
+              setConceptOpen(false)
+            }}
             aria-label="Switch module"
-            aria-expanded={pickerOpen}
+            aria-expanded={moduleOpen}
           >
             ☰
           </button>
-          {pickerOpen && (
+          {moduleOpen && (
             <div className="scene-modulepicker" role="menu">
               {modules.map((m) => (
                 <button
@@ -64,7 +104,7 @@ export function Header({ concept, modules, activeModuleId }: HeaderProps) {
                   role="menuitem"
                   onClick={() => {
                     navigate(concept.id, m.id)
-                    setPickerOpen(false)
+                    setModuleOpen(false)
                   }}
                 >
                   {m.title}

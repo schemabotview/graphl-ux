@@ -113,36 +113,66 @@ body {
   pointer-events: none;
   background: linear-gradient(to bottom, rgba(37, 37, 37, 0.9), rgba(37, 37, 37, 0));
 }
-/* Bare logo + concept button — both the icon and the label return home, so they
-   share one button. It takes the row's free space (flex: 1) to push the ☰ menu to
-   the right edge, the way the standalone concept span used to. */
-.scene-brandbar__home {
+/* Logo button — the home affordance (returns to the concept catalog). */
+.scene-brandbar__logo {
   pointer-events: auto;
-  flex: 1;
   display: flex;
   align-items: center;
-  gap: 10px;
   padding: 6px;
   border: none;
   background: none;
-  text-align: left;
   cursor: pointer;
 }
-.scene-brandbar__home:active img {
+.scene-brandbar__logo:active img {
   transform: scale(0.92);
 }
-.scene-brandbar__home:focus,
-.scene-brandbar__home:focus-visible {
+.scene-brandbar__logo:focus,
+.scene-brandbar__logo:focus-visible {
   outline: none;
 }
-.scene-brandbar__home img {
+.scene-brandbar__logo img {
   display: block;
+}
+
+/* Concept switcher — label + caret open a dropdown of all concepts. Takes the
+   row's free space (flex: 1) to push the ☰ menu to the right edge. */
+.scene-brandbar__concept-wrap {
+  position: relative;
+  flex: 1;
+  pointer-events: auto;
+}
+.scene-brandbar__concept-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+}
+.scene-brandbar__concept-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.scene-brandbar__concept-btn:focus,
+.scene-brandbar__concept-btn:focus-visible {
+  outline: none;
 }
 .scene-brandbar__concept {
   font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.01em;
   color: rgba(244, 245, 247, 0.92);
+}
+.scene-brandbar__caret {
+  font-size: 10px;
+  line-height: 1;
+  color: rgba(244, 245, 247, 0.55);
+}
+/* Concept dropdown anchors to the left edge of its label (module picker is right). */
+.scene-brandbar__concept-wrap .scene-modulepicker {
+  right: auto;
+  left: 0;
 }
 
 /* Module picker: ☰ button + dropdown anchored to its right. */
