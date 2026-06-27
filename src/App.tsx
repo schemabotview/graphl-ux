@@ -63,6 +63,11 @@ export default function App() {
   // so they persist in localStorage across refreshes rather than in the URL.
   const [panelOpen, setPanelOpen] = useState(() => readPanelOpen())
   const [panelWidth, setPanelWidth] = useState(() => readPanelWidth())
+  // "Show full scene" — momentarily suppress the section's spotlight/focus so the
+  // learner can read the whole map. Per-step (resets on page change below), NOT a
+  // persisted preference: the authored narration spotlight should return on the
+  // next slide.
+  const [showFull, setShowFull] = useState(false)
 
   const audioRef = useRef<HTMLAudioElement>(null)
   // Mirror `playing` in a ref so the page-change effect can read the live play
@@ -149,6 +154,7 @@ export default function App() {
     if (!a) return
     a.currentTime = 0
     setProgress(0)
+    setShowFull(false) // each slide reasserts its authored spotlight
     if (playingRef.current) a.play().catch(() => setPlaying(false))
     else a.pause()
   }, [pageIdx])
@@ -268,8 +274,8 @@ export default function App() {
           <SceneViewer
             key={page.sceneId}
             scene={scene}
-            highlight={page.highlight}
-            focus={page.focus}
+            highlight={showFull ? undefined : page.highlight}
+            focus={showFull ? undefined : page.focus}
           />
 
           <Header concept={concept} modules={allModules} activeModuleId={page.moduleId} />
@@ -345,6 +351,27 @@ export default function App() {
                 <line x1="14" y1="5" x2="14" y2="19" stroke="currentColor" strokeWidth="1.6" />
               </svg>
             </button>
+            {(page.highlight?.length || page.focus) && (
+              <button
+                className="scene-iconbtn"
+                onClick={(e) => {
+                  e.currentTarget.blur() // momentary action — don't retain focus
+                  setShowFull((f) => !f)
+                }}
+                aria-pressed={showFull}
+                aria-label={showFull ? 'Return to focus' : 'Show full scene'}
+              >
+                {/* expand-to-corners (fit whole scene) */}
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path
+                    d="M8 4H4v4M16 4h4v4M8 20H4v-4M16 20h4v-4"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            )}
           </div>
 
           <div className="scene-progress" onClick={seek}>

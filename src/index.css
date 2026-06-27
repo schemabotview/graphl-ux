@@ -251,6 +251,12 @@ body {
 .scene-iconbtn:active {
   transform: scale(0.92);
 }
+/* Active "on" state for toggle icon buttons (panel open, show-full engaged). */
+.scene-iconbtn[aria-pressed='true'] {
+  border-color: #3b3f54;
+  color: #fff;
+  background: rgba(60, 62, 78, 0.78);
+}
 /* No lingering focus ring on the control buttons — Space/tap drive play/pause
    and the panel toggle is a momentary action, so a sticky focus state reads as a
    stuck "on" button. */
