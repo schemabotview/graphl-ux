@@ -290,7 +290,7 @@ const rightColumn = group(
 
 const root = group(
   'dsa-scene-root',
-  wgrid({ cols: [1, 1.15], rows: [1], gap: 0.3, padding: 0.4 }, [
+  wgrid({ cols: [1, 1.15], rows: [1], gap: 0.3, padding: 0.02 }, [
     { node: leftColumn, at: [0, 0] },
     { node: rightColumn, at: [1, 0] },
   ]),

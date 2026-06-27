@@ -190,7 +190,7 @@ const cpuLayer = group(
 
 const root = group(
   'python-root',
-  wgrid({ cols: [1], rows: [4.5, 5, 5, 1.5], gap: 0.5, padding: 0.4 }, [
+  wgrid({ cols: [1], rows: [4.5, 5, 5, 1.5], gap: 0.5, padding: 0.02 }, [
     { node: top, at: [0, 0] },
     { node: memoryArea, at: [0, 1] },
     { node: bottom, at: [0, 2] },

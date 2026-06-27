@@ -183,7 +183,7 @@ const cpuLayer = group(
 
 const root = group(
   'java-root',
-  wgrid({ cols: [1], rows: [4.5, 5, 5, 1.5], gap: 0.5, padding: 0.4 }, [
+  wgrid({ cols: [1], rows: [4.5, 5, 5, 1.5], gap: 0.5, padding: 0.02 }, [
     { node: top, at: [0, 0] },
     { node: memoryArea, at: [0, 1] },
     { node: bottom, at: [0, 2] },
@@ -196,8 +196,9 @@ export const javaJvm: SceneSpec = {
   topic: 'java',
   title: 'Java on the JVM',
   subtitle: 'Source → class loader → memory → execution engine → CPU',
-  // ~24:17 canvas so the wide JVM grid renders with roughly square cells.
-  canvas: { width: 1440, height: 1020 },
+  // Taller-than-16:9 canvas (~6:5): fills the panel-open reading view's vertical
+  // space; accepts a little left/right pillarbox in the panel-closed 16:9 frame.
+  canvas: { width: 1440, height: 1180 },
   grid: { cols: 1, rows: 1, gap: 0, padding: 0.04 },
   nodes: [root],
   edges: [

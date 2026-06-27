@@ -222,7 +222,7 @@ const memory = container(
 
 const root = group(
   'sa-root',
-  wgrid({ cols: [4.5, 1], rows: [1], gap: 0.5, padding: 0.4 }, [
+  wgrid({ cols: [4.5, 1], rows: [1], gap: 0.5, padding: 0.02 }, [
     { node: content, at: [0, 0] },
     { node: memory, at: [1, 0] },
   ]),
