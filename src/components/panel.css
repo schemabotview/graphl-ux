@@ -42,7 +42,9 @@ body.resizing {
   flex: 1;
   min-width: 0;
   margin: 0;
-  font-size: 22px;
+  /* Section title sits a step below the footer module title (caps at 22px), so the
+     section reads as subordinate to its module. */
+  font-size: 20px;
   font-weight: 700;
   color: var(--ink-strong);
   line-height: 1.2;

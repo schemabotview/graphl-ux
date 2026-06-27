@@ -230,17 +230,18 @@ body {
   font-weight: 600;
 }
 
+/* Bare control icon: no chip/border/bg — calm chrome matching the brand-bar ☰.
+   Keeps a 44×44 hit area for touch; the dark caption scrim behind the cluster
+   gives contrast. Active/toggle state reads via COLOR (no bg to fill). */
 .scene-iconbtn {
   display: grid;
   place-items: center;
   width: 44px;
   height: 44px;
   padding: 0;
-  border: 1px solid #2a2d3d;
-  border-radius: 999px;
-  color: rgba(244, 245, 247, 0.92);
-  background: rgba(28, 28, 28, 0.7);
-  backdrop-filter: blur(6px);
+  border: none;
+  background: none;
+  color: rgba(244, 245, 247, 0.7);
   font-size: 16px;
   cursor: pointer;
 }
@@ -248,14 +249,16 @@ body {
   width: 18px;
   height: 18px;
 }
+.scene-iconbtn:hover {
+  color: rgba(244, 245, 247, 1);
+}
 .scene-iconbtn:active {
   transform: scale(0.92);
 }
-/* Active "on" state for toggle icon buttons (panel open, show-full engaged). */
+/* Active "on" state for toggle icon buttons (panel open, show-full engaged) —
+   brighter color stands in for the old background fill. */
 .scene-iconbtn[aria-pressed='true'] {
-  border-color: #3b3f54;
-  color: #fff;
-  background: rgba(60, 62, 78, 0.78);
+  color: rgba(244, 245, 247, 1);
 }
 /* No lingering focus ring on the control buttons — Space/tap drive play/pause
    and the panel toggle is a momentary action, so a sticky focus state reads as a
@@ -274,7 +277,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 44px 120px 22px 22px;
+  padding: 44px 72px 22px 22px;
   text-align: left;
   pointer-events: none;
   background: linear-gradient(to top, rgba(37, 37, 37, 0.92), rgba(37, 37, 37, 0));
@@ -282,7 +285,8 @@ body {
 
 .scene-caption h1 {
   margin: 0;
-  font-size: 26px;
+  /* Responsive hero: ~18px on a phone (tidy 1–2 lines), ~22px on desktop video. */
+  font-size: clamp(18px, 4.5vw, 22px);
   font-weight: 700;
   line-height: 1.1;
 }
@@ -360,30 +364,49 @@ body {
 }
 
 /* Bottom-right control cluster: play/pause + content-panel toggle. */
+/* Bottom-right cluster pinned to the edge (grows upward). The contextual show-full
+   sits alone on the top row, right-aligned above the panel toggle; the persistent
+   play · panel pair rides the horizontal bottom row. show-full appearing/disappearing
+   only adds/removes the top row, so play/panel never move; stacking (vs one long row)
+   keeps the cluster from overlapping the bottom-left caption on narrow screens. */
 .scene-controls {
   position: absolute;
   right: 16px;
   bottom: 16px;
   z-index: 8;
   display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.scene-controls__row {
+  display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
-/* Round play/pause button (graphl-mobile's feed__playstate). */
+/* Play/pause — bare icon matching the other controls (44×44 hit area, no chip). */
 .scene-playstate {
   display: grid;
   place-items: center;
   width: 44px;
   height: 44px;
   padding: 0;
-  border: 1px solid #2a2d3d;
-  border-radius: 999px;
-  color: rgba(244, 245, 247, 0.92);
-  background: rgba(28, 28, 28, 0.7);
-  backdrop-filter: blur(6px);
-  font-size: 13px;
+  border: none;
+  background: none;
+  color: rgba(244, 245, 247, 0.7);
   cursor: pointer;
+}
+.scene-playstate svg {
+  width: 18px;
+  height: 18px;
+}
+.scene-playstate:hover {
+  color: rgba(244, 245, 247, 1);
+}
+.scene-playstate:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 .scene-playstate:active {
   transform: scale(0.92);

@@ -325,32 +325,11 @@ export default function App() {
             </p>
           </div>
 
+          {/* Bottom-right cluster: the contextual show-full sits alone on a top row;
+              the two persistent buttons (play · panel) ride a horizontal bottom row
+              pinned to the edge. show-full's appear/disappear only adds/removes the
+              top row, so play/panel never move. */}
           <div className="scene-controls">
-            <button
-              className="scene-playstate"
-              onClick={(e) => {
-                e.currentTarget.blur() // don't retain focus (Space drives play/pause globally)
-                setPlaying((p) => !p)
-              }}
-              disabled={!audioUrl}
-              aria-label={playing ? 'Pause' : 'Play'}
-            >
-              {playing ? '❚❚' : '▶'}
-            </button>
-            <button
-              className="scene-iconbtn"
-              onClick={(e) => {
-                e.currentTarget.blur() // don't retain focus after toggling
-                setPanelOpen((o) => !o)
-              }}
-              aria-pressed={panelOpen}
-              aria-label="Toggle content panel"
-            >
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden>
-                <rect x="3.5" y="5" width="17" height="14" rx="2" stroke="currentColor" strokeWidth="1.6" />
-                <line x1="14" y1="5" x2="14" y2="19" stroke="currentColor" strokeWidth="1.6" />
-              </svg>
-            </button>
             {(page.highlight?.length || page.focus) && (
               <button
                 className="scene-iconbtn"
@@ -372,6 +351,42 @@ export default function App() {
                 </svg>
               </button>
             )}
+            <div className="scene-controls__row">
+              <button
+                className="scene-playstate"
+                onClick={(e) => {
+                  e.currentTarget.blur() // don't retain focus (Space drives play/pause globally)
+                  setPlaying((p) => !p)
+                }}
+                disabled={!audioUrl}
+                aria-label={playing ? 'Pause' : 'Play'}
+              >
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  {playing ? (
+                    <>
+                      <rect x="6" y="5" width="4" height="14" rx="1" />
+                      <rect x="14" y="5" width="4" height="14" rx="1" />
+                    </>
+                  ) : (
+                    <path d="M8 5.5v13a1 1 0 0 0 1.54.84l10-6.5a1 1 0 0 0 0-1.68l-10-6.5A1 1 0 0 0 8 5.5Z" />
+                  )}
+                </svg>
+              </button>
+              <button
+                className="scene-iconbtn"
+                onClick={(e) => {
+                  e.currentTarget.blur() // don't retain focus after toggling
+                  setPanelOpen((o) => !o)
+                }}
+                aria-pressed={panelOpen}
+                aria-label="Toggle content panel"
+              >
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <rect x="3.5" y="5" width="17" height="14" rx="2" stroke="currentColor" strokeWidth="1.6" />
+                  <line x1="14" y1="5" x2="14" y2="19" stroke="currentColor" strokeWidth="1.6" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <div className="scene-progress" onClick={seek}>
