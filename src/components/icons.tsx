@@ -27,6 +27,20 @@ export function PanelIcon() {
   )
 }
 
+// Close ✕ — used by the content panel's dismiss button (matches the scene-iconbtn chrome).
+export function CloseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M6 6l12 12M18 6L6 18"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
 // Expand-to-corners — "fit the whole scene" (show-full / drop the spotlight).
 export function ExpandIcon() {
   return (

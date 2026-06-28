@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 import type { Section } from '../content/notebook.ts'
+import { CloseIcon } from './icons.tsx'
 import './panel.css'
 
 interface RightPanelProps {
@@ -18,8 +19,8 @@ interface RightPanelProps {
 // The content panel for one section: heading + Markdown body (prose, bullets,
 // GFM tables, fenced code). Images are already stripped by the notebook parser.
 // Resizable via the left-edge handle. Paging is owned by ←/→ and the mobile
-// tap-zones, so the panel has no stepper — just a top-right contents list (jump to
-// any slide) and a close button.
+// tap-zones, so the panel has no stepper — the title itself is a dropdown (jump to
+// any slide, mirroring the brand-bar concept switcher) and a bare close icon.
 export function RightPanel({
   section,
   index,
@@ -30,8 +31,9 @@ export function RightPanel({
   onResizeStart,
 }: RightPanelProps) {
   const [tocOpen, setTocOpen] = useState(false)
+  const tocRef = useRef<HTMLDivElement>(null)
 
-  // Esc closes the contents list (then, on a second press, isn't our concern).
+  // Esc closes the section dropdown (then, on a second press, isn't our concern).
   useEffect(() => {
     if (!tocOpen) return
     const onKey = (e: KeyboardEvent) => {
@@ -39,6 +41,16 @@ export function RightPanel({
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
+  }, [tocOpen])
+
+  // Click outside the title/dropdown closes it (matches the brand-bar pickers).
+  useEffect(() => {
+    if (!tocOpen) return
+    const onDown = (e: MouseEvent) => {
+      if (tocRef.current && !tocRef.current.contains(e.target as Node)) setTocOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
   }, [tocOpen])
 
   const jump = (i: number) => {
@@ -50,61 +62,48 @@ export function RightPanel({
     <aside className="panel" style={{ flex: `0 0 ${width}px` }}>
       <div className="panel__resizer" onPointerDown={onResizeStart} />
       <header className="panel__head">
-        <h2 className="panel__title">{section.heading.replace(/`/g, '')}</h2>
-        <div className="panel__head-actions">
+        {/* Title doubles as the section picker — click to drop a list of every
+            slide, mirroring the brand-bar concept dropdown. */}
+        <div className="panel__title-wrap" ref={tocRef}>
           <button
-            className="panel__headbtn"
+            className="panel__title-btn"
             onClick={() => setTocOpen((o) => !o)}
             aria-expanded={tocOpen}
-            aria-label="All slides"
+            aria-label="Jump to section"
           >
-            {/* Contents (bulleted-list) icon — distinct from the brand-bar ☰, which
-                switches modules. This jumps to any slide within the reading. */}
-            <svg viewBox="0 0 24 24" fill="none" width={18} height={18} aria-hidden>
-              <circle cx="5" cy="7" r="1.4" fill="currentColor" />
-              <circle cx="5" cy="12" r="1.4" fill="currentColor" />
-              <circle cx="5" cy="17" r="1.4" fill="currentColor" />
-              <line x1="9" y1="7" x2="19" y2="7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-              <line x1="9" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-              <line x1="9" y1="17" x2="19" y2="17" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-            </svg>
+            <h2 className="panel__title">{section.heading.replace(/`/g, '')}</h2>
+            <span className="panel__title-caret" aria-hidden>▾</span>
           </button>
-          <button className="panel__headbtn" onClick={onClose} aria-label="Close panel">
-            ✕
-          </button>
+          {tocOpen && (
+            <div className="panel__toc" role="menu">
+              <ol className="panel__toc-list">
+                {headings.map((h, i) => (
+                  <li key={i}>
+                    <button
+                      className={i === index ? 'is-active' : undefined}
+                      role="menuitem"
+                      aria-current={i === index ? 'true' : undefined}
+                      onClick={() => jump(i)}
+                    >
+                      <span className="panel__toc-num">{i + 1}</span>
+                      <span className="panel__toc-text">{h.replace(/`/g, '')}</span>
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
         </div>
+        {/* Bare close icon — same chrome as the left scene controls (scene-iconbtn). */}
+        <button className="scene-iconbtn" onClick={onClose} aria-label="Close panel">
+          <CloseIcon />
+        </button>
       </header>
       <article className="panel__body markdown">
         <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
           {section.body}
         </ReactMarkdown>
       </article>
-
-      {tocOpen && (
-        <div className="panel__toc">
-          <div className="panel__toc-head">
-            <span>Contents</span>
-            <button onClick={() => setTocOpen(false)} aria-label="Close contents">
-              ✕
-            </button>
-          </div>
-          <ol className="panel__toc-list">
-            {headings.map((h, i) => (
-              <li key={i}>
-                <button
-                  className={i === index ? 'is-active' : undefined}
-                  aria-current={i === index ? 'true' : undefined}
-                  onClick={() => jump(i)}
-                >
-                  <span className="panel__toc-num">{i + 1}</span>
-                  <span className="panel__toc-text">{h.replace(/`/g, '')}</span>
-                </button>
-              </li>
-            ))}
-          </ol>
-        </div>
-      )}
-
     </aside>
   )
 }

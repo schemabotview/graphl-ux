@@ -50,7 +50,7 @@ export interface Concept {
 }
 
 /** Display order of categories in the concept dropdown; others follow, in catalog order. */
-export const CATEGORY_ORDER = ['Data', 'Languages', 'Engineering', 'Systems']
+export const CATEGORY_ORDER = ['Data', 'Languages', 'Engineering', 'Systems', 'Cloud']
 
 // First-seen order is display order on the home grid.
 export const concepts: Concept[] = [
@@ -127,6 +127,14 @@ export const concepts: Concept[] = [
     blurb: 'Container orchestration from zero to CKA — pods, controllers, services, scheduling, RBAC',
     category: 'Systems',
     contentBaseUrl: 'https://raw.githubusercontent.com/schemabotview/kubernetes-content/main',
+  },
+  {
+    id: 'aws',
+    label: 'AWS',
+    accent: ORANGE,
+    blurb: 'Cloud foundations to the SAA — global infrastructure, IAM, VPC networking, and data engineering',
+    category: 'Cloud',
+    contentBaseUrl: 'https://raw.githubusercontent.com/schemabotview/aws-content/main',
   },
   {
     id: 'databricks-data-engineer',

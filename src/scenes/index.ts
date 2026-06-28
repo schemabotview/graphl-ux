@@ -17,6 +17,10 @@ import { linux } from './linux.ts'
 import { docker } from './docker.ts'
 import { kubernetes } from './kubernetes.ts'
 import { databricksDataEngineer } from './databricks-data-engineer.ts'
+import { awsGlobal } from './aws-global.ts'
+import { awsIam } from './aws-iam.ts'
+import { awsVpc } from './aws-vpc.ts'
+import { awsDataEngineering } from './aws-data-engineering.ts'
 
 // Scene registry: the manifest references scenes by id; this maps id → SceneSpec.
 // Modules run on one dense scene each (01 = spark-execution, 02 = spark-rdd-api);
@@ -84,4 +88,11 @@ export const scenes: Record<string, SceneSpec> = {
   // databricks-data-engineer-content module rides; the manifest frames one subsystem per
   // section via highlight/focus.
   'databricks-data-engineer': databricksDataEngineer,
+  // AWS concept (aws-content). Four faithful NodeMap ports, one per topic the manifest
+  // wires module-by-module: aws-global (module 01 foundations — service/deployment models,
+  // connecting to AWS, Region⊃AZ⊃DC global infra), aws-iam, aws-vpc, aws-data-engineering.
+  'aws-global': awsGlobal,
+  'aws-iam': awsIam,
+  'aws-vpc': awsVpc,
+  'aws-data-engineering': awsDataEngineering,
 }
