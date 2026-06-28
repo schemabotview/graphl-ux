@@ -15,6 +15,7 @@ import { dsa } from './dsa.ts'
 import { sql } from './sql.ts'
 import { linux } from './linux.ts'
 import { docker } from './docker.ts'
+import { kubernetes } from './kubernetes.ts'
 
 // Scene registry: the manifest references scenes by id; this maps id → SceneSpec.
 // Modules run on one dense scene each (01 = spark-execution, 02 = spark-rdd-api);
@@ -68,4 +69,10 @@ export const scenes: Record<string, SceneSpec> = {
   // The single dense scene every docker-content module rides; the manifest frames
   // one subsystem per section via highlight.
   docker: docker,
+  // The whole Kubernetes platform on one wide map (ported from NodeMap's kubernetes.ts):
+  // top spine = Client (kubectl) | Cluster (Control Plane·Worker Node) | Registry; bottom
+  // detail = Workloads | Resources (Storage·Networking·Config) | Operate (Scheduling·RBAC·Security).
+  // The single dense scene every kubernetes-content module rides; the manifest frames
+  // one subsystem per section via highlight/focus.
+  kubernetes: kubernetes,
 }

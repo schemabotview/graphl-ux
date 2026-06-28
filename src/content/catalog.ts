@@ -120,6 +120,14 @@ export const concepts: Concept[] = [
     category: 'Systems',
     contentBaseUrl: 'https://raw.githubusercontent.com/schemabotview/docker-content/main',
   },
+  {
+    id: 'kubernetes',
+    label: 'Kubernetes',
+    accent: BLUE,
+    blurb: 'Container orchestration from zero to CKA — pods, controllers, services, scheduling, RBAC',
+    category: 'Systems',
+    contentBaseUrl: 'https://raw.githubusercontent.com/schemabotview/kubernetes-content/main',
+  },
 ]
 
 /** Look up a concept by id (hash slug). */
