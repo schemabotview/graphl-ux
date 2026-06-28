@@ -49,5 +49,14 @@ export function useNarration(pageIdx: number) {
     a.currentTime = ((e.clientX - rect.left) / rect.width) * a.duration
   }
 
-  return { audioRef, playing, setPlaying, progress, seek, onTimeUpdate }
+  // Nudge the clip by `delta` seconds (keyboard < / >), clamped to the clip; no-ops
+  // when no clip is loaded. Updates progress immediately so the fill tracks the seek.
+  const nudge = (delta: number) => {
+    const a = audioRef.current
+    if (!a || !a.duration) return
+    a.currentTime = Math.min(a.duration, Math.max(0, a.currentTime + delta))
+    setProgress(a.currentTime / a.duration)
+  }
+
+  return { audioRef, playing, setPlaying, progress, seek, nudge, onTimeUpdate }
 }

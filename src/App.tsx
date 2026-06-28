@@ -28,7 +28,7 @@ export default function App() {
   const { panelOpen, setPanelOpen, panelWidth, startResize } = usePanelPrefs()
   const [showFull, setShowFull] = useState(false)
 
-  const { audioRef, playing, setPlaying, progress, seek, onTimeUpdate } = useNarration(pageIdx)
+  const { audioRef, playing, setPlaying, progress, seek, nudge, onTimeUpdate } = useNarration(pageIdx)
 
   useEffect(() => setShowFull(false), [pageIdx])
 
@@ -42,6 +42,8 @@ export default function App() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight') setPageIdx((i) => Math.min(pages.length - 1, i + 1))
       else if (e.key === 'ArrowLeft') setPageIdx((i) => Math.max(0, i - 1))
+      else if (e.key === ',' || e.key === '<') nudge(-5)
+      else if (e.key === '.' || e.key === '>') nudge(5)
       else if (e.key === ' ' || e.code === 'Space') {
         e.preventDefault()
         setPlaying((p) => !p)
