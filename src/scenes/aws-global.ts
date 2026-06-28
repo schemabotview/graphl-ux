@@ -33,9 +33,9 @@ const wgrid = (spec: WeightedSpec, children: WeightedSeed[]): PatternResult => (
 const serviceStack = group(
   'awsf-svc-stack',
   wgrid({ cols: [1], rows: [1, 1, 1], gap: 0.14, padding: 0.04 }, [
-    { node: chip('awsf-svc-saas', 'SaaS', ORANGE, 'software'), at: [0, 0] },
-    { node: chip('awsf-svc-paas', 'PaaS', ORANGE, 'OS + runtime'), at: [0, 1] },
-    { node: chip('awsf-svc-iaas', 'IaaS', ORANGE, 'hardware'), at: [0, 2] },
+    { node: chip('awsf-svc-saas', 'SaaS', ORANGE), at: [0, 0] },
+    { node: chip('awsf-svc-paas', 'PaaS', ORANGE), at: [0, 1] },
+    { node: chip('awsf-svc-iaas', 'IaaS', ORANGE), at: [0, 2] },
   ]),
 )
 
@@ -125,9 +125,9 @@ const deploymentModels = container(
 const doors = group(
   'awsf-conn-doors',
   wgrid({ cols: [1], rows: [1, 1, 1], gap: 0.14, padding: 0.04 }, [
-    { node: chip('awsf-conn-console', 'Console', YELLOW, 'user / password → session token'), at: [0, 0] },
-    { node: chip('awsf-conn-cli', 'CLI', YELLOW, 'access key + secret (SSO temp token)'), at: [0, 1] },
-    { node: chip('awsf-conn-sdk', 'SDK', YELLOW, 'access key + secret (SSO temp token)'), at: [0, 2] },
+    { node: chip('awsf-conn-console', 'Console', YELLOW), at: [0, 0] },
+    { node: chip('awsf-conn-cli', 'CLI', YELLOW), at: [0, 1] },
+    { node: chip('awsf-conn-sdk', 'SDK', YELLOW), at: [0, 2] },
   ]),
 )
 

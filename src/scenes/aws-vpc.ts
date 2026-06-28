@@ -12,12 +12,17 @@ import { BLUE, GRAY, GREEN, ORANGE, PURPLE, RED, TEAL } from '../engine/colors.t
 // and an SG once per resource. This is the dense scene module 06 (VPC & Connectivity)
 // rides; the manifest frames one hop per section via highlight/focus. Faithful
 // transcription: same node ids (`ans-*`), same colors, same weighted tracks.
+//
+// Note: the source carried a descriptive subtitle on each leaf (e.g. "stateless · allow
+// + deny"). graphl-ux renders a leaf `sub` at a fixed size that overflows these narrow
+// cells, and the other ports (kubernetes/docker/linux) carry no leaf subs — so that
+// detail lives in the notebook/narration here, and the nodes keep just their labels.
 
-/** A NodeMap bare titled leaf → graphl-ux `symbol`: glyph + label (+ optional sub). */
-const comp = (id: string, label: string, color: string, sub?: string): NodeSeed => ({ id, label, color, kind: 'symbol', sub })
+/** A NodeMap bare titled leaf → graphl-ux `symbol`: glyph + label. */
+const comp = (id: string, label: string, color: string): NodeSeed => ({ id, label, color, kind: 'symbol' })
 
 /** A NodeMap `term()` chip → graphl-ux `term`: a filled chip whose text IS the concept. */
-const chip = (id: string, label: string, color: string, sub?: string): NodeSeed => ({ id, label, color, kind: 'term', sub })
+const chip = (id: string, label: string, color: string): NodeSeed => ({ id, label, color, kind: 'term' })
 
 const wgrid = (spec: WeightedSpec, children: WeightedSeed[]): PatternResult => ({
   grid: spec,
@@ -29,10 +34,10 @@ const wgrid = (spec: WeightedSpec, children: WeightedSeed[]): PatternResult => (
 const publicSubnet = container(
   { id: 'ans-public-subnet', label: 'Public Subnet', color: TEAL },
   wgrid({ cols: [1, 1, 1, 1], rows: [1], gap: 0.3, padding: 0.32 }, [
-    { node: comp('ans-nacl-public', 'NACL — public', ORANGE, 'stateless · allow + deny'), at: [0, 0] },
-    { node: comp('ans-nlb', 'NLB', PURPLE, 'L4 · static IP · no SG'), at: [1, 0] },
-    { node: comp('ans-sg-alb', 'SG: ALB SG', RED, 'in 443 from 0.0.0.0/0'), at: [2, 0] },
-    { node: comp('ans-alb', 'ALB', BLUE, 'L7 · path routing · TLS'), at: [3, 0] },
+    { node: comp('ans-nacl-public', 'NACL — public', ORANGE), at: [0, 0] },
+    { node: comp('ans-nlb', 'NLB', PURPLE), at: [1, 0] },
+    { node: comp('ans-sg-alb', 'SG: ALB SG', RED), at: [2, 0] },
+    { node: comp('ans-alb', 'ALB', BLUE), at: [3, 0] },
   ]),
 )
 
@@ -41,8 +46,8 @@ const publicSubnet = container(
 const asgA = container(
   { id: 'ans-asg-a', label: 'ASG — AZ-A', color: TEAL },
   wgrid({ cols: [1, 1], rows: [1, 1], gap: 0.2, padding: 0.25 }, [
-    { node: comp('ans-ec2-a1', 'EC2', GREEN, 'i-001'), at: [0, 0] },
-    { node: comp('ans-ec2-a2', 'EC2', GREEN, 'i-002'), at: [1, 0] },
+    { node: comp('ans-ec2-a1', 'EC2', GREEN), at: [0, 0] },
+    { node: comp('ans-ec2-a2', 'EC2', GREEN), at: [1, 0] },
     { node: chip('ans-ec2-a-launching', 'launching…', PURPLE), at: [0, 1, 2, 1] },
   ]),
 )
@@ -50,8 +55,8 @@ const asgA = container(
 const privateSubnetA = container(
   { id: 'ans-private-a', label: 'Private Subnet AZ-A', color: TEAL },
   wgrid({ cols: [1], rows: [0.55, 0.55, 2.2], gap: 0.22, padding: 0.3 }, [
-    { node: comp('ans-nacl-a', 'NACL — AZ-A', ORANGE, 'stateless · deny bad IPs'), at: [0, 0] },
-    { node: comp('ans-sg-ec2-a', 'SG: EC2 SG', RED, 'in 80 from ALB SG only'), at: [0, 1] },
+    { node: comp('ans-nacl-a', 'NACL — AZ-A', ORANGE), at: [0, 0] },
+    { node: comp('ans-sg-ec2-a', 'SG: EC2 SG', RED), at: [0, 1] },
     { node: asgA, at: [0, 2] },
   ]),
 )
@@ -61,8 +66,8 @@ const privateSubnetA = container(
 const asgB = container(
   { id: 'ans-asg-b', label: 'ASG — AZ-B', color: TEAL },
   wgrid({ cols: [1, 1], rows: [1, 1], gap: 0.2, padding: 0.25 }, [
-    { node: comp('ans-ec2-b1', 'EC2', GREEN, 'i-003'), at: [0, 0] },
-    { node: comp('ans-ec2-b2', 'EC2', GREEN, 'i-004'), at: [1, 0] },
+    { node: comp('ans-ec2-b1', 'EC2', GREEN), at: [0, 0] },
+    { node: comp('ans-ec2-b2', 'EC2', GREEN), at: [1, 0] },
     { node: chip('ans-ec2-b-terminating', 'terminating…', ORANGE), at: [0, 1, 2, 1] },
   ]),
 )
@@ -70,8 +75,8 @@ const asgB = container(
 const privateSubnetB = container(
   { id: 'ans-private-b', label: 'Private Subnet AZ-B', color: TEAL },
   wgrid({ cols: [1], rows: [0.55, 0.55, 2.2], gap: 0.22, padding: 0.3 }, [
-    { node: comp('ans-nacl-b', 'NACL — AZ-B', ORANGE, 'stateless · deny bad IPs'), at: [0, 0] },
-    { node: comp('ans-sg-ec2-b', 'SG: EC2 SG', RED, 'in 80 from ALB SG only'), at: [0, 1] },
+    { node: comp('ans-nacl-b', 'NACL — AZ-B', ORANGE), at: [0, 0] },
+    { node: comp('ans-sg-ec2-b', 'SG: EC2 SG', RED), at: [0, 1] },
     { node: asgB, at: [0, 2] },
   ]),
 )
@@ -99,7 +104,7 @@ const vpc = container(
 const awsCloud = container(
   { id: 'ans-aws-cloud', label: 'AWS Cloud', color: ORANGE },
   wgrid({ cols: [1], rows: [0.7, 8], gap: 0.45, padding: 0.45 }, [
-    { node: comp('ans-igw', 'Internet Gateway (IGW)', GRAY, 'VPC entry point'), at: [0, 0] },
+    { node: comp('ans-igw', 'Internet Gateway (IGW)', GRAY), at: [0, 0] },
     { node: vpc, at: [0, 1] },
   ]),
 )

@@ -150,7 +150,7 @@ const callerSide = container(
   { id: 'caller-side', label: 'Caller — GitHub Actions', color: BLUE },
   wgrid({ cols: [1], rows: [1, 1], gap: 0.18, padding: 0.22 }, [
     { node: chip('oidc-token', 'OIDC token', PURPLE), at: [0, 0] },
-    { node: chip('identity-policy', 'identity policy', YELLOW, 'identity-based'), at: [0, 1] },
+    { node: chip('identity-policy', 'identity policy', YELLOW), at: [0, 1] },
   ]),
 )
 
@@ -164,8 +164,8 @@ const stsMediator = container(
 const roleSide = container(
   { id: 'role-side', label: 'DeployerRole — acct-prod', color: RED },
   wgrid({ cols: [1], rows: [1, 1, 1], gap: 0.18, padding: 0.22 }, [
-    { node: chip('trust-policy', 'trust policy', YELLOW, 'resource-based'), at: [0, 0] },
-    { node: chip('perm-policy', 'perm policy', YELLOW, 'identity-based'), at: [0, 1] },
+    { node: chip('trust-policy', 'trust policy', YELLOW), at: [0, 0] },
+    { node: chip('perm-policy', 'perm policy', YELLOW), at: [0, 1] },
     { node: comp('target-infra', 'target infra', GREEN), at: [0, 2] },
   ]),
 )
