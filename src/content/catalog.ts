@@ -128,6 +128,14 @@ export const concepts: Concept[] = [
     category: 'Systems',
     contentBaseUrl: 'https://raw.githubusercontent.com/schemabotview/kubernetes-content/main',
   },
+  {
+    id: 'databricks-data-engineer',
+    label: 'Databricks Data Engineer',
+    accent: ORANGE,
+    blurb: 'Lakehouse from zero to the DE Associate exam — Delta, Unity Catalog, Lakeflow, medallion',
+    category: 'Data',
+    contentBaseUrl: 'https://raw.githubusercontent.com/schemabotview/databricks-data-engineer-content/main',
+  },
 ]
 
 /** Look up a concept by id (hash slug). */
