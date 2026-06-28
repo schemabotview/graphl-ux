@@ -42,8 +42,10 @@ body.resizing {
    switcher); the dropdown anchors to this wrapper. */
 .panel__title-wrap {
   position: relative;
+  /* Grow to claim the header's free space so a short heading shows in full;
+     min-width: 0 still lets it shrink + ellipsis-truncate a genuinely long one. */
+  flex: 1 1 auto;
   min-width: 0;
-  max-width: 100%;
 }
 .panel__title-btn {
   display: inline-flex;
@@ -90,9 +92,10 @@ body.resizing {
   top: calc(100% + 8px);
   left: 0;
   z-index: 8;
-  /* Size to the section list, at least as wide as the title, capped to the panel. */
+  /* Size to the section list (not the now-full-width title wrapper), with a floor
+     so short lists still read as a menu, capped to the panel. */
   width: max-content;
-  min-width: 100%;
+  min-width: 240px;
   max-width: min(420px, 80vw);
   max-height: 60vh;
   overflow-y: auto;
