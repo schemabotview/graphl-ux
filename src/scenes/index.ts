@@ -16,6 +16,7 @@ import { sql } from './sql.ts'
 import { linux } from './linux.ts'
 import { docker } from './docker.ts'
 import { kubernetes } from './kubernetes.ts'
+import { databricksDataEngineer } from './databricks-data-engineer.ts'
 
 // Scene registry: the manifest references scenes by id; this maps id → SceneSpec.
 // Modules run on one dense scene each (01 = spark-execution, 02 = spark-rdd-api);
@@ -75,4 +76,12 @@ export const scenes: Record<string, SceneSpec> = {
   // The single dense scene every kubernetes-content module rides; the manifest frames
   // one subsystem per section via highlight/focus.
   kubernetes: kubernetes,
+  // The whole Databricks Data Intelligence Platform on one wide map (ported from
+  // NodeMap's databricks-data-engineer.ts): four columns left→right — Sources
+  // (Batch·Streams) → Connectivity (Lakeflow Connect·Federation) → Data Intelligence
+  // Platform (Lakeflow Jobs·Medallion·Workspace+Compute·Foundation [Delta·Engine·Unity
+  // Catalog]·Cloud Storage) → Consumers (BI·Apps·Sharing). The single dense scene every
+  // databricks-data-engineer-content module rides; the manifest frames one subsystem per
+  // section via highlight/focus.
+  'databricks-data-engineer': databricksDataEngineer,
 }
