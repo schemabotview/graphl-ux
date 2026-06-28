@@ -39,6 +39,10 @@ const P = 0.3
 /** A NodeMap `term`-kind leaf → graphl-ux `term`: a filled chip whose text IS the concept. */
 const chip = (id: string, label: string, color: string): NodeSeed => ({ id, label, color, kind: 'term' })
 
+/** A graphl-ux `symbol`: glyph + label — used for the outer Sources / Consumers, which
+ *  are external systems (a thing you point at) rather than in-platform concepts. */
+const comp = (id: string, label: string, color: string): NodeSeed => ({ id, label, color, kind: 'symbol' })
+
 /** Native weighted-track authoring: the grid carries relative track WEIGHTS and each
  *  child's `at` becomes its `cell`, indexing those tracks 1:1 (engine resolves arrays). */
 const wgrid = (spec: WeightedSpec, children: WeightedSeed[]): PatternResult => ({
@@ -55,10 +59,10 @@ const sources = container(
       node: container(
         { id: 'batch-sources', label: 'Batch', color: GRAY },
         wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: 0.15, padding: 0.08 }, [
-          { node: chip('src-files', 'Files', GRAY), at: [0, 0] },
-          { node: chip('src-rdbms', 'RDBMS', GRAY), at: [0, 1] },
-          { node: chip('src-apis', 'APIs', GRAY), at: [0, 2] },
-          { node: chip('src-saas', 'SaaS', GRAY), at: [0, 3] },
+          { node: comp('src-files', 'Files', GRAY), at: [0, 0] },
+          { node: comp('src-rdbms', 'RDBMS', GRAY), at: [0, 1] },
+          { node: comp('src-apis', 'APIs', GRAY), at: [0, 2] },
+          { node: comp('src-saas', 'SaaS', GRAY), at: [0, 3] },
         ]),
       ),
       at: [0, 0],
@@ -67,10 +71,10 @@ const sources = container(
       node: container(
         { id: 'stream-sources', label: 'Streams', color: TEAL },
         wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: 0.15, padding: 0.08 }, [
-          { node: chip('src-kafka', 'Kafka', TEAL), at: [0, 0] },
-          { node: chip('src-kinesis', 'Kinesis', TEAL), at: [0, 1] },
-          { node: chip('src-eventhubs', 'Event Hubs', TEAL), at: [0, 2] },
-          { node: chip('src-pubsub', 'Pub/Sub', TEAL), at: [0, 3] },
+          { node: comp('src-kafka', 'Kafka', TEAL), at: [0, 0] },
+          { node: comp('src-kinesis', 'Kinesis', TEAL), at: [0, 1] },
+          { node: comp('src-eventhubs', 'Event Hubs', TEAL), at: [0, 2] },
+          { node: comp('src-pubsub', 'Pub/Sub', TEAL), at: [0, 3] },
         ]),
       ),
       at: [0, 1],
@@ -256,15 +260,15 @@ const consumers = container(
       node: container(
         { id: 'bi', label: 'BI', color: GREEN },
         wgrid({ cols: [1], rows: [1, 1, 1], gap: 0.15, padding: 0.08 }, [
-          { node: chip('tableau', 'Tableau', GREEN), at: [0, 0] },
-          { node: chip('power-bi', 'Power BI', GREEN), at: [0, 1] },
-          { node: chip('looker', 'Looker', GREEN), at: [0, 2] },
+          { node: comp('tableau', 'Tableau', GREEN), at: [0, 0] },
+          { node: comp('power-bi', 'Power BI', GREEN), at: [0, 1] },
+          { node: comp('looker', 'Looker', GREEN), at: [0, 2] },
         ]),
       ),
       at: [0, 0],
     },
-    { node: chip('databricks-apps', 'Databricks Apps', GREEN), at: [0, 1] },
-    { node: chip('delta-sharing', 'Delta Sharing', TEAL), at: [0, 2] },
+    { node: comp('databricks-apps', 'Databricks Apps', GREEN), at: [0, 1] },
+    { node: comp('delta-sharing', 'Delta Sharing', TEAL), at: [0, 2] },
   ]),
 )
 
