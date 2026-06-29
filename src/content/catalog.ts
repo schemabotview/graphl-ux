@@ -140,6 +140,14 @@ export const concepts: Concept[] = [
     contentBaseUrl: 'https://raw.githubusercontent.com/schemabotview/aws-content/main',
   },
   {
+    id: 'azure',
+    label: 'Azure',
+    accent: BLUE,
+    blurb: 'Cloud foundations to the AZ-104 — global infrastructure, Entra ID & governance, VNet networking',
+    category: 'Cloud',
+    contentBaseUrl: 'https://raw.githubusercontent.com/schemabotview/azure-content/main',
+  },
+  {
     id: 'databricks-data-engineer',
     label: 'Databricks Data Engineer',
     accent: ORANGE,

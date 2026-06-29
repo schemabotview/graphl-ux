@@ -21,6 +21,9 @@ import { awsGlobal } from './aws-global.ts'
 import { awsIam } from './aws-iam.ts'
 import { awsVpc } from './aws-vpc.ts'
 import { awsDataEngineering } from './aws-data-engineering.ts'
+import { azureFundamentals } from './azure-fundamentals.ts'
+import { azureIdentityGovernance } from './azure-identity-governance.ts'
+import { azureNetworkTraffic } from './azure-network-traffic.ts'
 
 // Scene registry: the manifest references scenes by id; this maps id → SceneSpec.
 // Modules run on one dense scene each (01 = spark-execution, 02 = spark-rdd-api);
@@ -95,4 +98,13 @@ export const scenes: Record<string, SceneSpec> = {
   'aws-iam': awsIam,
   'aws-vpc': awsVpc,
   'aws-data-engineering': awsDataEngineering,
+  // Azure concept (azure-content). Three faithful NodeMap ports, one per topic the
+  // manifest wires module-by-module: azure-fundamentals (module 01 foundations —
+  // service/deployment models, connecting to Azure via ARM, Geography ⊃ Region ⊃ Zone ⊃
+  // DC global infra), azure-identity-governance (module 02 — Entra tenant, ARM scope
+  // ladder, enforcement planes, workload identity federation), azure-network-traffic
+  // (module 06 — Front Door → VNet → AGW subnet → zonal app subnets; NSG vs ASG).
+  'azure-fundamentals': azureFundamentals,
+  'azure-identity-governance': azureIdentityGovernance,
+  'azure-network-traffic': azureNetworkTraffic,
 }
