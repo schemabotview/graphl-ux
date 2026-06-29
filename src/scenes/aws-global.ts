@@ -203,7 +203,7 @@ const rightCol = group(
 
 const root: SceneNodeSpec = group(
   'awsf-root',
-  wgrid({ cols: [1, 1], rows: [1], gap: 0.5, padding: 0.04 }, [
+  wgrid({ cols: [1, 1], rows: [1], gap: 0.14, padding: 0.04 }, [
     { node: leftCol, at: [0, 0] },
     { node: rightCol, at: [1, 0] },
   ]),

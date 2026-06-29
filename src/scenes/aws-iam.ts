@@ -31,12 +31,14 @@ const wgrid = (spec: WeightedSpec, children: WeightedSeed[]): PatternResult => (
 
 const anatomyBanner = container(
   { id: 'anatomy-banner', label: 'Anatomy of every AWS account', color: GRAY },
-  wgrid({ cols: [1, 1, 1, 1, 1], rows: [1], gap: 0.3, padding: 0.32 }, [
-    { node: comp('anat-root', 'root', GRAY), at: [0, 0] },
-    { node: comp('anat-users', 'users / groups', BLUE), at: [1, 0] },
-    { node: comp('anat-roles', 'roles', RED), at: [2, 0] },
-    { node: comp('anat-policies', 'identity policies', YELLOW), at: [3, 0] },
-    { node: comp('anat-resources', 'resources', GREEN), at: [4, 0] },
+  // Empty weighted gutter columns (2.5 each) on the ends pull the five legend
+  // glyphs into a tighter centered cluster instead of stretching them edge-to-edge.
+  wgrid({ cols: [2.5, 1, 1, 1, 1, 1, 2.5], rows: [1], gap: 0.3, padding: 0.32 }, [
+    { node: comp('anat-root', 'root', GRAY), at: [1, 0] },
+    { node: comp('anat-users', 'users / groups', BLUE), at: [2, 0] },
+    { node: comp('anat-roles', 'roles', RED), at: [3, 0] },
+    { node: comp('anat-policies', 'identity policies', YELLOW), at: [4, 0] },
+    { node: comp('anat-resources', 'resources', GREEN), at: [5, 0] },
   ]),
 )
 
@@ -138,7 +140,10 @@ const workloadRolesBand = container(
 
 const workloadAcct = container(
   { id: 'workload-acct', label: 'Inside a Workload Account', color: ORANGE },
-  wgrid({ cols: [1], rows: [1, 1.4], gap: 0.25, padding: 0.32 }, [
+  // Single-column stack: padding is a fraction of the lone column, so a large value
+  // becomes a huge side gutter (~19%/side at 0.32). Keep it small so the bands fill
+  // the box width — matching the handshake's ~7% horizontal padding.
+  wgrid({ cols: [1], rows: [1, 1.4], gap: 0.25, padding: 0.08 }, [
     { node: trustRolesBand, at: [0, 0] },
     { node: workloadRolesBand, at: [0, 1] },
   ]),
@@ -211,8 +216,9 @@ export const awsIam: SceneSpec = {
   topic: 'aws',
   title: 'AWS IAM — identities, roles & policy evaluation',
   subtitle: 'Organizations → accounts → roles · the assume-role handshake · policy evaluation',
-  // The source map's 30×18 frame (≈1.67:1).
-  canvas: { width: 1440, height: 864 },
+  // The source map's 30×18 frame; narrowed to 1280 (≈1.48:1) so the map packs
+  // tighter horizontally instead of stretching across the full 16:9 viewport.
+  canvas: { width: 1280, height: 864 },
   grid: { cols: 1, rows: 1, gap: 0, padding: 0.05 },
   nodes: [root],
   edges: [
