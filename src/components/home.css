@@ -6,7 +6,7 @@
   height: 100%;
   overflow-y: auto;
   background: var(--bg);
-  padding: 64px 20px 48px;
+  padding: 36px 20px 32px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -14,7 +14,7 @@
 
 .home__hero {
   text-align: center;
-  margin-bottom: 36px;
+  margin-bottom: 24px;
 }
 
 .home__glyph {
@@ -35,20 +35,33 @@
   color: #9aa3b2;
 }
 
+/* One category bucket (heading + its card grid). */
+.home__section {
+  width: 100%;
+  max-width: 720px;
+  margin-bottom: 20px;
+}
+.home__section:last-child {
+  margin-bottom: 0;
+}
+
+.home__section-title {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7c8595;
+}
+
 .home__grid {
   list-style: none;
   margin: 0;
   padding: 0;
   width: 100%;
-  max-width: 640px;
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 14px;
-}
-@media (min-width: 560px) {
-  .home__grid {
-    grid-template-columns: 1fr 1fr;
-  }
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
 }
 
 /* Card: subtle accent fill over the base + a solid accent left edge (a filled
@@ -57,12 +70,11 @@
   width: 100%;
   text-align: left;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 18px 20px;
+  align-items: center;
+  padding: 12px 14px;
   border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--bg));
   border-left: 3px solid var(--accent);
-  border-radius: 14px;
+  border-radius: 10px;
   background: color-mix(in srgb, var(--accent) 12%, var(--bg));
   color: #f1f2f4;
   cursor: pointer;
@@ -82,12 +94,8 @@
 }
 
 .home__card-label {
-  font-size: 19px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 600;
   letter-spacing: -0.01em;
-}
-
-.home__card-blurb {
-  font-size: 13px;
-  color: #9aa3b2;
+  line-height: 1.25;
 }

@@ -1,4 +1,4 @@
-import { concepts } from '../content/catalog.ts'
+import { buildConceptMenu } from '../content/catalog.ts'
 import { navigate } from '../router.ts'
 import './home.css'
 
@@ -19,21 +19,26 @@ export function Home() {
         <p className="home__tagline">Pick a concept to start learning</p>
       </header>
 
-      <ul className="home__grid">
-        {concepts.map((c) => (
-          <li key={c.id}>
-            <button
-              type="button"
-              className="home__card"
-              style={{ '--accent': c.accent } as React.CSSProperties}
-              onClick={() => navigate(c.id)}
-            >
-              <span className="home__card-label">{c.label}</span>
-              {c.blurb && <span className="home__card-blurb">{c.blurb}</span>}
-            </button>
-          </li>
-        ))}
-      </ul>
+      {buildConceptMenu().map((cat) => (
+        <section key={cat.label} className="home__section">
+          <h2 className="home__section-title">{cat.label}</h2>
+          <ul className="home__grid">
+            {cat.concepts.map((c) => (
+              <li key={c.id}>
+                <button
+                  type="button"
+                  className="home__card"
+                  style={{ '--accent': c.accent } as React.CSSProperties}
+                  onClick={() => navigate(c.id)}
+                  title={c.blurb}
+                >
+                  <span className="home__card-label">{c.label}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
     </main>
   )
 }

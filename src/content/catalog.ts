@@ -49,8 +49,11 @@ export interface Concept {
   contentBaseUrl: string
 }
 
-/** Display order of categories in the concept dropdown; others follow, in catalog order. */
-export const CATEGORY_ORDER = ['Data', 'Languages', 'Engineering', 'Systems', 'Cloud']
+// Display order of categories, top → bottom on the home grid (and in the
+// brand-bar dropdown): ML/AI at the top, Systems at the bottom. Others follow,
+// in catalog order. ('ML/AI' has no concepts yet — listed so it slots in first
+// the moment one is added.)
+export const CATEGORY_ORDER = ['ML/AI', 'Data', 'Languages', 'Cloud', 'Engineering', 'Systems']
 
 // First-seen order is display order on the home grid.
 export const concepts: Concept[] = [
