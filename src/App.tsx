@@ -10,6 +10,7 @@ import { Header } from './components/Header.tsx'
 import { ReelCaption } from './components/ReelCaption.tsx'
 import { ReelControls } from './components/ReelControls.tsx'
 import { TapZones } from './components/TapZones.tsx'
+import { ScrubBar } from './components/ScrubBar.tsx'
 import { usePanelPrefs } from './hooks/usePanelPrefs.ts'
 import { useNarration } from './hooks/useNarration.ts'
 import { useContentNav } from './hooks/useContentNav.ts'
@@ -28,7 +29,7 @@ export default function App() {
   const { panelOpen, setPanelOpen, panelWidth, startResize } = usePanelPrefs()
   const [showFull, setShowFull] = useState(false)
 
-  const { audioRef, playing, setPlaying, progress, seek, nudge, onTimeUpdate } = useNarration(pageIdx)
+  const { audioRef, playing, setPlaying, progress, seekToFraction, nudge, onTimeUpdate } = useNarration(pageIdx)
 
   useEffect(() => setShowFull(false), [pageIdx])
 
@@ -137,9 +138,7 @@ export default function App() {
             onTogglePanel={() => setPanelOpen((o) => !o)}
           />
 
-          <div className="scene-progress" onClick={seek}>
-            <div className="scene-progress__fill" style={{ width: `${progress * 100}%` }} />
-          </div>
+          <ScrubBar progress={progress} onSeek={seekToFraction} />
 
           <audio
             ref={audioRef}

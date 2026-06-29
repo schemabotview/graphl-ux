@@ -446,18 +446,37 @@ body {
   transform: scale(0.92);
 }
 
-/* Thin progress line pinned to the very bottom edge. */
-.scene-progress {
+/* Narration scrub bar: a thin line pinned to the bottom edge inside a taller
+   transparent hit zone so it's easy to grab; click or drag to seek. */
+.scene-scrub {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 3px;
+  height: 16px;
   z-index: 6;
-  background: rgba(255, 255, 255, 0.16);
+  display: flex;
+  align-items: flex-end;
+  cursor: pointer;
+  touch-action: none;
 }
-.scene-progress__fill {
+.scene-scrub__track {
+  position: relative;
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.16);
+  transition: height 120ms ease;
+}
+.scene-scrub:hover .scene-scrub__track,
+.scene-scrub--dragging .scene-scrub__track {
+  height: 6px;
+}
+.scene-scrub__fill {
   height: 100%;
   background: rgba(255, 255, 255, 0.9);
   transition: width 120ms linear;
+}
+/* While dragging the fill should snap to the pointer, not ease behind it. */
+.scene-scrub--dragging .scene-scrub__fill {
+  transition: none;
 }

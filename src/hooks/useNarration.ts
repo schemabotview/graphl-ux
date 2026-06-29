@@ -41,12 +41,15 @@ export function useNarration(pageIdx: number) {
     setProgress(a.duration > 0 ? a.currentTime / a.duration : 0)
   }
 
-  // Click the progress bar to seek: map the click x to a fraction of the duration.
-  const seek = (e: React.MouseEvent<HTMLDivElement>) => {
+  // Seek to an absolute fraction (0..1) of the clip — the scrub bar reports this
+  // for both click and drag. Clamped, and updates progress immediately so the
+  // fill tracks the pointer rather than waiting on the next timeupdate.
+  const seekToFraction = (fraction: number) => {
     const a = audioRef.current
     if (!a || !a.duration) return
-    const rect = e.currentTarget.getBoundingClientRect()
-    a.currentTime = ((e.clientX - rect.left) / rect.width) * a.duration
+    const f = Math.min(1, Math.max(0, fraction))
+    a.currentTime = f * a.duration
+    setProgress(f)
   }
 
   // Nudge the clip by `delta` seconds (keyboard < / >), clamped to the clip; no-ops
@@ -58,5 +61,5 @@ export function useNarration(pageIdx: number) {
     setProgress(a.currentTime / a.duration)
   }
 
-  return { audioRef, playing, setPlaying, progress, seek, nudge, onTimeUpdate }
+  return { audioRef, playing, setPlaying, progress, seekToFraction, nudge, onTimeUpdate }
 }
