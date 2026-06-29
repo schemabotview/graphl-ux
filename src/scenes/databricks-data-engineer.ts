@@ -92,9 +92,9 @@ const connectivity = container(
       node: container(
         { id: 'lakeflow-connect', label: 'Lakeflow Connect', color: BLUE },
         wgrid({ cols: [1], rows: [1, 1, 1], gap: 0.15, padding: 0.08 }, [
-          { node: chip('auto-loader', 'Auto Loader', BLUE), at: [0, 0] },
-          { node: chip('copy-into', 'COPY INTO', BLUE), at: [0, 1] },
-          { node: chip('connectors', 'Connectors', BLUE), at: [0, 2] },
+          { node: comp('auto-loader', 'Auto Loader', BLUE), at: [0, 0] },
+          { node: comp('copy-into', 'COPY INTO', BLUE), at: [0, 1] },
+          { node: comp('connectors', 'Connectors', BLUE), at: [0, 2] },
         ]),
       ),
       at: [0, 1],
