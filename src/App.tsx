@@ -23,15 +23,29 @@ export default function App() {
   const route = useRoute()
   const concept = conceptById(route.concept)
 
-  const { pages, allModules, status, error, pageIdx, setPageIdx, goto } =
-    useContentNav(concept, route.module, route.section)
+  const {
+    allModules,
+    modulePages,
+    page,
+    pageInModule,
+    status,
+    error,
+    next,
+    prev,
+    canPrev,
+    canNext,
+    atModuleEnd,
+    gotoInModule,
+  } = useContentNav(concept, route.module, route.section)
 
   const { panelOpen, setPanelOpen, panelWidth, startResize } = usePanelPrefs()
   const [showFull, setShowFull] = useState(false)
 
-  const { audioRef, playing, setPlaying, progress, seekToFraction, nudge, onTimeUpdate } = useNarration(pageIdx)
+  // Per-page identity drives the narration clip reset (no global index any more).
+  const pageKey = page ? `${page.moduleId}:${page.slug}` : ''
+  const { audioRef, playing, setPlaying, progress, seekToFraction, nudge, onTimeUpdate } = useNarration(pageKey)
 
-  useEffect(() => setShowFull(false), [pageIdx])
+  useEffect(() => setShowFull(false), [pageKey])
 
   const [showHint, setShowHint] = useState(true)
   useEffect(() => {
@@ -41,8 +55,8 @@ export default function App() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight') setPageIdx((i) => Math.min(pages.length - 1, i + 1))
-      else if (e.key === 'ArrowLeft') setPageIdx((i) => Math.max(0, i - 1))
+      if (e.key === 'ArrowRight') next()
+      else if (e.key === 'ArrowLeft') prev()
       else if (e.key === ',' || e.key === '<') nudge(-5)
       else if (e.key === '.' || e.key === '>') nudge(5)
       else if (e.key === ' ' || e.code === 'Space') {
@@ -52,9 +66,8 @@ export default function App() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [pages.length])
+  }, [next, prev, nudge, setPlaying])
 
-  const page = pages[pageIdx]
   const scene = page ? (scenes[page.sceneId] ?? Object.values(scenes)[0]) : undefined
 
   if (route.concept === 'preview' && scenes[route.module]) {
@@ -89,8 +102,9 @@ export default function App() {
   const audioUrl = audioPath ? contentUrl(audioPath, concept.contentBaseUrl) : undefined
 
   const handleClipEnded = () => {
-    const next = pageIdx + 1
-    if (next < pages.length && pages[next].moduleId === page.moduleId) setPageIdx(next)
+    // Hands-free playthrough, bounded to the current module: advance within the module
+    // on clip end, but stop at its last page rather than crossing the boundary.
+    if (!atModuleEnd) next()
     else setPlaying(false)
   }
 
@@ -110,13 +124,13 @@ export default function App() {
           <Header concept={concept} modules={allModules} activeModuleId={page.moduleId} />
 
           <TapZones
-            canPrev={pageIdx > 0}
-            canNext={pageIdx < pages.length - 1}
+            canPrev={canPrev}
+            canNext={canNext}
             showHint={showHint}
             playing={playing}
             playDisabled={!audioUrl}
-            onPrev={() => goto(pageIdx - 1)}
-            onNext={() => goto(pageIdx + 1)}
+            onPrev={prev}
+            onNext={next}
             onTogglePlay={() => setPlaying((p) => !p)}
           />
 
@@ -153,12 +167,10 @@ export default function App() {
       {panelOpen && (
         <RightPanel
           section={{ heading: page.heading, body: page.body }}
-          index={page.moduleIndex}
-          headings={pages
-            .slice(pageIdx - page.moduleIndex, pageIdx - page.moduleIndex + page.moduleCount)
-            .map((p) => p.heading)}
+          index={pageInModule}
+          headings={modulePages.map((p) => p.heading)}
           width={panelWidth}
-          onJump={(i) => goto(pageIdx - page.moduleIndex + i)}
+          onJump={gotoInModule}
           onClose={() => setPanelOpen(false)}
           onResizeStart={startResize}
         />

@@ -139,17 +139,22 @@ These were settled by discussion. Don't relitigate without the owner.
   module → section** (e.g. Apache Spark → `01-foundations` → "Lazy evaluation"). Plan
   for the shape: future concepts (AWS, Databricks, …), **~9 modules/concept, ~15
   sections/module**.
-  - **Horizontal = one continuous section flow across the WHOLE concept.** On load the
-    app fetches *every* module's notebook and flattens them into a single page list
-    (`hooks/useContentNav.ts`), so paging runs straight past a module boundary — module 1's last
-    section → module 2's first — with **no refetch and no jump-to-start**. Touch:
+  - **Horizontal = one continuous section flow across the WHOLE concept.** Navigation is
+    addressed as **`(curModuleId, pageInModule)`**, not one flat index (`hooks/useContentNav.ts`).
+    On load the app fetches the manifest + **only the current module's notebook**, then
+    **prefetches the immediately adjacent modules in the background** (a per-module
+    `cache`), so paging runs straight past a module boundary — module 1's last section →
+    module 2's first — with the neighbor already loaded (no burst, no jump-to-start). This
+    replaced an earlier "fetch *every* module's notebook up front" load whose burst at
+    raw.githubusercontent.com intermittently drew transient HTTP 400s. Touch:
     story **tap zones** (left third = prev, right third = next). Desktop: ← → arrow
     keys. A step swaps **scene + panel + caption + audio together**; the scene remounts
     on `sceneId` change, and since each module now rides **one dense scene**, in-module
     steps don't remount (smooth). The caption shows each page's own module title; the
     counter resets per module (`section N/M`).
-  - **Module switch = the ☰ brand-bar picker** — it jumps to a module's first page
-    *within the flat list* (no refetch). There is **no separate vertical/swipe axis**;
+  - **Module switch = the ☰ brand-bar picker** — it routes to a module's first page
+    (loading that module's notebook on demand if it isn't cached/prefetched yet). There
+    is **no separate vertical/swipe axis**;
     paging across a boundary already crosses modules. (The earlier "vertical swipe =
     module" plan was dropped in favor of this continuous model.)
   - **Audio follows navigation** (`playingRef` in `hooks/useNarration.ts`). Play state persists
@@ -218,7 +223,7 @@ graphl-ux/                  # this repo — the render engine; ships no content
       TapZones.tsx                # mobile prev/next/center-play tap zones
       icons.tsx                   # the reel control SVGs (play-pause / panel / expand)
     hooks/                  #   App's stateful logic, one concern per hook
-      useContentNav.ts            # fetch+flatten pages, pageIdx, deep-link restore, URL sync
+      useContentNav.ts            # lazy per-module fetch + neighbor prefetch, (module,page) nav, deep-link restore, URL sync
       useNarration.ts             # <audio> ref + play/progress + clip reset on page change
       usePanelPrefs.ts            # panel open/width (localStorage) + drag-resize
     router.ts               # hash router #/<concept>/<module>/<section>; navigate / replaceRoute
@@ -259,11 +264,13 @@ Apache Spark **modules 01–02** are wired end-to-end (build target: mobile reel
 - **Home page built**: `#/` shows the concept catalog (`components/Home.tsx`, calm card
   grid from `content/catalog.ts`); a card routes to `#/<concept>` (hash router,
   `router.ts`); the in-scene brand-bar logo routes back home.
-- **Navigation — continuous flow built**: all modules load flattened into one page
-  list; ← → (desktop) and **tap zones** (mobile, `≤760px`) page straight across module
-  boundaries; the ☰ picker jumps to a module. **Audio persists across steps and
-  auto-advances within a module** on clip end. **Deep links restore the exact slide on
-  refresh** (`#/<concept>/<module>/<section-slug>`).
+- **Navigation — continuous flow built, now lazy per-module**: addressed as
+  `(curModuleId, pageInModule)`; the app loads the current module's notebook on demand
+  and **prefetches the adjacent modules** so ← → (desktop) and **tap zones** (mobile,
+  `≤760px`) page straight across module boundaries; the ☰ picker routes to a module
+  (loading it if needed). **Audio persists across steps and auto-advances within a
+  module** on clip end. **Deep links restore the exact slide on refresh**
+  (`#/<concept>/<module>/<section-slug>`).
 - **Content is fetched at runtime** per concept from that concept's `contentBaseUrl`
   (in `content/catalog.ts`; Spark = `apache-spark-content` over raw GitHub).
   `VITE_CONTENT_BASE_URL` is now only a dev override / fallback default in
@@ -283,9 +290,10 @@ Apache Spark **modules 01–02** are wired end-to-end (build target: mobile reel
    still need a Colab generation pass — a missing clip 404s (auto-advance halts there)
    rather than narrating. The `sceneAudioFallback` map in `App.tsx` covers only
    sections that omit `audio` entirely; delete it once every section has a real clip.
-2. On load the app fetches **all** wired notebooks up front (fine at 2 modules). Once
-   all ~9 are wired, switch to lazy-loading per module.
+2. A module that isn't cached/prefetched yet (a far ☰ jump, or paging faster than the
+   prefetch) shows the full-screen "Loading content…" for the moment it loads — fine,
+   but a subtler in-stage spinner would read better.
 
 **Likely next:** highlight module 02 (`spark-rdd-api`) — pure manifest editing now ·
-generate the per-section narration `.wav`s · lazy-load module notebooks · CDN
-(jsDelivr) for content (swap `VITE_CONTENT_BASE_URL`).
+generate the per-section narration `.wav`s · CDN (jsDelivr) for content (swap
+`VITE_CONTENT_BASE_URL`).

@@ -1,82 +1,78 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { buildPages, type ModuleManifest, type Page } from '../content/module.ts'
 import { fetchManifest, fetchNotebook } from '../content/client.ts'
 import type { Concept } from '../content/catalog.ts'
 import { replaceRoute } from '../router.ts'
 
-// Map `items` through `fn` with at most `limit` calls in flight at once, returning
-// results in the original order. A tiny worker-pool — keeps us from firing every
-// notebook fetch in one concurrent burst (see the call site for why that matters).
-async function mapWithConcurrency<T, R>(
-  items: T[],
-  limit: number,
-  fn: (item: T) => Promise<R>,
-): Promise<R[]> {
-  const results = new Array<R>(items.length)
-  let next = 0
-  async function worker() {
-    while (next < items.length) {
-      const i = next++
-      results[i] = await fn(items[i])
-    }
-  }
-  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker))
-  return results
-}
+// Where a pending position lands once the current module's pages are available:
+// a section slug (deep link / ☰), or a module edge (start when paging forward into
+// a module, end when paging backward into one). Resolved by effect (4) below.
+type PendingTarget = { section?: string; edge?: 'start' | 'end' }
 
-// Owns the content/navigation state for a concept: fetches every module, flattens
-// them into one continuous page list, tracks the current page index, restores the
-// position from a deep link, and keeps the URL in sync as the user pages. The shell
-// drives the index (keyboard, tap zones, clip auto-advance) via `goto`/`setPageIdx`;
-// `moduleId`/`section` come from the route and seed the restore.
+// Owns the content/navigation state for a concept, addressed as (module, pageInModule)
+// rather than one flat index. Only the manifest + the CURRENT module's notebook are
+// fetched up front; the immediate neighbors are prefetched in the background so
+// crossing a module boundary is instant. This replaces the old "fetch every module's
+// notebook at once" load, whose burst at raw.githubusercontent.com intermittently
+// drew transient HTTP 400s. `routeModuleId`/`routeSection` come from the route and
+// drive explicit module switches (☰ picker, deep link, Back/Forward); internal paging
+// moves position directly and rewrites the URL silently (no hashchange → no loop).
 export function useContentNav(
   concept: Concept | undefined,
-  moduleId: string,
-  section: string,
+  routeModuleId: string,
+  routeSection: string,
 ) {
-  const [pages, setPages] = useState<Page[]>([])
   const [allModules, setAllModules] = useState<ModuleManifest[]>([])
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
+  // Loaded modules only, keyed by module id — filled lazily as the user reaches them.
+  // cacheRef mirrors `cache` so the async loader (and `goToModule`) can read the
+  // latest without re-subscribing; both are always written together via `putModule`.
+  const [cache, setCache] = useState<Record<string, Page[]>>({})
+  const cacheRef = useRef<Record<string, Page[]>>({})
+  const [curModuleId, setCurModuleId] = useState('')
+  const [pageInModule, setPageInModule] = useState(0)
+  const [pending, setPending] = useState<PendingTarget | null>(null)
   const [error, setError] = useState<string>()
-  const [pageIdx, setPageIdx] = useState(0)
-  // Which concept the current `pages` belong to. Guards the URL-sync below so it never
-  // writes the new concept's id against the previous concept's still-loaded pages
-  // (which would corrupt the deep link the instant you switch concepts).
+  // Which concept `cache`/`allModules` belong to. Guards the route + URL-sync effects
+  // so they never act on a stale concept's data the instant you switch concepts.
   const [loadedConceptId, setLoadedConceptId] = useState<string>()
 
-  // Load the selected concept and flatten EVERY module into one continuous page list,
-  // so paging runs straight across module boundaries (end of module 1 → start of
-  // module 2) with no refetch. Re-runs only when the concept changes; switching
-  // modules is just a jump within this list (see the restore effect below).
+  const putModule = (id: string, pages: Page[]) => {
+    cacheRef.current = { ...cacheRef.current, [id]: pages }
+    setCache(cacheRef.current)
+  }
+
+  const moduleIndex = (id: string) => allModules.findIndex((m) => m.id === id)
+
+  // (1) Concept change → reset, fetch the (cheap) manifest, and pick the start module
+  // (the deep-linked module, else the first). The start module's notebook is loaded by
+  // the loader effect (3). routeModuleId/routeSection are read once here to seed the
+  // deep link; later route changes are owned by effect (2).
   useEffect(() => {
     if (!concept) return
     let cancelled = false
-    setStatus('loading')
-    setPageIdx(0)
-    setPages([])
+    cacheRef.current = {}
+    setCache({})
+    setError(undefined)
     setAllModules([])
+    setCurModuleId('')
+    setPageInModule(0)
+    setPending(null)
     void (async () => {
       try {
         const manifest = await fetchManifest(concept.contentBaseUrl)
-        // Fetch notebooks with a small concurrency cap rather than all at once:
-        // bursting every module's notebook at raw.githubusercontent.com is what
-        // provokes Fastly's intermittent transient rejections. Order is preserved so
-        // `buildPages(notebooks[i], p)` below still lines up with `presentations[i]`.
-        const notebooks = await mapWithConcurrency(
-          manifest.presentations,
-          3,
-          (p) => fetchNotebook(p.notebook, concept.contentBaseUrl),
-        )
         if (cancelled) return
-        const flat = manifest.presentations.flatMap((p, i) => buildPages(notebooks[i], p))
-        setAllModules(manifest.presentations)
-        setPages(flat)
+        const mods = manifest.presentations
+        const start =
+          routeModuleId && mods.some((m) => m.id === routeModuleId)
+            ? routeModuleId
+            : mods[0]?.id ?? ''
+        setAllModules(mods)
         setLoadedConceptId(concept.id)
-        setStatus('ready')
+        setPending(routeSection ? { section: routeSection } : { edge: 'start' })
+        setCurModuleId(start)
       } catch (e) {
         if (cancelled) return
         setError(e instanceof Error ? e.message : String(e))
-        setStatus('error')
       }
     })()
     return () => {
@@ -84,29 +80,139 @@ export function useContentNav(
     }
   }, [concept])
 
-  // Restore position from the route after content loads (refresh / deep link): a
-  // `section` slug lands on that exact slide; a bare `module` lands on its first page.
-  // Manual paging syncs the URL silently (below), so this fires only on an explicit
-  // route change (☰ picker, Back/Forward, or a fresh refresh).
+  // (2) Explicit route change (☰ picker, deep link, Back/Forward) → select that module
+  // + section. Internal paging rewrites the URL via replaceState (no hashchange), so
+  // `routeModuleId`/`routeSection` change ONLY on an explicit nav — this never fights
+  // paging. (On mount it re-asserts the deep link once `allModules` arrives.)
   useEffect(() => {
-    if (pages.length === 0 || (!moduleId && !section)) return
-    let idx = -1
-    if (section) idx = pages.findIndex((p) => p.slug === section && (!moduleId || p.moduleId === moduleId))
-    if (idx < 0 && moduleId) idx = pages.findIndex((p) => p.moduleId === moduleId)
-    if (idx >= 0) setPageIdx(idx)
-  }, [moduleId, section, pages])
+    if (!concept || loadedConceptId !== concept.id) return
+    if (!routeModuleId || !allModules.some((m) => m.id === routeModuleId)) return
+    setPending(routeSection ? { section: routeSection } : { edge: 'start' })
+    setCurModuleId(routeModuleId)
+  }, [routeModuleId, routeSection, allModules, loadedConceptId, concept])
 
-  // Keep the address bar deep-linkable as the user pages: silently rewrite the URL to
-  // the current slide (concept/module/slug). `replaceRoute` uses replaceState so it
-  // neither fires `hashchange` (no effect loop) nor adds Back/Forward churn.
+  // (3) Ensure the current module's notebook is loaded, then prefetch its neighbors so
+  // a boundary cross is instant. Neighbor failures are swallowed — they'll surface
+  // (and retry) if/when that module is actually navigated to.
   useEffect(() => {
-    if (pages.length === 0 || !concept || loadedConceptId !== concept.id) return
-    const p = pages[pageIdx]
-    if (p) replaceRoute(concept.id, p.moduleId, p.slug)
-  }, [pageIdx, pages, concept, loadedConceptId])
+    if (!concept || !curModuleId || allModules.length === 0) return
+    let cancelled = false
+    const ensure = async (id: string): Promise<void> => {
+      if (!id || cacheRef.current[id]) return
+      const mod = allModules.find((m) => m.id === id)
+      if (!mod) return
+      const nb = await fetchNotebook(mod.notebook, concept.contentBaseUrl)
+      if (cancelled || loadedConceptId !== concept.id) return
+      putModule(id, buildPages(nb, mod))
+    }
+    void (async () => {
+      try {
+        await ensure(curModuleId)
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : String(e))
+        return
+      }
+      if (cancelled) return
+      const i = moduleIndex(curModuleId)
+      void ensure(allModules[i - 1]?.id ?? '').catch(() => {})
+      void ensure(allModules[i + 1]?.id ?? '').catch(() => {})
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [concept, curModuleId, allModules, loadedConceptId])
 
-  // Clamped index setter — the one way the shell moves between slides.
-  const goto = (next: number) => setPageIdx(Math.min(pages.length - 1, Math.max(0, next)))
+  // (4) Resolve a pending position once the current module's pages are available
+  // (fired on load, since `cache` is a dep). A section slug lands on that slide; the
+  // `end` edge lands on the last page (paged backward into the module); else page 0.
+  useEffect(() => {
+    if (!pending) return
+    const pages = cache[curModuleId]
+    if (!pages) return
+    let idx = 0
+    if (pending.section) {
+      const found = pages.findIndex((p) => p.slug === pending.section)
+      idx = found >= 0 ? found : 0
+    } else if (pending.edge === 'end') {
+      idx = pages.length - 1
+    }
+    setPageInModule(idx)
+    setPending(null)
+  }, [pending, cache, curModuleId])
 
-  return { pages, allModules, status, error, pageIdx, setPageIdx, goto }
+  const modulePages = cache[curModuleId] ?? []
+  const page: Page | undefined = modulePages[pageInModule]
+
+  // (5) Keep the address bar deep-linkable as the user pages — silently (replaceState).
+  // Skipped while a position is pending so it never writes a stale slug mid-resolve.
+  useEffect(() => {
+    if (!concept || loadedConceptId !== concept.id || pending || !page) return
+    replaceRoute(concept.id, page.moduleId, page.slug)
+  }, [page, pending, concept, loadedConceptId])
+
+  // Jump to another module at a given edge — instant when cached (the common case,
+  // thanks to neighbor prefetch); otherwise the loader effect + (4) resolve it.
+  const goToModule = (modId: string, edge: 'start' | 'end') => {
+    setCurModuleId(modId)
+    const pages = cacheRef.current[modId]
+    if (edge === 'start') {
+      setPageInModule(0)
+      setPending(null)
+    } else if (pages) {
+      setPageInModule(pages.length - 1)
+      setPending(null)
+    } else {
+      setPending({ edge: 'end' })
+    }
+  }
+
+  const next = () => {
+    if (pageInModule < modulePages.length - 1) {
+      setPageInModule(pageInModule + 1)
+      return
+    }
+    const i = moduleIndex(curModuleId)
+    if (i >= 0 && i < allModules.length - 1) goToModule(allModules[i + 1].id, 'start')
+  }
+
+  const prev = () => {
+    if (pageInModule > 0) {
+      setPageInModule(pageInModule - 1)
+      return
+    }
+    const i = moduleIndex(curModuleId)
+    if (i > 0) goToModule(allModules[i - 1].id, 'end')
+  }
+
+  // Jump within the current module (the content panel's section list).
+  const gotoInModule = (i: number) =>
+    setPageInModule(Math.min(modulePages.length - 1, Math.max(0, i)))
+
+  const i = moduleIndex(curModuleId)
+  const canPrev = pageInModule > 0 || i > 0
+  const canNext = pageInModule < modulePages.length - 1 || (i >= 0 && i < allModules.length - 1)
+  // At the last page of the current module — clip auto-advance stops here rather than
+  // crossing the boundary (a module is one hands-free playthrough, as before).
+  const atModuleEnd = pageInModule >= modulePages.length - 1
+
+  const status: 'loading' | 'ready' | 'error' = error
+    ? 'error'
+    : allModules.length > 0 && Boolean(cache[curModuleId]) && Boolean(page)
+      ? 'ready'
+      : 'loading'
+
+  return {
+    allModules,
+    modulePages,
+    page,
+    pageInModule,
+    status,
+    error,
+    next,
+    prev,
+    canPrev,
+    canNext,
+    atModuleEnd,
+    gotoInModule,
+  }
 }
