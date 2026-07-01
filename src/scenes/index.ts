@@ -18,9 +18,8 @@ import { docker } from './docker.ts'
 import { kubernetes } from './kubernetes.ts'
 import { databricksDataEngineer } from './databricks-data-engineer.ts'
 import { awsGlobal } from './aws-global.ts'
+import { awsCloud } from './aws-cloud.ts'
 import { awsIam } from './aws-iam.ts'
-import { awsVpc } from './aws-vpc.ts'
-import { awsDataEngineering } from './aws-data-engineering.ts'
 import { azureFundamentals } from './azure-fundamentals.ts'
 import { azureIdentityGovernance } from './azure-identity-governance.ts'
 import { azureNetworkTraffic } from './azure-network-traffic.ts'
@@ -91,13 +90,15 @@ export const scenes: Record<string, SceneSpec> = {
   // databricks-data-engineer-content module rides; the manifest frames one subsystem per
   // section via highlight/focus.
   'databricks-data-engineer': databricksDataEngineer,
-  // AWS concept (aws-content). Four faithful NodeMap ports, one per topic the manifest
-  // wires module-by-module: aws-global (module 01 foundations — service/deployment models,
-  // connecting to AWS, Region⊃AZ⊃DC global infra), aws-iam, aws-vpc, aws-data-engineering.
+  // AWS concept (aws-content). Three scenes the manifest wires module-by-module:
+  // aws-global (module 01 foundations — service/deployment models, connecting to AWS,
+  // Region⊃AZ⊃DC global infra); aws-cloud (the whole `aws.ts` everything-map — the dense
+  // spine most modules ride slices of, with the SG-vs-NACL geometry and the data-eng
+  // pipeline folded in); and aws-iam (deep IAM policy/role concepts). The former aws-vpc
+  // and aws-data-engineering deep-dives were retired into aws-cloud.
   'aws-global': awsGlobal,
+  'aws-cloud': awsCloud,
   'aws-iam': awsIam,
-  'aws-vpc': awsVpc,
-  'aws-data-engineering': awsDataEngineering,
   // Azure concept (azure-content). Three faithful NodeMap ports, one per topic the
   // manifest wires module-by-module: azure-fundamentals (module 01 foundations —
   // service/deployment models, connecting to Azure via ARM, Geography ⊃ Region ⊃ Zone ⊃
