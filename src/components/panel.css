@@ -217,7 +217,50 @@ body.resizing {
   border-radius: 10px;
   padding: 14px 16px;
   overflow-x: auto;
+  margin: 0;
+}
+
+/* Wrapper around each fenced block — positioning context for the copy button. */
+.panel__codeblock {
+  position: relative;
   margin: 0.9em 0;
+}
+
+/* Copy button — calm, low-contrast, sits top-right; lifts on block/own hover. */
+.panel__copy {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid #3a3f4b;
+  border-radius: 7px;
+  background: rgba(40, 44, 52, 0.85);
+  color: #8b919e;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.panel__codeblock:hover .panel__copy,
+.panel__copy:focus-visible {
+  opacity: 1;
+}
+.panel__copy:hover {
+  color: var(--ink-strong);
+  border-color: #4a505c;
+}
+.panel__copy.is-copied {
+  opacity: 1;
+  color: #98c379; /* One Dark green — confirmation */
+  border-color: #98c379;
+}
+.panel__copy svg {
+  width: 15px;
+  height: 15px;
 }
 .markdown pre code {
   background: none;

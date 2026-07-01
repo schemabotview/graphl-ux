@@ -41,6 +41,36 @@ export function CloseIcon() {
   )
 }
 
+// Copy — two stacked sheets; used by the panel's per-fenced-block copy button.
+export function CopyIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" strokeWidth="1.6" />
+      <path
+        d="M5 15H4a0 0 0 0 1 0 0V5a1 1 0 0 1 1-1h10a0 0 0 0 1 0 0v1"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+// Check ✓ — the "copied" confirmation state of the copy button.
+export function CheckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M5 13l4 4 10-10"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 // Expand-to-corners — "fit the whole scene" (show-full / drop the spotlight).
 export function ExpandIcon() {
   return (

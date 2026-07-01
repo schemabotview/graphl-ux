@@ -3,8 +3,55 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 import type { Section } from '../content/notebook.ts'
-import { CloseIcon } from './icons.tsx'
+import { CheckIcon, CloseIcon, CopyIcon } from './icons.tsx'
 import './panel.css'
+
+// Pull the raw text out of a rendered <pre>'s children (highlight.js wraps tokens
+// in nested spans, so we can't read a single string — walk the React tree).
+function nodeText(node: React.ReactNode): string {
+  if (node == null || typeof node === 'boolean') return ''
+  if (typeof node === 'string' || typeof node === 'number') return String(node)
+  if (Array.isArray(node)) return node.map(nodeText).join('')
+  if (typeof node === 'object' && 'props' in node) {
+    return nodeText((node as { props: { children?: React.ReactNode } }).props.children)
+  }
+  return ''
+}
+
+// <pre> override for every fenced (```) block — code, ASCII diagrams, plain text
+// alike. Renders the original <pre> untouched (highlight.js tokens/styling intact)
+// and floats a copy button in the top-right that writes the block's raw text to the
+// clipboard, flipping to a check for ~1.5s.
+function CodeBlock({ children, ...props }: React.HTMLAttributes<HTMLPreElement>) {
+  const [copied, setCopied] = useState(false)
+  const preRef = useRef<HTMLPreElement>(null)
+
+  const copy = async () => {
+    const text = preRef.current?.innerText ?? nodeText(children)
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      /* clipboard blocked (insecure context / denied) — no-op */
+    }
+  }
+
+  return (
+    <div className="panel__codeblock">
+      <button
+        className={`panel__copy${copied ? ' is-copied' : ''}`}
+        onClick={copy}
+        aria-label={copied ? 'Copied' : 'Copy to clipboard'}
+      >
+        {copied ? <CheckIcon /> : <CopyIcon />}
+      </button>
+      <pre {...props} ref={preRef}>
+        {children}
+      </pre>
+    </div>
+  )
+}
 
 interface RightPanelProps {
   section: Section
@@ -100,7 +147,11 @@ export function RightPanel({
         </button>
       </header>
       <article className="panel__body markdown">
-        <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          rehypePlugins={[rehypeHighlight]}
+          components={{ pre: CodeBlock }}
+        >
           {section.body}
         </ReactMarkdown>
       </article>
