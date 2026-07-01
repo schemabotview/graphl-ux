@@ -86,8 +86,8 @@ const sources = container(
 
 const connectivity = container(
   { id: 'connectivity', label: 'Connectivity', color: BLUE },
-  wgrid({ cols: [1], rows: [1, 3, 1], gap: 0.15, padding: 0.08 }, [
-    { node: chip('lakehouse-federation', 'Lakehouse Federation', BLUE), at: [0, 0] },
+  wgrid({ cols: [1], rows: [1, 2, 1], gap: 0.15, padding: 0.08 }, [
+    { node: comp('lakehouse-federation', 'Lakehouse Federation', BLUE), at: [0, 0] },
     {
       node: container(
         { id: 'lakeflow-connect', label: 'Lakeflow Connect', color: BLUE },
@@ -99,7 +99,7 @@ const connectivity = container(
       ),
       at: [0, 1],
     },
-    { node: chip('connect-api', 'API / REST', BLUE), at: [0, 2] },
+    { node: comp('connect-api', 'API / REST', BLUE), at: [0, 2] },
   ]),
 )
 
@@ -321,7 +321,7 @@ const consumers = container(
 // An invisible `group` carries the source root's 3 / 3 / 18 / 4 weighted columns.
 const main: SceneNodeSpec = group(
   'databricks-main',
-  wgrid({ cols: [3, 3, 18, 4], rows: [1], gap: 0.4, padding: 0.04 }, [
+  wgrid({ cols: [2, 2, 18, 2], rows: [1], gap: 0.4, padding: 0.04 }, [
     { node: sources, at: [0, 0] },
     { node: connectivity, at: [1, 0] },
     { node: platform, at: [2, 0] },
@@ -344,18 +344,12 @@ export const databricksDataEngineer: SceneSpec = {
     { from: 'src-rdbms', to: 'lakehouse-federation', label: 'federate', color: BLUE },
     { from: 'src-apis', to: 'connectors', label: 'pull', color: BLUE },
     { from: 'src-saas', to: 'connectors', label: 'pull', color: BLUE },
-    { from: 'src-kafka', to: 'auto-loader', label: 'stream', color: TEAL },
-    { from: 'src-kinesis', to: 'auto-loader', label: 'stream', color: TEAL },
-    { from: 'src-eventhubs', to: 'auto-loader', label: 'stream', color: TEAL },
-    { from: 'src-pubsub', to: 'auto-loader', label: 'stream', color: TEAL },
+    { from: 'stream-sources', to: 'auto-loader', label: 'stream', color: TEAL },
     { from: 'lakeflow-connect', to: 'bronze', label: 'raw write', color: BLUE },
     { from: 'copy-into', to: 'bronze', label: 'idempotent', color: BLUE },
 
     // ── Orchestration: a trigger fires a Job run; tasks run the workloads ──────
-    { from: 'trigger-cron', to: 'job-dag', label: 'time-based', color: ORANGE },
-    { from: 'trigger-file', to: 'job-dag', label: 'on arrival', color: ORANGE },
-    { from: 'trigger-table', to: 'job-dag', label: 'on update', color: ORANGE },
-    { from: 'trigger-continuous', to: 'job-dag', label: 'always on', color: ORANGE },
+    { from: 'job-triggers', to: 'job-dag', label: 'fires run', color: ORANGE },
     { from: 'job-dag', to: 'declarative-pipelines', label: 'pipeline task', color: ORANGE },
     { from: 'job-dag', to: 'dbsql', label: 'SQL task', color: ORANGE },
 
@@ -373,12 +367,8 @@ export const databricksDataEngineer: SceneSpec = {
     { from: 'mosaic-ai', to: 'databricks-apps', label: 'inference', color: GRAY },
 
     // ── Storage: Medallion persists to Delta Lake → Cloud Storage ──────────────
-    { from: 'bronze', to: 'delta-lake', label: 'persist', color: YELLOW },
-    { from: 'silver', to: 'delta-lake', label: 'persist', color: YELLOW },
-    { from: 'gold', to: 'delta-lake', label: 'persist', color: YELLOW },
-    { from: 'delta-lake', to: 's3', label: 'parquet', color: YELLOW },
-    { from: 'delta-lake', to: 'adls', label: 'parquet', color: YELLOW },
-    { from: 'delta-lake', to: 'gcs', label: 'parquet', color: YELLOW },
+    { from: 'medallion', to: 'delta-lake', label: 'persist', color: YELLOW },
+    { from: 'delta-lake', to: 'cloud-storage', label: 'parquet', color: YELLOW },
 
     // ── Engine drives workloads ────────────────────────────────────────────────
     { from: 'spark-engine', to: 'declarative-pipelines', label: 'execute', color: ORANGE },
@@ -398,14 +388,11 @@ export const databricksDataEngineer: SceneSpec = {
     { from: 'repos', to: 'gh-actions', label: 'merge to main', color: BLUE },
     { from: 'gh-actions', to: 'databricks-cli', label: 'CI runs', color: BLUE },
     { from: 'databricks-yml', to: 'databricks-cli', label: 'resources', color: BLUE },
-    { from: 'databricks-cli', to: 'job-dag', label: 'provisions', color: BLUE },
-    { from: 'databricks-cli', to: 'declarative-pipelines', label: 'provisions', color: BLUE },
+    { from: 'databricks-cli', to: 'lakeflow-jobs', label: 'provisions', color: BLUE },
     { from: 'run-as-sp', to: 'job-dag', label: 'run-as', color: BLUE },
 
     // ── Compute types: SQL warehouse backs DBSQL; serverless backs all workloads ─
     { from: 'dbsql', to: 'sql-warehouse', label: 'runs on', color: GREEN },
-    { from: 'serverless', to: 'declarative-pipelines', label: 'serverless DLT', color: TEAL },
-    { from: 'serverless', to: 'dbsql', label: 'serverless SQL', color: TEAL },
-    { from: 'serverless', to: 'lakeflow-jobs', label: 'serverless jobs', color: TEAL },
+    { from: 'serverless', to: 'lakeflow-jobs', label: 'serverless', color: TEAL },
   ],
 }
