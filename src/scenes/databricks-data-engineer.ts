@@ -105,9 +105,36 @@ const connectivity = container(
 
 // ─── CENTER: Data Intelligence Platform ───────────────────────────────────────
 
+// What FIRES a job run: scheduled cron (time-based) vs. data-driven (file arrival /
+// table update) vs. always-on continuous. The exam's core decision lives here.
+const jobTriggers = container(
+  { id: 'job-triggers', label: 'Triggers', color: ORANGE },
+  wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: 0.15, padding: 0.08 }, [
+    { node: chip('trigger-cron', 'Scheduled (cron)', ORANGE), at: [0, 0] },
+    { node: chip('trigger-file', 'File arrival', ORANGE), at: [0, 1] },
+    { node: chip('trigger-table', 'Table update', ORANGE), at: [0, 2] },
+    { node: chip('trigger-continuous', 'Continuous', ORANGE), at: [0, 3] },
+  ]),
+)
+
+// The Job = a DAG of tasks: a trigger fires a run, each task runs one workload type
+// (notebook / SQL / pipeline / dashboard); if/else + for_each route the DAG.
+const jobDag = container(
+  { id: 'job-dag', label: 'Job (Tasks DAG)', color: ORANGE },
+  wgrid({ cols: [1], rows: [1, 1, 1, 1, 1], gap: 0.15, padding: 0.08 }, [
+    { node: chip('task-notebook', 'Notebook', ORANGE), at: [0, 0] },
+    { node: chip('task-sql', 'SQL', ORANGE), at: [0, 1] },
+    { node: chip('task-pipeline', 'Pipeline', ORANGE), at: [0, 2] },
+    { node: chip('task-dashboard', 'Dashboard', ORANGE), at: [0, 3] },
+    { node: chip('job-control', 'if/else · for_each', ORANGE), at: [0, 4] },
+  ]),
+)
+
 const lakeflowJobs = container(
   { id: 'lakeflow-jobs', label: 'Lakeflow Jobs (Workflows)', color: ORANGE },
-  wgrid({ cols: [1, 1, 1], rows: [1], gap: G, padding: P }, [
+  wgrid({ cols: [0.9, 1.1, 1, 1, 1], rows: [1], gap: G, padding: P }, [
+    { node: jobTriggers, at: [0, 0] },
+    { node: jobDag, at: [1, 0] },
     {
       node: container(
         { id: 'declarative-pipelines', label: 'Declarative Pipelines (DLT)', color: PURPLE },
@@ -119,7 +146,7 @@ const lakeflowJobs = container(
           { node: chip('dlt-live', 'LIVE.', PURPLE), at: [0, 4] },
         ]),
       ),
-      at: [0, 0],
+      at: [2, 0],
     },
     {
       node: container(
@@ -131,7 +158,7 @@ const lakeflowJobs = container(
           { node: chip('dbsql-alerts', 'Alerts', GREEN), at: [0, 3] },
         ]),
       ),
-      at: [1, 0],
+      at: [3, 0],
     },
     {
       node: container(
@@ -143,7 +170,7 @@ const lakeflowJobs = container(
           { node: chip('feature-store', 'Feature Store', GRAY), at: [0, 3] },
         ]),
       ),
-      at: [2, 0],
+      at: [4, 0],
     },
   ]),
 )
@@ -157,12 +184,27 @@ const medallion = container(
   ]),
 )
 
+// CI/CD: merge to main runs GitHub Actions, which runs `databricks bundle deploy`.
+// The databricks.yml bundle declares resources (jobs, pipelines) and deploys them into
+// the workspace, run-as a service principal in test/prod. Flow starts at `repos` — the
+// Repos / Git chip IS Databricks Git Folders (the workspace clone of the GitHub remote).
+const cicd = container(
+  { id: 'cicd', label: 'CI/CD', color: BLUE },
+  wgrid({ cols: [1], rows: [1, 1, 1, 1], gap: 0.15, padding: 0.08 }, [
+    { node: chip('gh-actions', 'GitHub Actions', BLUE), at: [0, 0] },
+    { node: chip('databricks-yml', 'databricks.yml', BLUE), at: [0, 1] },
+    { node: chip('databricks-cli', 'bundle deploy', BLUE), at: [0, 2] },
+    { node: chip('run-as-sp', 'service principal', BLUE), at: [0, 3] },
+  ]),
+)
+
 const workspaceCompute = container(
   { id: 'workspace-compute', label: 'Workspace + Compute', color: BLUE },
-  wgrid({ cols: [1, 1, 1], rows: [1, 1], gap: G, padding: 0.22 }, [
+  wgrid({ cols: [1, 1, 1, 1.2], rows: [1, 1], gap: G, padding: 0.22 }, [
     { node: chip('notebooks', 'Notebooks', BLUE), at: [0, 0] },
     { node: chip('dbutils', 'dbutils / Secrets', BLUE), at: [1, 0] },
     { node: chip('repos', 'Repos / Git', BLUE), at: [2, 0] },
+    { node: cicd, at: [3, 0] },
     {
       node: container(
         { id: 'compute', label: 'Compute', color: BLUE },
@@ -174,7 +216,7 @@ const workspaceCompute = container(
           { node: chip('dbr-runtime', 'DBR (LTS)', BLUE), at: [4, 0] },
         ]),
       ),
-      at: [0, 1, 3, 1],
+      at: [0, 1, 4, 1],
     },
   ]),
 )
@@ -242,7 +284,7 @@ const cloudStorage = container(
 
 const platform = container(
   { id: 'data-intelligence-platform', label: 'Data Intelligence Platform', color: ORANGE },
-  wgrid({ cols: [1], rows: [5, 1.5, 3, 4, 1], gap: 0.4, padding: 0.08 }, [
+  wgrid({ cols: [1], rows: [4, 1.5, 4, 4, 1], gap: 0.4, padding: 0.08 }, [
     { node: lakeflowJobs, at: [0, 0] },
     { node: medallion, at: [0, 1] },
     { node: workspaceCompute, at: [0, 2] },
@@ -309,6 +351,14 @@ export const databricksDataEngineer: SceneSpec = {
     { from: 'lakeflow-connect', to: 'bronze', label: 'raw write', color: BLUE },
     { from: 'copy-into', to: 'bronze', label: 'idempotent', color: BLUE },
 
+    // ── Orchestration: a trigger fires a Job run; tasks run the workloads ──────
+    { from: 'trigger-cron', to: 'job-dag', label: 'time-based', color: ORANGE },
+    { from: 'trigger-file', to: 'job-dag', label: 'on arrival', color: ORANGE },
+    { from: 'trigger-table', to: 'job-dag', label: 'on update', color: ORANGE },
+    { from: 'trigger-continuous', to: 'job-dag', label: 'always on', color: ORANGE },
+    { from: 'job-dag', to: 'declarative-pipelines', label: 'pipeline task', color: ORANGE },
+    { from: 'job-dag', to: 'dbsql', label: 'SQL task', color: ORANGE },
+
     // ── ELT: Declarative Pipelines drives Bronze → Silver → Gold ───────────────
     { from: 'declarative-pipelines', to: 'medallion', label: '@dlt.table', color: PURPLE },
     { from: 'bronze', to: 'silver', label: 'cleanse / dedup', color: GRAY },
@@ -341,8 +391,16 @@ export const databricksDataEngineer: SceneSpec = {
 
     // ── Workspace + Compute hosts dev + execution ──────────────────────────────
     { from: 'notebooks', to: 'all-purpose-cluster', label: 'interactive', color: BLUE },
-    { from: 'lakeflow-jobs', to: 'job-cluster', label: 'schedule', color: ORANGE },
+    { from: 'job-dag', to: 'job-cluster', label: 'runs on', color: ORANGE },
     { from: 'dbr-runtime', to: 'spark-engine', label: 'ships with', color: BLUE },
+
+    // ── CI/CD: merge to main → GH Actions → bundle deploy → resources ──────────
+    { from: 'repos', to: 'gh-actions', label: 'merge to main', color: BLUE },
+    { from: 'gh-actions', to: 'databricks-cli', label: 'CI runs', color: BLUE },
+    { from: 'databricks-yml', to: 'databricks-cli', label: 'resources', color: BLUE },
+    { from: 'databricks-cli', to: 'job-dag', label: 'provisions', color: BLUE },
+    { from: 'databricks-cli', to: 'declarative-pipelines', label: 'provisions', color: BLUE },
+    { from: 'run-as-sp', to: 'job-dag', label: 'run-as', color: BLUE },
 
     // ── Compute types: SQL warehouse backs DBSQL; serverless backs all workloads ─
     { from: 'dbsql', to: 'sql-warehouse', label: 'runs on', color: GREEN },
